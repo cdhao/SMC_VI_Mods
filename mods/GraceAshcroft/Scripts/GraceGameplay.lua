@@ -5,6 +5,7 @@ local WRITING_BOOST_GRANTED = "GRACE_WRITING_BOOST_GRANTED"
 local HEMOLYTIC_LEVEL = "GRACE_HEMOLYTIC_LEVEL"
 local STABILIZER_LEVEL = "GRACE_STABILIZER_LEVEL"
 local STEROID_LEVEL = "GRACE_STEROID_LEVEL"
+local STEROID_LAST_HEAL_TURN = "GRACE_STEROID_LAST_HEAL_TURN"
 
 local PROJECT_HEMOLYTIC_1 = "PROJECT_GRACE_HEMOLYTIC_1"
 local PROJECT_HEMOLYTIC_2 = "PROJECT_GRACE_HEMOLYTIC_2"
@@ -54,6 +55,8 @@ for projectType, _ in pairs(ENHANCER_PROJECTS) do
 end
 
 local recentBloodAwards = {}
+local recentCampAwards = {}
+local recentAwardTurn = nil
 
 local TECH_WRITING_INDEX = nil
 if GameInfo.Technologies["TECH_WRITING"] ~= nil then
@@ -63,6 +66,11 @@ end
 local RESOURCE_INFECTED_BLOOD_INDEX = nil
 if GameInfo.Resources[RESOURCE_INFECTED_BLOOD] ~= nil then
     RESOURCE_INFECTED_BLOOD_INDEX = GameInfo.Resources[RESOURCE_INFECTED_BLOOD].Index
+end
+
+local BARBARIAN_CAMP_IMPROVEMENT_INDEX = nil
+if GameInfo.Improvements["IMPROVEMENT_BARBARIAN_CAMP"] ~= nil then
+    BARBARIAN_CAMP_IMPROVEMENT_INDEX = GameInfo.Improvements["IMPROVEMENT_BARBARIAN_CAMP"].Index
 end
 
 local function Log(message)
@@ -102,6 +110,27 @@ local function IsBarbarianPlayer(playerID)
 
     if playerID ~= nil and PlayerConfigurations[playerID] ~= nil then
         return PlayerConfigurations[playerID]:GetCivilizationTypeName() == "CIVILIZATION_BARBARIAN"
+    end
+
+    return false
+end
+
+local function IsBarbarianCampImprovement(improvementType)
+    if improvementType == nil then
+        return false
+    end
+
+    if BARBARIAN_CAMP_IMPROVEMENT_INDEX == nil and GameInfo.Improvements["IMPROVEMENT_BARBARIAN_CAMP"] ~= nil then
+        BARBARIAN_CAMP_IMPROVEMENT_INDEX = GameInfo.Improvements["IMPROVEMENT_BARBARIAN_CAMP"].Index
+    end
+
+    if BARBARIAN_CAMP_IMPROVEMENT_INDEX ~= nil and improvementType == BARBARIAN_CAMP_IMPROVEMENT_INDEX then
+        return true
+    end
+
+    local improvement = GameInfo.Improvements[improvementType]
+    if improvement ~= nil then
+        return improvement.BarbarianCamp == true or improvement.BarbarianCamp == 1 or improvement.ImprovementType == "IMPROVEMENT_BARBARIAN_CAMP"
     end
 
     return false
@@ -321,31 +350,6 @@ local function CanSetEnhancerLevel(playerID, projectConfig)
     end
 
     return GetNumericPlayerProperty(player, projectConfig.propertyName) < targetLevel
-end
-
-local function SpendProjectBloodRemainder(playerID)
-    local totalCost = GetParam("GRACE_PROJECT_BLOOD_COST", 3)
-    local nativeCost = GetParam("GRACE_NATIVE_PROJECT_BLOOD_COST", 1)
-    local remainderCost = math.max(0, totalCost - nativeCost)
-
-    if remainderCost == 0 then
-        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_BLOOD_COST_SETTLED", totalCost, GetBlood(playerID)))
-        return true
-    end
-
-    local currentBlood = GetBlood(playerID)
-    if currentBlood < remainderCost then
-        if currentBlood > 0 then
-            ChangeBlood(playerID, -currentBlood, true)
-        end
-
-        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_NOT_ENOUGH_BLOOD", totalCost, GetBlood(playerID)))
-        return false
-    end
-
-    local newBlood = ChangeBlood(playerID, -remainderCost, true)
-    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_BLOOD_COST_SETTLED", totalCost, newBlood))
-    return true
 end
 
 local function GetUnitAbility(unit)
@@ -591,6 +595,17 @@ local function GetCurrentTurn()
     return 0
 end
 
+local function ClearAwardCachesForCurrentTurn()
+    local currentTurn = GetCurrentTurn()
+    if recentAwardTurn ~= currentTurn then
+        recentBloodAwards = {}
+        recentCampAwards = {}
+        recentAwardTurn = currentTurn
+    end
+
+    return currentTurn
+end
+
 local function TryReadField(source, key)
     if source == nil or key == nil then
         return nil
@@ -679,13 +694,41 @@ local function TryAwardBloodForKill(killedPlayerID, killedUnitID, killerPlayerID
         return
     end
 
-    local awardKey = tostring(GetCurrentTurn()) .. ":" .. tostring(killedPlayerID) .. ":" .. tostring(killedUnitID) .. ":" .. tostring(killerPlayerID)
+    local currentTurn = ClearAwardCachesForCurrentTurn()
+    local awardKey = tostring(currentTurn) .. ":" .. tostring(killedPlayerID) .. ":" .. tostring(killedUnitID) .. ":" .. tostring(killerPlayerID)
     if recentBloodAwards[awardKey] then
         return
     end
 
     recentBloodAwards[awardKey] = true
     ChangeBlood(killerPlayerID, GetParam("GRACE_BLOOD_PER_BARBARIAN_KILL", 1))
+end
+
+local function TryAwardBloodForBarbarianCamp(playerID, unitID, locationX, locationY, improvementType)
+    if playerID == nil or not HasBloodSampler(playerID) then
+        return
+    end
+
+    if not IsBarbarianCampImprovement(improvementType) then
+        return
+    end
+
+    local currentTurn = ClearAwardCachesForCurrentTurn()
+    local plotKey = tostring(locationX) .. "," .. tostring(locationY)
+    if Map ~= nil and Map.GetPlotIndex ~= nil then
+        local plotIndex = Map.GetPlotIndex(locationX, locationY)
+        if plotIndex ~= nil then
+            plotKey = tostring(plotIndex)
+        end
+    end
+
+    local awardKey = tostring(currentTurn) .. ":" .. plotKey .. ":" .. tostring(playerID)
+    if recentCampAwards[awardKey] then
+        return
+    end
+
+    recentCampAwards[awardKey] = true
+    ChangeBlood(playerID, GetParam("GRACE_BLOOD_PER_BARBARIAN_CAMP", 2))
 end
 
 local function OnCombat(combatResult)
@@ -707,7 +750,15 @@ local function OnUnitKilledInCombat(killedPlayerID, killedUnitID, killerPlayerID
     TryAwardBloodForKill(killedPlayerID, killedUnitID, killerPlayerID)
 end
 
-local function OnCityProjectCompleted(playerID, cityID, projectID)
+local function OnImprovementActivated(locationX, locationY, unitOwner, unitID, improvementType, improvementOwner, activationType, activationValue)
+    TryAwardBloodForBarbarianCamp(unitOwner, unitID, locationX, locationY, improvementType)
+end
+
+local function OnCityProjectCompleted(playerID, cityID, projectID, buildingIndex, x, y, bCancelled)
+    if bCancelled == true then
+        return
+    end
+
     if not IsGracePlayer(playerID) then
         return
     end
@@ -728,36 +779,24 @@ local function OnCityProjectCompleted(playerID, cityID, projectID)
             return
         end
 
-        if not SpendProjectBloodRemainder(playerID) then
-            return
-        end
-
         SetEnhancerLevel(playerID, enhancerProject)
         return
     end
 
     if projectType == PROJECT_BLOOD_SAMPLE then
-        if not SpendProjectBloodRemainder(playerID) then
-            return
-        end
-
         HandleBloodSampleAnalysis(playerID)
     elseif projectType == PROJECT_PATHOLOGY then
-        if not SpendProjectBloodRemainder(playerID) then
-            return
-        end
-
         HandlePathologyResearch(playerID)
     elseif projectType == PROJECT_REVIEW then
-        if not SpendProjectBloodRemainder(playerID) then
-            return
-        end
-
         HandleContainmentReview(playerID)
     end
 end
 
-local function OnPlayerTurnActivated(playerID)
+local function OnPlayerTurnActivated(playerID, bIsFirstTime)
+    if bIsFirstTime == false then
+        return
+    end
+
     if not IsGracePlayer(playerID) then
         return
     end
@@ -778,6 +817,14 @@ local function OnPlayerTurnActivated(playerID)
     if steroidLevel <= 0 then
         return
     end
+
+    local currentTurn = GetCurrentTurn()
+    local lastSteroidHealTurn = player:GetProperty(STEROID_LAST_HEAL_TURN)
+    if tonumber(lastSteroidHealTurn) == currentTurn then
+        return
+    end
+
+    player:SetProperty(STEROID_LAST_HEAL_TURN, currentTurn)
 
     local healAmount = steroidLevel * GetParam("GRACE_STEROID_HEALING", 5)
     if UnitManager == nil or UnitManager.ChangeDamage == nil then
@@ -800,16 +847,13 @@ local function OnUnitAddedToMap(playerID, unitID)
 end
 
 local function Initialize()
-    if Events.Combat ~= nil then
-        Events.Combat.Add(OnCombat)
-    else
-        Log("Events.Combat is unavailable; falling back to UnitKilledInCombat only.")
-    end
-
     if Events.UnitKilledInCombat ~= nil then
         Events.UnitKilledInCombat.Add(OnUnitKilledInCombat)
+    elseif Events.Combat ~= nil then
+        Events.Combat.Add(OnCombat)
+        Log("Events.UnitKilledInCombat is unavailable; Events.Combat will handle barbarian kill blood gain as fallback.")
     else
-        Log("Events.UnitKilledInCombat is unavailable; Events.Combat will handle barbarian kill blood gain when possible.")
+        Log("No compatible combat kill event is available; barbarian kill blood gain is inactive.")
     end
 
     if Events.CityProjectCompleted ~= nil then
@@ -822,6 +866,12 @@ local function Initialize()
         Events.UnitAddedToMap.Add(OnUnitAddedToMap)
     else
         Log("Events.UnitAddedToMap is unavailable; new units may need a turn-start refresh for Grace abilities.")
+    end
+
+    if Events.ImprovementActivated ~= nil then
+        Events.ImprovementActivated.Add(OnImprovementActivated)
+    else
+        Log("Events.ImprovementActivated is unavailable; barbarian camp blood gain is inactive.")
     end
 
     if Events.PlayerTurnActivated ~= nil then
