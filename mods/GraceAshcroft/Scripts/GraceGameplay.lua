@@ -376,6 +376,26 @@ local function SetEnhancerLevel(playerID, projectConfig)
     PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_ENHANCER_GAINED", LookupText(nameTag), targetLevel, maxLevel, GetBlood(playerID)))
 end
 
+local function ForceHealUnit(unit, healAmount)
+    if unit == nil or healAmount == nil or healAmount <= 0 then
+        return 0
+    end
+
+    if unit.GetDamage == nil or unit.ChangeDamage == nil then
+        return 0
+    end
+
+    local currentDamage = tonumber(unit:GetDamage()) or 0
+    if currentDamage <= 0 then
+        return 0
+    end
+
+    local actualHeal = math.min(healAmount, currentDamage)
+    unit:ChangeDamage(-actualHeal)
+
+    return actualHeal
+end
+
 local function GrantScience(playerID, amount, suppressNotification)
     local player = GetPlayer(playerID)
     if player == nil or amount <= 0 then
@@ -994,15 +1014,12 @@ local function OnPlayerTurnActivated(playerID, bIsFirstTime)
     player:SetProperty(STEROID_LAST_HEAL_TURN, currentTurn)
 
     local healAmount = steroidLevel * GetParam("GRACE_STEROID_HEALING", 5)
-    if UnitManager == nil or UnitManager.ChangeDamage == nil then
-        return
+    local totalHealed = 0
+    for _, unit in player:GetUnits():Members() do
+        totalHealed = totalHealed + ForceHealUnit(unit, healAmount)
     end
 
-    for _, unit in player:GetUnits():Members() do
-        if unit ~= nil and unit.GetDamage ~= nil and unit:GetDamage() > 0 then
-            UnitManager.ChangeDamage(unit, -healAmount)
-        end
-    end
+    Log("Steroid healing applied: level=" .. tostring(steroidLevel) .. ", healPerUnit=" .. tostring(healAmount) .. ", totalHealed=" .. tostring(totalHealed))
 end
 
 local function Initialize()
