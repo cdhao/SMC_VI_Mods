@@ -6,9 +6,15 @@ local HEMOLYTIC_LEVEL = "GRACE_HEMOLYTIC_LEVEL"
 local STABILIZER_LEVEL = "GRACE_STABILIZER_LEVEL"
 local STEROID_LEVEL = "GRACE_STEROID_LEVEL"
 
-local PROJECT_HEMOLYTIC = "PROJECT_GRACE_HEMOLYTIC_AGENT"
-local PROJECT_STABILIZER = "PROJECT_GRACE_STABILIZER"
-local PROJECT_STEROID = "PROJECT_GRACE_STEROID"
+local PROJECT_HEMOLYTIC_1 = "PROJECT_GRACE_HEMOLYTIC_1"
+local PROJECT_HEMOLYTIC_2 = "PROJECT_GRACE_HEMOLYTIC_2"
+local PROJECT_HEMOLYTIC_3 = "PROJECT_GRACE_HEMOLYTIC_3"
+local PROJECT_STABILIZER_1 = "PROJECT_GRACE_STABILIZER_1"
+local PROJECT_STABILIZER_2 = "PROJECT_GRACE_STABILIZER_2"
+local PROJECT_STABILIZER_3 = "PROJECT_GRACE_STABILIZER_3"
+local PROJECT_STEROID_1 = "PROJECT_GRACE_STEROID_1"
+local PROJECT_STEROID_2 = "PROJECT_GRACE_STEROID_2"
+local PROJECT_STEROID_3 = "PROJECT_GRACE_STEROID_3"
 local PROJECT_BLOOD_SAMPLE = "PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS"
 local PROJECT_PATHOLOGY = "PROJECT_GRACE_ABNORMAL_PATHOLOGY"
 local PROJECT_REVIEW = "PROJECT_GRACE_CONTAINMENT_REVIEW"
@@ -25,14 +31,27 @@ local STABILIZER_ABILITIES = {
     "ABILITY_GRACE_STABILIZER_3"
 }
 
+local ENHANCER_PROJECTS = {
+    [PROJECT_HEMOLYTIC_1] = { propertyName = HEMOLYTIC_LEVEL, maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", abilityTypes = HEMOLYTIC_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 1 },
+    [PROJECT_HEMOLYTIC_2] = { propertyName = HEMOLYTIC_LEVEL, maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", abilityTypes = HEMOLYTIC_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 2 },
+    [PROJECT_HEMOLYTIC_3] = { propertyName = HEMOLYTIC_LEVEL, maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", abilityTypes = HEMOLYTIC_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 3 },
+    [PROJECT_STABILIZER_1] = { propertyName = STABILIZER_LEVEL, maxParam = "GRACE_MAX_STABILIZER_LEVEL", abilityTypes = STABILIZER_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 1 },
+    [PROJECT_STABILIZER_2] = { propertyName = STABILIZER_LEVEL, maxParam = "GRACE_MAX_STABILIZER_LEVEL", abilityTypes = STABILIZER_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 2 },
+    [PROJECT_STABILIZER_3] = { propertyName = STABILIZER_LEVEL, maxParam = "GRACE_MAX_STABILIZER_LEVEL", abilityTypes = STABILIZER_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 3 },
+    [PROJECT_STEROID_1] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", abilityTypes = nil, nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 1 },
+    [PROJECT_STEROID_2] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", abilityTypes = nil, nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 2 },
+    [PROJECT_STEROID_3] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", abilityTypes = nil, nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 3 }
+}
+
 local BLOOD_PROJECTS = {
-    [PROJECT_HEMOLYTIC] = true,
-    [PROJECT_STABILIZER] = true,
-    [PROJECT_STEROID] = true,
     [PROJECT_BLOOD_SAMPLE] = true,
     [PROJECT_PATHOLOGY] = true,
     [PROJECT_REVIEW] = true
 }
+
+for projectType, _ in pairs(ENHANCER_PROJECTS) do
+    BLOOD_PROJECTS[projectType] = true
+end
 
 local recentBloodAwards = {}
 
@@ -280,15 +299,28 @@ local function GetEraScaledValue(baseParam, perEraParam)
     return baseValue + (perEraValue * GetEraIndex())
 end
 
-local function CanGrantEnhancer(playerID, propertyName, maxParam)
+local function GetEnhancerTargetLevel(projectConfig)
+    if projectConfig == nil then
+        return 0, 0
+    end
+
+    local maxLevel = GetParam(projectConfig.maxParam, 3)
+    local targetLevel = tonumber(projectConfig.level) or 0
+    return math.min(targetLevel, maxLevel), maxLevel
+end
+
+local function CanSetEnhancerLevel(playerID, projectConfig)
     local player = GetPlayer(playerID)
     if player == nil then
         return false
     end
 
-    local level = GetNumericPlayerProperty(player, propertyName)
-    local maxLevel = GetParam(maxParam, 3)
-    return level < maxLevel
+    local targetLevel = GetEnhancerTargetLevel(projectConfig)
+    if targetLevel <= 0 then
+        return false
+    end
+
+    return GetNumericPlayerProperty(player, projectConfig.propertyName) < targetLevel
 end
 
 local function SpendProjectBloodRemainder(playerID)
@@ -400,27 +432,30 @@ local function GetUnitByID(playerID, unitID)
     return nil
 end
 
-local function GrantEnhancer(playerID, propertyName, maxParam, abilityTypes, nameTagPrefix)
+local function SetEnhancerLevel(playerID, projectConfig)
     local player = GetPlayer(playerID)
     if player == nil then
         return
     end
 
-    local level = GetNumericPlayerProperty(player, propertyName)
-    local maxLevel = GetParam(maxParam, 3)
-    if level >= maxLevel then
+    local targetLevel, maxLevel = GetEnhancerTargetLevel(projectConfig)
+    if targetLevel <= 0 then
+        return
+    end
+
+    local level = GetNumericPlayerProperty(player, projectConfig.propertyName)
+    if level >= targetLevel then
         PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_CAPPED"))
         return
     end
 
-    local nextLevel = level + 1
-    player:SetProperty(propertyName, nextLevel)
-    if abilityTypes ~= nil then
+    player:SetProperty(projectConfig.propertyName, targetLevel)
+    if projectConfig.abilityTypes ~= nil then
         ApplyEnhancerLevelToUnits(playerID)
     end
 
-    local nameTag = nameTagPrefix .. tostring(nextLevel) .. "_NAME"
-    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_ENHANCER_GAINED", LookupText(nameTag), nextLevel, maxLevel, GetBlood(playerID)))
+    local nameTag = projectConfig.nameTagPrefix .. tostring(targetLevel) .. "_NAME"
+    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_ENHANCER_GAINED", LookupText(nameTag), targetLevel, maxLevel, GetBlood(playerID)))
 end
 
 local function GrantScience(playerID, amount)
@@ -686,8 +721,9 @@ local function OnCityProjectCompleted(playerID, cityID, projectID)
         return
     end
 
-    if projectType == PROJECT_HEMOLYTIC then
-        if not CanGrantEnhancer(playerID, HEMOLYTIC_LEVEL, "GRACE_MAX_HEMOLYTIC_LEVEL") then
+    local enhancerProject = ENHANCER_PROJECTS[projectType]
+    if enhancerProject ~= nil then
+        if not CanSetEnhancerLevel(playerID, enhancerProject) then
             PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_CAPPED"))
             return
         end
@@ -696,30 +732,11 @@ local function OnCityProjectCompleted(playerID, cityID, projectID)
             return
         end
 
-        GrantEnhancer(playerID, HEMOLYTIC_LEVEL, "GRACE_MAX_HEMOLYTIC_LEVEL", HEMOLYTIC_ABILITIES, "LOC_ABILITY_GRACE_HEMOLYTIC_")
-    elseif projectType == PROJECT_STABILIZER then
-        if not CanGrantEnhancer(playerID, STABILIZER_LEVEL, "GRACE_MAX_STABILIZER_LEVEL") then
-            PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_CAPPED"))
-            return
-        end
+        SetEnhancerLevel(playerID, enhancerProject)
+        return
+    end
 
-        if not SpendProjectBloodRemainder(playerID) then
-            return
-        end
-
-        GrantEnhancer(playerID, STABILIZER_LEVEL, "GRACE_MAX_STABILIZER_LEVEL", STABILIZER_ABILITIES, "LOC_ABILITY_GRACE_STABILIZER_")
-    elseif projectType == PROJECT_STEROID then
-        if not CanGrantEnhancer(playerID, STEROID_LEVEL, "GRACE_MAX_STEROID_LEVEL") then
-            PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_CAPPED"))
-            return
-        end
-
-        if not SpendProjectBloodRemainder(playerID) then
-            return
-        end
-
-        GrantEnhancer(playerID, STEROID_LEVEL, "GRACE_MAX_STEROID_LEVEL", nil, "LOC_ABILITY_GRACE_STEROID_")
-    elseif projectType == PROJECT_BLOOD_SAMPLE then
+    if projectType == PROJECT_BLOOD_SAMPLE then
         if not SpendProjectBloodRemainder(playerID) then
             return
         end
