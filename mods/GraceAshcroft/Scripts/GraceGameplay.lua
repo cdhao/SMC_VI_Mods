@@ -2,8 +2,6 @@ local CIVILIZATION_ELPIS_PROTOCOL = "CIVILIZATION_ELPIS_PROTOCOL"
 local RESOURCE_INFECTED_BLOOD = "RESOURCE_INFECTED_BLOOD"
 local WRITING_BOOST_GRANTED = "GRACE_WRITING_BOOST_GRANTED"
 
-local HEMOLYTIC_LEVEL = "GRACE_HEMOLYTIC_LEVEL"
-local STABILIZER_LEVEL = "GRACE_STABILIZER_LEVEL"
 local STEROID_LEVEL = "GRACE_STEROID_LEVEL"
 local STEROID_LAST_HEAL_TURN = "GRACE_STEROID_LAST_HEAL_TURN"
 
@@ -18,36 +16,24 @@ local PROJECT_STEROID_2 = "PROJECT_GRACE_STEROID_2"
 local PROJECT_STEROID_3 = "PROJECT_GRACE_STEROID_3"
 local PROJECT_BLOOD_SAMPLE = "PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS"
 local PROJECT_PATHOLOGY = "PROJECT_GRACE_ABNORMAL_PATHOLOGY"
-local PROJECT_REVIEW = "PROJECT_GRACE_CONTAINMENT_REVIEW"
-
-local HEMOLYTIC_ABILITIES = {
-    "ABILITY_GRACE_HEMOLYTIC_1",
-    "ABILITY_GRACE_HEMOLYTIC_2",
-    "ABILITY_GRACE_HEMOLYTIC_3"
-}
-
-local STABILIZER_ABILITIES = {
-    "ABILITY_GRACE_STABILIZER_1",
-    "ABILITY_GRACE_STABILIZER_2",
-    "ABILITY_GRACE_STABILIZER_3"
-}
+local PROJECT_STRATEGIC = "PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS"
 
 local ENHANCER_PROJECTS = {
-    [PROJECT_HEMOLYTIC_1] = { propertyName = HEMOLYTIC_LEVEL, maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", abilityTypes = HEMOLYTIC_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 1 },
-    [PROJECT_HEMOLYTIC_2] = { propertyName = HEMOLYTIC_LEVEL, maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", abilityTypes = HEMOLYTIC_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 2 },
-    [PROJECT_HEMOLYTIC_3] = { propertyName = HEMOLYTIC_LEVEL, maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", abilityTypes = HEMOLYTIC_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 3 },
-    [PROJECT_STABILIZER_1] = { propertyName = STABILIZER_LEVEL, maxParam = "GRACE_MAX_STABILIZER_LEVEL", abilityTypes = STABILIZER_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 1 },
-    [PROJECT_STABILIZER_2] = { propertyName = STABILIZER_LEVEL, maxParam = "GRACE_MAX_STABILIZER_LEVEL", abilityTypes = STABILIZER_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 2 },
-    [PROJECT_STABILIZER_3] = { propertyName = STABILIZER_LEVEL, maxParam = "GRACE_MAX_STABILIZER_LEVEL", abilityTypes = STABILIZER_ABILITIES, nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 3 },
-    [PROJECT_STEROID_1] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", abilityTypes = nil, nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 1 },
-    [PROJECT_STEROID_2] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", abilityTypes = nil, nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 2 },
-    [PROJECT_STEROID_3] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", abilityTypes = nil, nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 3 }
+    [PROJECT_HEMOLYTIC_1] = { maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 1 },
+    [PROJECT_HEMOLYTIC_2] = { maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 2 },
+    [PROJECT_HEMOLYTIC_3] = { maxParam = "GRACE_MAX_HEMOLYTIC_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_HEMOLYTIC_", level = 3 },
+    [PROJECT_STABILIZER_1] = { maxParam = "GRACE_MAX_STABILIZER_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 1 },
+    [PROJECT_STABILIZER_2] = { maxParam = "GRACE_MAX_STABILIZER_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 2 },
+    [PROJECT_STABILIZER_3] = { maxParam = "GRACE_MAX_STABILIZER_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_STABILIZER_", level = 3 },
+    [PROJECT_STEROID_1] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 1 },
+    [PROJECT_STEROID_2] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 2 },
+    [PROJECT_STEROID_3] = { propertyName = STEROID_LEVEL, maxParam = "GRACE_MAX_STEROID_LEVEL", nameTagPrefix = "LOC_ABILITY_GRACE_STEROID_", level = 3 }
 }
 
 local BLOOD_PROJECTS = {
     [PROJECT_BLOOD_SAMPLE] = true,
     [PROJECT_PATHOLOGY] = true,
-    [PROJECT_REVIEW] = true
+    [PROJECT_STRATEGIC] = true
 }
 
 for projectType, _ in pairs(ENHANCER_PROJECTS) do
@@ -57,6 +43,7 @@ end
 local recentBloodAwards = {}
 local recentCampAwards = {}
 local recentAwardTurn = nil
+local ClearAwardCachesForCurrentTurn = nil
 
 local TECH_WRITING_INDEX = nil
 if GameInfo.Technologies["TECH_WRITING"] ~= nil then
@@ -311,6 +298,20 @@ local function GetProjectType(projectID)
     return nil
 end
 
+local function GetCityByID(playerID, cityID)
+    local player = GetPlayer(playerID)
+    if player == nil or player.GetCities == nil or cityID == nil then
+        return nil
+    end
+
+    local cities = player:GetCities()
+    if cities == nil or cities.FindID == nil then
+        return nil
+    end
+
+    return cities:FindID(cityID)
+end
+
 local function GetEraIndex()
     if Game ~= nil and Game.GetEras ~= nil then
         local eras = Game.GetEras()
@@ -320,12 +321,6 @@ local function GetEraIndex()
     end
 
     return 0
-end
-
-local function GetEraScaledValue(baseParam, perEraParam)
-    local baseValue = GetParam(baseParam, 0)
-    local perEraValue = GetParam(perEraParam, 0)
-    return baseValue + (perEraValue * GetEraIndex())
 end
 
 local function GetEnhancerTargetLevel(projectConfig)
@@ -344,96 +339,16 @@ local function CanSetEnhancerLevel(playerID, projectConfig)
         return false
     end
 
+    if projectConfig.propertyName == nil then
+        return true
+    end
+
     local targetLevel = GetEnhancerTargetLevel(projectConfig)
     if targetLevel <= 0 then
         return false
     end
 
     return GetNumericPlayerProperty(player, projectConfig.propertyName) < targetLevel
-end
-
-local function GetUnitAbility(unit)
-    if unit == nil or unit.GetAbility == nil then
-        return nil
-    end
-
-    return unit:GetAbility()
-end
-
-local function GetAbilityCount(unitAbility, abilityType)
-    if unitAbility == nil or unitAbility.GetAbilityCount == nil then
-        return 0
-    end
-
-    return tonumber(unitAbility:GetAbilityCount(abilityType)) or 0
-end
-
-local function ChangeAbilityCount(unitAbility, abilityType, amount)
-    if unitAbility == nil or unitAbility.ChangeAbilityCount == nil or amount == 0 then
-        return
-    end
-
-    unitAbility:ChangeAbilityCount(abilityType, amount)
-end
-
-local function SetUnitAbilityLevel(unit, abilityTypes, level)
-    local unitAbility = GetUnitAbility(unit)
-    if unitAbility == nil or abilityTypes == nil then
-        return false
-    end
-
-    local targetAbility = abilityTypes[level]
-    for _, abilityType in ipairs(abilityTypes) do
-        local count = GetAbilityCount(unitAbility, abilityType)
-        if abilityType == targetAbility then
-            if count == 0 then
-                ChangeAbilityCount(unitAbility, abilityType, 1)
-            elseif count > 1 then
-                ChangeAbilityCount(unitAbility, abilityType, -(count - 1))
-            end
-        elseif count > 0 then
-            ChangeAbilityCount(unitAbility, abilityType, -count)
-        end
-    end
-
-    return true
-end
-
-local function ApplyEnhancerLevelToUnit(playerID, unit)
-    local player = GetPlayer(playerID)
-    if player == nil or unit == nil then
-        return
-    end
-
-    SetUnitAbilityLevel(unit, HEMOLYTIC_ABILITIES, GetNumericPlayerProperty(player, HEMOLYTIC_LEVEL))
-    SetUnitAbilityLevel(unit, STABILIZER_ABILITIES, GetNumericPlayerProperty(player, STABILIZER_LEVEL))
-end
-
-local function ApplyEnhancerLevelToUnits(playerID)
-    local player = GetPlayer(playerID)
-    if player == nil or player.GetUnits == nil then
-        return
-    end
-
-    for _, unit in player:GetUnits():Members() do
-        ApplyEnhancerLevelToUnit(playerID, unit)
-    end
-end
-
-local function GetUnitByID(playerID, unitID)
-    if UnitManager ~= nil and UnitManager.GetUnit ~= nil then
-        return UnitManager.GetUnit(playerID, unitID)
-    end
-
-    local player = GetPlayer(playerID)
-    if player ~= nil and player.GetUnits ~= nil then
-        local units = player:GetUnits()
-        if units ~= nil and units.FindID ~= nil then
-            return units:FindID(unitID)
-        end
-    end
-
-    return nil
 end
 
 local function SetEnhancerLevel(playerID, projectConfig)
@@ -447,22 +362,21 @@ local function SetEnhancerLevel(playerID, projectConfig)
         return
     end
 
-    local level = GetNumericPlayerProperty(player, projectConfig.propertyName)
-    if level >= targetLevel then
-        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_CAPPED"))
-        return
-    end
+    if projectConfig.propertyName ~= nil then
+        local level = GetNumericPlayerProperty(player, projectConfig.propertyName)
+        if level >= targetLevel then
+            PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PROJECT_CAPPED"))
+            return
+        end
 
-    player:SetProperty(projectConfig.propertyName, targetLevel)
-    if projectConfig.abilityTypes ~= nil then
-        ApplyEnhancerLevelToUnits(playerID)
+        player:SetProperty(projectConfig.propertyName, targetLevel)
     end
 
     local nameTag = projectConfig.nameTagPrefix .. tostring(targetLevel) .. "_NAME"
     PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_ENHANCER_GAINED", LookupText(nameTag), targetLevel, maxLevel, GetBlood(playerID)))
 end
 
-local function GrantScience(playerID, amount)
+local function GrantScience(playerID, amount, suppressNotification)
     local player = GetPlayer(playerID)
     if player == nil or amount <= 0 then
         return false
@@ -471,7 +385,9 @@ local function GrantScience(playerID, amount)
     if player.GrantYield ~= nil and GameInfo.Yields["YIELD_SCIENCE"] ~= nil then
         player:GrantYield(GameInfo.Yields["YIELD_SCIENCE"].Index, amount)
         Log("Granted " .. tostring(amount) .. " Science through GrantYield.")
-        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_SCIENCE_GAINED", amount, GetBlood(playerID)))
+        if not suppressNotification then
+            PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_SCIENCE_GAINED", amount, GetBlood(playerID)))
+        end
         return true
     end
 
@@ -479,7 +395,9 @@ local function GrantScience(playerID, amount)
     if techs ~= nil and techs.ChangeCurrentResearchProgress ~= nil then
         techs:ChangeCurrentResearchProgress(amount)
         Log("Granted " .. tostring(amount) .. " Science through current research progress.")
-        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_SCIENCE_GAINED", amount, GetBlood(playerID)))
+        if not suppressNotification then
+            PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_SCIENCE_GAINED", amount, GetBlood(playerID)))
+        end
         return true
     end
 
@@ -487,7 +405,7 @@ local function GrantScience(playerID, amount)
     return false
 end
 
-local function GrantGreatScientistPoints(playerID, amount)
+local function GrantGreatScientistPoints(playerID, amount, suppressNotification)
     local player = GetPlayer(playerID)
     if player == nil or amount <= 0 then
         return false
@@ -506,8 +424,213 @@ local function GrantGreatScientistPoints(playerID, amount)
 
     points:ChangePointsTotal(GameInfo.GreatPersonClasses["GREAT_PERSON_CLASS_SCIENTIST"].Index, amount)
     Log("Granted " .. tostring(amount) .. " Great Scientist points.")
-    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_SCIENTIST_POINTS_GAINED", amount, GetBlood(playerID)))
+    if not suppressNotification then
+        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_SCIENTIST_POINTS_GAINED", amount, GetBlood(playerID)))
+    end
     return true
+end
+
+local function GetCityScienceYield(city)
+    if city == nil or city.GetYield == nil then
+        return 0
+    end
+
+    if YieldTypes ~= nil and YieldTypes.SCIENCE ~= nil then
+        return tonumber(city:GetYield(YieldTypes.SCIENCE)) or 0
+    end
+
+    if GameInfo.Yields["YIELD_SCIENCE"] ~= nil then
+        return tonumber(city:GetYield(GameInfo.Yields["YIELD_SCIENCE"].Index)) or 0
+    end
+
+    return 0
+end
+
+local function GetCityGreatScientistPointsPerTurn(city)
+    if city == nil then
+        return 0
+    end
+
+    if city.GetGreatPeoplePoints ~= nil then
+        local cityPoints = city:GetGreatPeoplePoints()
+        if cityPoints ~= nil and cityPoints.GetPointsPerTurn ~= nil and GameInfo.GreatPersonClasses["GREAT_PERSON_CLASS_SCIENTIST"] ~= nil then
+            return tonumber(cityPoints:GetPointsPerTurn(GameInfo.GreatPersonClasses["GREAT_PERSON_CLASS_SCIENTIST"].Index)) or 0
+        end
+    end
+
+    local amount = 0
+    local cityDistricts = nil
+    if city.GetDistricts ~= nil then
+        cityDistricts = city:GetDistricts()
+    end
+
+    if cityDistricts ~= nil and cityDistricts.HasDistrict ~= nil then
+        for row in GameInfo.District_GreatPersonPoints() do
+            if row.GreatPersonClassType == "GREAT_PERSON_CLASS_SCIENTIST" then
+                local district = GameInfo.Districts[row.DistrictType]
+                if district ~= nil and cityDistricts:HasDistrict(district.Index, true) then
+                    amount = amount + (tonumber(row.PointsPerTurn) or 0)
+                end
+            end
+        end
+    end
+
+    local cityBuildings = nil
+    if city.GetBuildings ~= nil then
+        cityBuildings = city:GetBuildings()
+    end
+
+    if cityBuildings ~= nil and cityBuildings.HasBuilding ~= nil then
+        for row in GameInfo.Building_GreatPersonPoints() do
+            if row.GreatPersonClassType == "GREAT_PERSON_CLASS_SCIENTIST" then
+                local building = GameInfo.Buildings[row.BuildingType]
+                if building ~= nil and cityBuildings:HasBuilding(building.Index) then
+                    amount = amount + (tonumber(row.PointsPerTurn) or 0)
+                end
+            end
+        end
+    end
+
+    return amount
+end
+
+local function CalculatePathologyRewardPerBlood(city)
+    local percent = GetParam("GRACE_PATHOLOGY_CITY_YIELD_PERCENT", 50) / 100
+    local minimumReward = GetParam("GRACE_PATHOLOGY_MIN_REWARD_PER_BLOOD", 5)
+    local currentEra = GetEraIndex()
+    local scientistPoints = math.max(minimumReward, math.floor((GetCityGreatScientistPointsPerTurn(city) * percent) + currentEra))
+    local science = math.max(minimumReward, math.floor((GetCityScienceYield(city) * percent) + (currentEra * 2)))
+
+    return scientistPoints, science
+end
+
+local function GrantPathologyFundingRewards(playerID, city, processedBlood)
+    local scientistPointsPerBlood, sciencePerBlood = CalculatePathologyRewardPerBlood(city)
+    local scientistPoints = processedBlood * scientistPointsPerBlood
+    local science = processedBlood * sciencePerBlood
+
+    GrantGreatScientistPoints(playerID, scientistPoints, true)
+    GrantScience(playerID, science, true)
+
+    return scientistPoints, science
+end
+
+local function IsResourceUnlockedForPlayer(player, resource)
+    if player == nil or resource == nil then
+        return false
+    end
+
+    if resource.PrereqTech == nil then
+        return true
+    end
+
+    local tech = GameInfo.Technologies[resource.PrereqTech]
+    if tech == nil then
+        return true
+    end
+
+    local techs = player:GetTechs()
+    if techs == nil or techs.HasTech == nil then
+        return false
+    end
+
+    return techs:HasTech(tech.Index)
+end
+
+local function GetResourceEra(resource)
+    if resource == nil then
+        return 0
+    end
+
+    local revealedEra = tonumber(resource.RevealedEra)
+    if revealedEra ~= nil then
+        return revealedEra
+    end
+
+    if resource.PrereqTech ~= nil and GameInfo.Technologies[resource.PrereqTech] ~= nil then
+        local tech = GameInfo.Technologies[resource.PrereqTech]
+        if tech.EraType ~= nil and GameInfo.Eras[tech.EraType] ~= nil then
+            return GameInfo.Eras[tech.EraType].Index
+        end
+    end
+
+    return 0
+end
+
+local function GetPlayerResourceAmount(resources, resource)
+    if resources == nil or resources.GetResourceAmount == nil or resource == nil then
+        return 0
+    end
+
+    return tonumber(resources:GetResourceAmount(resource.Index)) or 0
+end
+
+local function GetResourceStockpileCap(resources, resource)
+    if resources ~= nil and resources.GetResourceStockpileCap ~= nil and resource ~= nil then
+        local cap = tonumber(resources:GetResourceStockpileCap(resource.Index))
+        if cap ~= nil and cap > 0 then
+            return cap
+        end
+    end
+
+    if GameInfo.Resource_Consumption ~= nil then
+        for consumption in GameInfo.Resource_Consumption() do
+            if consumption.ResourceType == resource.ResourceType and consumption.StockpileCap ~= nil then
+                return tonumber(consumption.StockpileCap) or 999
+            end
+        end
+    end
+
+    return 999
+end
+
+local function FindStrategicSynthesisTarget(playerID, resourcePerBlood)
+    local player = GetPlayer(playerID)
+    if player == nil or player.GetResources == nil then
+        return nil
+    end
+
+    local resources = player:GetResources()
+    if resources == nil then
+        return nil
+    end
+
+    local candidates = {}
+    for resource in GameInfo.Resources() do
+        if resource.ResourceClassType == "RESOURCECLASS_STRATEGIC" and resource.ResourceType ~= RESOURCE_INFECTED_BLOOD and IsResourceUnlockedForPlayer(player, resource) then
+            local amount = GetPlayerResourceAmount(resources, resource)
+            local cap = GetResourceStockpileCap(resources, resource)
+            local remaining = cap - amount
+            if remaining >= resourcePerBlood then
+                table.insert(candidates, {
+                    index = resource.Index,
+                    resourceType = resource.ResourceType,
+                    name = resource.Name,
+                    amount = amount,
+                    era = GetResourceEra(resource),
+                    capacityBlood = math.floor(remaining / resourcePerBlood)
+                })
+            end
+        end
+    end
+
+    if #candidates == 0 then
+        return nil
+    end
+
+    table.sort(candidates, function(a, b)
+        if a.amount ~= b.amount then
+            return a.amount < b.amount
+        end
+
+        if a.era ~= b.era then
+            return a.era > b.era
+        end
+
+        return a.resourceType < b.resourceType
+    end)
+
+    return candidates[1]
 end
 
 local function RandomIndex(maxValue)
@@ -570,21 +693,63 @@ local function TryTriggerCurrentEraEureka(playerID)
     return true
 end
 
-local function HandleBloodSampleAnalysis(playerID)
+local function HandleBloodSampleAnalysis(playerID, city)
     if TryTriggerCurrentEraEureka(playerID) then
         return
     end
 
-    GrantScience(playerID, GetEraScaledValue("GRACE_EUREKA_FALLBACK_SCIENCE", "GRACE_EUREKA_FALLBACK_SCIENCE_PER_ERA"))
+    local scientistPoints, science = GrantPathologyFundingRewards(playerID, city, 1)
+    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_EUREKA_FALLBACK_PATHOLOGY", scientistPoints, science, GetBlood(playerID)))
 end
 
-local function HandlePathologyResearch(playerID)
-    GrantGreatScientistPoints(playerID, GetEraScaledValue("GRACE_GREAT_SCIENTIST_POINTS", "GRACE_GREAT_SCIENTIST_POINTS_PER_ERA"))
+local function HandlePathologyFunding(playerID, city)
+    local maxBlood = math.max(1, math.min(GetParam("GRACE_PATHOLOGY_MAX_BLOOD_PER_PROJECT", 4), 4))
+    local extraBlood = math.min(maxBlood - 1, GetBlood(playerID))
+    local processedBlood = 1 + extraBlood
+
+    if extraBlood > 0 then
+        ChangeBlood(playerID, -extraBlood, true)
+    end
+
+    local scientistPoints, science = GrantPathologyFundingRewards(playerID, city, processedBlood)
+    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_PATHOLOGY_DONE", processedBlood, extraBlood, scientistPoints, science, GetBlood(playerID)))
 end
 
-local function HandleContainmentReview(playerID)
-    GrantScience(playerID, GetEraScaledValue("GRACE_CONTAINMENT_REVIEW_SCIENCE", "GRACE_CONTAINMENT_REVIEW_SCIENCE_PER_ERA"))
-    GrantGreatScientistPoints(playerID, GetEraScaledValue("GRACE_CONTAINMENT_REVIEW_GREAT_SCIENTIST_POINTS", "GRACE_CONTAINMENT_REVIEW_GREAT_SCIENTIST_POINTS_PER_ERA"))
+local function HandleStrategicMaterialSynthesis(playerID)
+    local player = GetPlayer(playerID)
+    if player == nil or player.GetResources == nil then
+        return
+    end
+
+    local resources = player:GetResources()
+    if resources == nil or resources.ChangeResourceAmount == nil then
+        return
+    end
+
+    local resourcePerBlood = math.max(1, GetParam("GRACE_STRATEGIC_RESOURCE_PER_BLOOD", 2))
+    local target = FindStrategicSynthesisTarget(playerID, resourcePerBlood)
+    if target == nil then
+        ChangeBlood(playerID, 1, true)
+        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_NO_TARGET", GetBlood(playerID)))
+        return
+    end
+
+    local maxBlood = math.max(1, math.min(GetParam("GRACE_STRATEGIC_MAX_BLOOD_PER_PROJECT", 5), 5))
+    local processedBlood = math.min(maxBlood, 1 + GetBlood(playerID), target.capacityBlood)
+    if processedBlood <= 0 then
+        ChangeBlood(playerID, 1, true)
+        PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_NO_TARGET", GetBlood(playerID)))
+        return
+    end
+
+    local extraBlood = processedBlood - 1
+    if extraBlood > 0 then
+        ChangeBlood(playerID, -extraBlood, true)
+    end
+
+    local resourceGained = processedBlood * resourcePerBlood
+    resources:ChangeResourceAmount(target.index, resourceGained)
+    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_DONE", processedBlood, extraBlood, LookupText(target.name), resourceGained, GetBlood(playerID)))
 end
 
 local function GetCurrentTurn()
@@ -595,7 +760,7 @@ local function GetCurrentTurn()
     return 0
 end
 
-local function ClearAwardCachesForCurrentTurn()
+function ClearAwardCachesForCurrentTurn()
     local currentTurn = GetCurrentTurn()
     if recentAwardTurn ~= currentTurn then
         recentBloodAwards = {}
@@ -738,11 +903,13 @@ local function OnCombat(combatResult)
     local defenderPlayerID = ExtractParticipantPlayerID(defender)
 
     if IsParticipantDead(defender) then
-        TryAwardBloodForKill(defenderPlayerID, ExtractParticipantUnitID(defender), attackerPlayerID)
+        local defenderUnitID = ExtractParticipantUnitID(defender)
+        TryAwardBloodForKill(defenderPlayerID, defenderUnitID, attackerPlayerID)
     end
 
     if IsParticipantDead(attacker) then
-        TryAwardBloodForKill(attackerPlayerID, ExtractParticipantUnitID(attacker), defenderPlayerID)
+        local attackerUnitID = ExtractParticipantUnitID(attacker)
+        TryAwardBloodForKill(attackerPlayerID, attackerUnitID, defenderPlayerID)
     end
 end
 
@@ -783,12 +950,13 @@ local function OnCityProjectCompleted(playerID, cityID, projectID, buildingIndex
         return
     end
 
+    local city = GetCityByID(playerID, cityID)
     if projectType == PROJECT_BLOOD_SAMPLE then
-        HandleBloodSampleAnalysis(playerID)
+        HandleBloodSampleAnalysis(playerID, city)
     elseif projectType == PROJECT_PATHOLOGY then
-        HandlePathologyResearch(playerID)
-    elseif projectType == PROJECT_REVIEW then
-        HandleContainmentReview(playerID)
+        HandlePathologyFunding(playerID, city)
+    elseif projectType == PROJECT_STRATEGIC then
+        HandleStrategicMaterialSynthesis(playerID)
     end
 end
 
@@ -807,7 +975,6 @@ local function OnPlayerTurnActivated(playerID, bIsFirstTime)
     end
 
     TryGrantOpeningWritingEureka(playerID)
-    ApplyEnhancerLevelToUnits(playerID)
 
     if player.GetUnits == nil then
         return
@@ -838,14 +1005,6 @@ local function OnPlayerTurnActivated(playerID, bIsFirstTime)
     end
 end
 
-local function OnUnitAddedToMap(playerID, unitID)
-    if not IsGracePlayer(playerID) then
-        return
-    end
-
-    ApplyEnhancerLevelToUnit(playerID, GetUnitByID(playerID, unitID))
-end
-
 local function Initialize()
     if Events.UnitKilledInCombat ~= nil then
         Events.UnitKilledInCombat.Add(OnUnitKilledInCombat)
@@ -860,12 +1019,6 @@ local function Initialize()
         Events.CityProjectCompleted.Add(OnCityProjectCompleted)
     else
         Log("Events.CityProjectCompleted is unavailable; project rewards are inactive.")
-    end
-
-    if Events.UnitAddedToMap ~= nil then
-        Events.UnitAddedToMap.Add(OnUnitAddedToMap)
-    else
-        Log("Events.UnitAddedToMap is unavailable; new units may need a turn-start refresh for Grace abilities.")
     end
 
     if Events.ImprovementActivated ~= nil then

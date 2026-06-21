@@ -3,13 +3,13 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '厄尔庇斯协议'),
     ('zh_Hans_CN', 'LOC_CIVILIZATION_ELPIS_PROTOCOL_ADJECTIVE', '厄尔庇斯协议的'),
     ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_NAME', '感染样本管制'),
-    ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '偏好靠近河流与丘陵出生。开局触发“文字”尤里卡。特色区域“方舟”替代学院，方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力。研究“文字”后，击杀蛮族单位可获得战略资源感染者血液，再通过方舟项目转化为战斗强化、科技值、大科学家点数或尤里卡。'),
+    ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '偏好靠近河流与丘陵出生。开局触发“文字”尤里卡。特色区域“方舟”替代学院，方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力。研究“文字”后，击杀蛮族单位可获得战略资源感染者血液，再通过方舟项目转化为战斗强化、战略物资、科研收益或尤里卡。BSAA补给箱：单位击杀敌方作战单位时，获得相当于该单位基础 [ICON_Strength] 战斗力 50% 的 [ICON_Gold] 金币。'),
 
     ('zh_Hans_CN', 'LOC_LEADER_GRACE_ASHCROFT_NAME', '格蕾丝·阿什克罗夫特'),
     ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_NAME', '隔离线调查员'),
-    ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_DESCRIPTION', '清剿蛮族威胁并回收感染样本。通过短周期城市项目将感染者血液制备为溶血剂、稳定剂、类固醇，或转化为科研成果。'),
+    ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_DESCRIPTION', '清剿蛮族威胁并回收感染样本。通过短周期城市项目将感染者血液制备为溶血剂、稳定剂、类固醇，或转化为后勤与科研成果。'),
     ('zh_Hans_CN', 'LOC_PEDIA_LEADERS_PAGE_LEADER_GRACE_ASHCROFT_QUOTE', '每一份样本都是下一次生还的证据。'),
-    ('zh_Hans_CN', 'LOC_LOADING_INFO_LEADER_GRACE_ASHCROFT', '格蕾丝·阿什克罗夫特，隔离线的灯仍未熄灭。清剿失控威胁，回收危险样本，用方舟把恐惧转化为秩序、治疗和真相。'),
+    ('zh_Hans_CN', 'LOC_LOADING_INFO_LEADER_GRACE_ASHCROFT', '格蕾丝·阿什克罗夫特，隔离线的灯仍未熄灭。厄尔庇斯协议会清剿失控威胁，回收危险样本，用方舟和BSAA补给箱把恐惧转化为秩序、后勤、治疗和真相。'),
 
     ('zh_Hans_CN', 'LOC_CITY_NAME_RHODES_HILL', '罗兹山'),
     ('zh_Hans_CN', 'LOC_CITY_NAME_ELPIS_SITE', '厄尔庇斯站点'),
@@ -69,15 +69,15 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
 
     ('zh_Hans_CN', 'LOC_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS_NAME', '血液样本分析'),
     ('zh_Hans_CN', 'LOC_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS_SHORT_NAME', '样本分析'),
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS_DESCRIPTION', '消耗 1 感染者血液，随机触发一个当前时代可用尤里卡。如果没有可触发的尤里卡，则获得科技值补偿。'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS_DESCRIPTION', '消耗 1 感染者血液，随机触发一个当前时代可用的尤里卡。如果没有可触发的尤里卡，则获得相当于处理 1 份血液的病理人才资助奖励。'),
 
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_NAME', '异常病理研究'),
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_SHORT_NAME', '病理研究'),
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_DESCRIPTION', '消耗 1 感染者血液，获得大科学家点数。奖励随时代提高。'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_NAME', '病理人才资助'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_SHORT_NAME', '人才资助'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_DESCRIPTION', '开始项目需要 1 感染者血液。完成时最多额外处理 3 份库存血液，总处理 1-4 份。每处理 1 份血液，获得基于当前城市每回合大科学家点数 50% 和时代序号的大科学家点数，并获得基于当前城市每回合科技值 50% 和时代序号的科技值；每项每血最低 5。'),
 
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_CONTAINMENT_REVIEW_NAME', '隔离协议复盘'),
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_CONTAINMENT_REVIEW_SHORT_NAME', '协议复盘'),
-    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_CONTAINMENT_REVIEW_DESCRIPTION', '消耗 1 感染者血液，获得科技值和少量大科学家点数。奖励随时代提高。'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS_NAME', '战略物资合成'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS_SHORT_NAME', '物资合成'),
+    ('zh_Hans_CN', 'LOC_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS_DESCRIPTION', '开始项目需要 1 感染者血液。完成时最多额外处理 4 份库存血液，总处理 1-5 份。每处理 1 份血液，获得同一种已解锁战略资源 2 点。优先选择当前库存最低的资源；库存相同时优先选择时代较新的资源。'),
 
     ('zh_Hans_CN', 'LOC_ABILITY_GRACE_HEMOLYTIC_1_NAME', '溶血剂 I'),
     ('zh_Hans_CN', 'LOC_ABILITY_GRACE_HEMOLYTIC_1_DESCRIPTION', '对蛮族单位 +5 [ICON_Strength] 战斗力。'),
@@ -111,6 +111,10 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_ENHANCER_GAINED', '获得 {1_Name} 强化（{2_num}/{3_num}）。当前血液：{4_num}。'),
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_SCIENCE_GAINED', '获得 {1_num} 科技值。当前血液：{2_num}。'),
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_SCIENTIST_POINTS_GAINED', '获得 {1_num} 大科学家点数。当前血液：{2_num}。'),
-    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_EUREKA_TRIGGERED', '触发 {1_Name} 尤里卡。当前血液：{2_num}。'),
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_EUREKA_TRIGGERED', '血液样本分析完成：触发“{1_Name}”尤里卡。当前血液：{2_num}。'),
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_WRITING_EUREKA', '方舟协议启动：已触发“文字”尤里卡。'),
-    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_EUREKA_FALLBACK', '没有可触发的尤里卡，已转化为 {1_num} 科技值。');
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_BSAA_GOLD_GAINED', 'BSAA补给箱回收物资：获得 {1_num} 金币。'),
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_DONE', '战略物资合成完成：本次处理 {1_num} 份感染者血液，额外消耗 {2_num}，获得 {3_Name} +{4_num}，剩余血液 {5_num}。'),
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_NO_TARGET', '战略物资合成中止：没有可进行合成的战略资源，已返还启动消耗。当前血液：{1_num}。'),
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_PATHOLOGY_DONE', '病理人才资助完成：本次处理 {1_num} 份感染者血液，额外消耗 {2_num}，获得 {3_num} 大科学家点数和 {4_num} 科技值，剩余血液 {5_num}。'),
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_EUREKA_FALLBACK_PATHOLOGY', '当前时代没有可触发的尤里卡。样本转入病理人才资助，获得 {1_num} 大科学家点数和 {2_num} 科技值。当前血液：{3_num}。');
