@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod id="6b8f93c1-7c19-4f06-a7c5-9ef0f1c7c911" version="1">
+  <Properties>
+    <Name>Grace Ashcroft - Elpis Protocol</Name>
+    <Description>Adds Grace Ashcroft and the Elpis Protocol civilization.</Description>
+    <Teaser>Clear barbarian threats, collect Infected Blood, and convert samples into combat and science.</Teaser>
+    <Authors>Codex</Authors>
+    <CompatibleVersions>1.2,2.0</CompatibleVersions>
+  </Properties>
+  <Dependencies>
+    <Mod id="4873eb62-8ccc-4574-b784-dda455e74e68" title="Expansion: Gathering Storm" />
+    <Mod id="1B28771A-C749-434B-9053-D1380C553DE9" title="Expansion: Rise and Fall" />
+  </Dependencies>
+  <FrontEndActions>
+    <UpdateDatabase id="GraceConfig">
+      <File>Data/Config.sql</File>
+    </UpdateDatabase>
+    <UpdateText id="GraceTextFrontEnd">
+      <File>Text/GraceAshcroft_zh_Hans_CN.sql</File>
+    </UpdateText>
+    <UpdateIcons id="GraceIconsFrontEnd">
+      <File>Icons/GraceIcons.sql</File>
+    </UpdateIcons>
+    <UpdateArt id="GraceArtFrontEnd">
+      <File>GraceAshcroft.dep</File>
+    </UpdateArt>
+  </FrontEndActions>
+  <InGameActions>
+    <UpdateDatabase id="GraceGameplay">
+      <Properties>
+        <LoadOrder>1000</LoadOrder>
+      </Properties>
+      <File>Data/Gameplay.sql</File>
+    </UpdateDatabase>
+    <UpdateText id="GraceTextInGame">
+      <File>Text/GraceAshcroft_zh_Hans_CN.sql</File>
+    </UpdateText>
+    <UpdateIcons id="GraceIconsInGame">
+      <File>Icons/GraceIcons.sql</File>
+    </UpdateIcons>
+    <UpdateArt id="GraceArtInGame">
+      <File>GraceAshcroft.dep</File>
+    </UpdateArt>
+    <AddGameplayScripts id="GraceGameplayScripts">
+      <Properties>
+        <LoadOrder>1000</LoadOrder>
+      </Properties>
+      <File>Scripts/GraceGameplay.lua</File>
+    </AddGameplayScripts>
+  </InGameActions>
+  <Files>
+    <File>Data/Config.sql</File>
+    <File>Data/Gameplay.sql</File>
+    <File>Text/GraceAshcroft_zh_Hans_CN.sql</File>
+    <File>Scripts/GraceGameplay.lua</File>
+    <File>Icons/GraceIcons.sql</File>
+    <File>GraceAshcroft.dep</File>
+    <File>ArtDefs/Districts.artdef</File>
+  </Files>
+</Mod>

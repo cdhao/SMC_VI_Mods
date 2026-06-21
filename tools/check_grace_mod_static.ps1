@@ -1,0 +1,218 @@
+$ErrorActionPreference = "Stop"
+
+$root = Split-Path -Parent $PSScriptRoot
+$modRoot = Join-Path $root "mods\GraceAshcroft"
+
+function Assert-FileExists {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Missing required file: $Path"
+    }
+}
+
+function Assert-Contains {
+    param(
+        [string]$Path,
+        [string]$Needle
+    )
+
+    $content = Get-Content -Raw -LiteralPath $Path
+    if (-not $content.Contains($Needle)) {
+        throw "Expected '$Needle' in $Path"
+    }
+}
+
+function Assert-NotContains {
+    param(
+        [string]$Path,
+        [string]$Needle
+    )
+
+    $content = Get-Content -Raw -LiteralPath $Path
+    if ($content.Contains($Needle)) {
+        throw "Did not expect '$Needle' in $Path"
+    }
+}
+
+function Assert-DoesNotMatch {
+    param(
+        [string]$Path,
+        [string]$Pattern
+    )
+
+    $content = Get-Content -Raw -LiteralPath $Path
+    if ($content -match $Pattern) {
+        throw "Did not expect pattern '$Pattern' in $Path"
+    }
+}
+
+$modinfo = Join-Path $modRoot "GraceAshcroft.modinfo"
+$config = Join-Path $modRoot "Data\Config.sql"
+$gameplay = Join-Path $modRoot "Data\Gameplay.sql"
+$text = Join-Path $modRoot "Text\GraceAshcroft_zh_Hans_CN.sql"
+$lua = Join-Path $modRoot "Scripts\GraceGameplay.lua"
+$icons = Join-Path $modRoot "Icons\GraceIcons.sql"
+$districtArtDef = Join-Path $modRoot "ArtDefs\Districts.artdef"
+$artDep = Join-Path $modRoot "GraceAshcroft.dep"
+
+@($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $artDep) | ForEach-Object {
+    Assert-FileExists $_
+}
+
+Assert-Contains $modinfo "<Mod id="
+Assert-Contains $modinfo "AddGameplayScripts"
+Assert-Contains $modinfo "Data/Config.sql"
+Assert-Contains $modinfo "Data/Gameplay.sql"
+Assert-Contains $modinfo "Text/GraceAshcroft_zh_Hans_CN.sql"
+Assert-Contains $modinfo "Scripts/GraceGameplay.lua"
+Assert-Contains $modinfo "UpdateIcons"
+Assert-Contains $modinfo "Icons/GraceIcons.sql"
+Assert-Contains $modinfo "UpdateArt"
+Assert-Contains $modinfo "GraceAshcroft.dep"
+Assert-Contains $modinfo "ArtDefs/Districts.artdef"
+Assert-NotContains $modinfo "AddUserInterfaces"
+Assert-NotContains $modinfo "UI/GraceBloodPanel"
+
+Assert-Contains $config "CIVILIZATION_ELPIS_PROTOCOL"
+Assert-Contains $config "LEADER_GRACE_ASHCROFT"
+Assert-Contains $config "Players:Expansion2_Players"
+Assert-Contains $config "DISTRICT_GRACE_ARK"
+Assert-NotContains $config "BUILDING_RHODES_HILL_SANATORIUM"
+
+Assert-Contains $gameplay "DISTRICT_GRACE_ARK"
+Assert-Contains $gameplay "TRAIT_DISTRICT_GRACE_ARK"
+Assert-Contains $gameplay "RESOURCE_INFECTED_BLOOD"
+Assert-Contains $gameplay "'RESOURCE_INFECTED_BLOOD', 'KIND_RESOURCE'"
+Assert-Contains $gameplay "Resource_Consumption"
+Assert-Contains $gameplay "DistrictReplaces"
+Assert-Contains $gameplay "'DISTRICT_GRACE_ARK', 'DISTRICT_CAMPUS'"
+Assert-Contains $gameplay "ZOC = (SELECT ZOC FROM Districts WHERE DistrictType = 'DISTRICT_ENCAMPMENT')"
+Assert-Contains $gameplay "HitPoints = (SELECT HitPoints FROM Districts WHERE DistrictType = 'DISTRICT_ENCAMPMENT')"
+Assert-Contains $gameplay "CanAttack = (SELECT CanAttack FROM Districts WHERE DistrictType = 'DISTRICT_ENCAMPMENT')"
+Assert-Contains $gameplay "Districts_XP2"
+Assert-Contains $gameplay "AttackRange"
+Assert-Contains $gameplay "PROJECT_GRACE_HEMOLYTIC_AGENT"
+Assert-Contains $gameplay "PROJECT_GRACE_STABILIZER"
+Assert-Contains $gameplay "PROJECT_GRACE_STEROID"
+Assert-Contains $gameplay "PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS"
+Assert-Contains $gameplay "PROJECT_GRACE_ABNORMAL_PATHOLOGY"
+Assert-Contains $gameplay "PROJECT_GRACE_CONTAINMENT_REVIEW"
+Assert-Contains $gameplay "Project_ResourceCosts"
+Assert-Contains $gameplay "StartProductionCost"
+Assert-Contains $gameplay "GRACE_NATIVE_PROJECT_BLOOD_COST"
+Assert-Contains $gameplay "'TECH_WRITING', 'DISTRICT_GRACE_ARK'"
+Assert-Contains $gameplay "GRACE_ARK_CITY_CENTER_SCIENCE"
+Assert-Contains $gameplay "GRACE_ARK_CITY_CENTER_PRODUCTION"
+Assert-Contains $gameplay "GRACE_ARK_DISTRICT_SCIENCE"
+Assert-Contains $gameplay "GRACE_ARK_DISTRICT_PRODUCTION"
+Assert-Contains $gameplay "OtherDistrictAdjacent"
+Assert-Contains $gameplay "GRACE_ARK_IMPROVEMENT_SCIENCE_"
+Assert-Contains $gameplay "GRACE_ARK_IMPROVEMENT_PRODUCTION_"
+Assert-Contains $gameplay "GRACE_ARK_PROD_"
+Assert-Contains $gameplay "GRACE_ARK_TO_SCIENCE"
+Assert-Contains $gameplay "GRACE_ARK_TO_FAITH"
+Assert-Contains $gameplay "GRACE_ARK_TO_CULTURE"
+Assert-Contains $gameplay "GRACE_ARK_TO_GOLD"
+Assert-Contains $gameplay "GRACE_ARK_TO_PRODUCTION"
+Assert-Contains $gameplay "GRACE_BLOOD_PER_BARBARIAN_KILL"
+Assert-Contains $gameplay "GRACE_HEMOLYTIC_1_REQUIREMENTS"
+Assert-Contains $gameplay "GRACE_HEMOLYTIC_2_REQUIREMENTS"
+Assert-Contains $gameplay "GRACE_HEMOLYTIC_3_REQUIREMENTS"
+Assert-Contains $gameplay "RequirementSetRequirements"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_1_REQUIREMENTS', 'REQUIRES_OPPONENT_IS_BARBARIAN'"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_2_REQUIREMENTS', 'REQUIRES_OPPONENT_IS_BARBARIAN'"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_3_REQUIREMENTS', 'REQUIRES_OPPONENT_IS_BARBARIAN'"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_1_COMBAT', 'MODIFIER_UNIT_ADJUST_COMBAT_STRENGTH', 'GRACE_HEMOLYTIC_1_REQUIREMENTS'"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_2_COMBAT', 'MODIFIER_UNIT_ADJUST_COMBAT_STRENGTH', 'GRACE_HEMOLYTIC_2_REQUIREMENTS'"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_3_COMBAT', 'MODIFIER_UNIT_ADJUST_COMBAT_STRENGTH', 'GRACE_HEMOLYTIC_3_REQUIREMENTS'"
+Assert-Contains $gameplay "'GRACE_STABILIZER_1_COMBAT', 'MODIFIER_UNIT_ADJUST_COMBAT_STRENGTH', NULL"
+Assert-Contains $gameplay "'GRACE_STABILIZER_2_COMBAT', 'MODIFIER_UNIT_ADJUST_COMBAT_STRENGTH', NULL"
+Assert-Contains $gameplay "'GRACE_HEMOLYTIC_3_COMBAT', 'Amount', 15"
+Assert-Contains $gameplay "'GRACE_STABILIZER_3_COMBAT', 'Amount', 15"
+Assert-NotContains $gameplay "GRACE_ATTACH_HEMOLYTIC_"
+Assert-NotContains $gameplay "GRACE_ATTACH_STABILIZER_"
+Assert-NotContains $gameplay "REQUIREMENT_UNIT_HAS_ABILITY"
+Assert-NotContains $gameplay "GRACE_REQUIRES_NO_HEMOLYTIC"
+Assert-NotContains $gameplay "GRACE_REQUIRES_NO_STABILIZER"
+Assert-NotContains $gameplay "GRACE_STEROID_1_COMBAT"
+Assert-NotContains $gameplay "GRACE_STEROID_2_COMBAT"
+Assert-NotContains $gameplay "GRACE_STEROID_3_COMBAT"
+Assert-NotContains $gameplay "GRACE_STEROID_DEFENSE"
+Assert-NotContains $gameplay "BUILDING_RHODES_HILL_SANATORIUM"
+
+Assert-Contains $text "LOC_CIVILIZATION_ELPIS_PROTOCOL_NAME"
+Assert-Contains $text "LOC_LEADER_GRACE_ASHCROFT_NAME"
+Assert-Contains $text "LOC_DISTRICT_GRACE_ARK_NAME"
+Assert-Contains $text "LOC_RESOURCE_INFECTED_BLOOD_NAME"
+Assert-Contains $text "LOC_ABILITY_GRACE_HEMOLYTIC_3_NAME"
+Assert-Contains $text "溶血剂 III"
+Assert-Contains $text "稳定剂 III"
+Assert-Contains $text "类固醇 III"
+Assert-Contains $text "每回合开始时所有受伤单位恢复 +15 [ICON_Damaged] 生命值"
+Assert-Contains $text "方舟"
+Assert-Contains $text "方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力"
+Assert-Contains $text "每个相邻改良设施"
+Assert-Contains $text "LOC_GRACE_NOTIFICATION_WRITING_EUREKA"
+Assert-Contains $text "消耗 3 感染者血液"
+Assert-Contains $text "LOC_GRACE_NOTIFICATION_PROJECT_BLOOD_COST_SETTLED"
+Assert-NotContains $text "LOC_GRACE_STEROID_PREVIEW"
+Assert-NotContains $text "方舟复制的学院相邻加成"
+Assert-NotContains $text "LOC_BUILDING_RHODES_HILL_SANATORIUM_NAME"
+Assert-NotContains $text "罗兹山疗养院"
+
+Assert-Contains $lua "RESOURCE_INFECTED_BLOOD"
+Assert-Contains $lua "GetResourceAmount"
+Assert-Contains $lua "ChangeResourceAmount"
+Assert-Contains $lua "SpendProjectBloodRemainder"
+Assert-Contains $lua "GRACE_NATIVE_PROJECT_BLOOD_COST"
+Assert-Contains $lua "GRACE_WRITING_BOOST_GRANTED"
+Assert-Contains $lua "TriggerBoost(TECH_WRITING_INDEX)"
+Assert-Contains $lua "Events.CityProjectCompleted.Add"
+Assert-Contains $lua "Events.Combat.Add"
+Assert-Contains $lua "Events.UnitAddedToMap.Add"
+Assert-Contains $lua "HEMOLYTIC_ABILITIES"
+Assert-Contains $lua "STABILIZER_ABILITIES"
+Assert-Contains $lua "SetUnitAbilityLevel"
+Assert-Contains $lua "ApplyEnhancerLevelToUnits"
+Assert-Contains $lua "GetAbilityCount"
+Assert-Contains $lua "ChangeAbilityCount"
+Assert-Contains $lua "PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS"
+Assert-Contains $lua "TriggerBoost"
+Assert-DoesNotMatch $lua "tonumber\s*\(\s*[A-Za-z0-9_:.]+GetProperty\s*\("
+Assert-NotContains $lua "AttachModifierByID"
+Assert-NotContains $lua "GRACE_ATTACH_HEMOLYTIC_"
+Assert-NotContains $lua "GRACE_ATTACH_STABILIZER_"
+Assert-NotContains $lua "LuaEvents.GraceBloodChanged"
+Assert-NotContains $lua "local INFECTED_BLOOD"
+Assert-NotContains $lua "SetBlood"
+Assert-NotContains $lua "TrySpendBlood"
+Assert-NotContains $lua "GetProperty(INFECTED_BLOOD"
+Assert-NotContains $lua "SetProperty(INFECTED_BLOOD"
+
+Assert-Contains $icons "ICON_RESOURCE_INFECTED_BLOOD"
+Assert-Contains $icons "RESOURCE_INFECTED_BLOOD"
+Assert-Contains $icons "ICON_DISTRICT_GRACE_ARK"
+Assert-Contains $icons "ICON_DISTRICT_GRACE_ARK_FOW"
+Assert-Contains $icons "ICON_PROJECT_GRACE_HEMOLYTIC_AGENT"
+Assert-Contains $icons "ICON_PROJECT_GRACE_CONTAINMENT_REVIEW"
+Assert-Contains $icons "IconDefinitions"
+Assert-Contains $icons "ICON_ATLAS_RESOURCES"
+Assert-Contains $icons "ICON_ATLAS_FONT_ICON_BASELINE_6"
+Assert-Contains $icons "ICON_ATLAS_DISTRICTS"
+Assert-Contains $icons "ICON_ATLAS_PROJECTS"
+
+Assert-Contains $districtArtDef "DISTRICT_GRACE_ARK"
+Assert-Contains $districtArtDef "<m_ElementName text=""DISTRICT_CAMPUS""/>"
+Assert-Contains $districtArtDef "<m_ArtDefPath text=""Landmarks.artdef""/>"
+Assert-Contains $districtArtDef "<m_ElementName text=""Campus""/>"
+Assert-Contains $districtArtDef "<m_ElementName text=""Campus_Pillaged""/>"
+Assert-Contains $districtArtDef "<m_ElementName text=""Campus_UnderConstruction""/>"
+Assert-Contains $districtArtDef "Build_District_Campus"
+Assert-Contains $districtArtDef "PLAY_AMBIENCE_DISTRICT_CAMPUS"
+Assert-Contains $districtArtDef "STOP_AMBIENCE_DISTRICT_CAMPUS"
+Assert-Contains $artDep "<name text=""GraceAshcroft""/>"
+Assert-Contains $artDep "<id text=""6b8f93c1-7c19-4f06-a7c5-9ef0f1c7c911""/>"
+Assert-Contains $artDep "<ArtDefPath text=""Districts.artdef""/>"
+
+Write-Host "Grace Ashcroft mod static validation passed."
