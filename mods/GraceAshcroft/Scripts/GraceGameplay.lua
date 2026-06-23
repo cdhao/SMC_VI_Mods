@@ -43,6 +43,8 @@ end
 local recentBloodAwards = {}
 local recentCampAwards = {}
 local recentAwardTurn = nil
+local recentUpgradeBloodSpends = {}
+local recentUpgradeSpendTurn = nil
 local ClearAwardCachesForCurrentTurn = nil
 
 local TECH_WRITING_INDEX = nil
@@ -791,6 +793,37 @@ function ClearAwardCachesForCurrentTurn()
     return currentTurn
 end
 
+local function ClearUpgradeBloodSpendCacheForCurrentTurn()
+    local currentTurn = GetCurrentTurn()
+    if recentUpgradeSpendTurn ~= currentTurn then
+        recentUpgradeBloodSpends = {}
+        recentUpgradeSpendTurn = currentTurn
+    end
+
+    return currentTurn
+end
+
+local function OnUnitUpgraded(playerID, unitID)
+    if not IsGracePlayer(playerID) then
+        return
+    end
+
+    if GetBlood(playerID) <= 0 then
+        return
+    end
+
+    local currentTurn = ClearUpgradeBloodSpendCacheForCurrentTurn()
+    local upgradeKey = tostring(currentTurn) .. ":" .. tostring(playerID) .. ":" .. tostring(unitID)
+    if recentUpgradeBloodSpends[upgradeKey] == true then
+        return
+    end
+
+    recentUpgradeBloodSpends[upgradeKey] = true
+    local bloodRemaining = ChangeBlood(playerID, -1, true)
+    PublishStatus(playerID, LookupText("LOC_GRACE_NOTIFICATION_UNIT_UPGRADED_BLOOD_SPENT", bloodRemaining))
+    Log("Unit upgrade consumed infected blood: player=" .. tostring(playerID) .. ", unit=" .. tostring(unitID) .. ", remaining=" .. tostring(bloodRemaining))
+end
+
 local function TryReadField(source, key)
     if source == nil or key == nil then
         return nil
@@ -1036,6 +1069,12 @@ local function Initialize()
         Events.CityProjectCompleted.Add(OnCityProjectCompleted)
     else
         Log("Events.CityProjectCompleted is unavailable; project rewards are inactive.")
+    end
+
+    if Events.UnitUpgraded ~= nil then
+        Events.UnitUpgraded.Add(OnUnitUpgraded)
+    else
+        Log("Events.UnitUpgraded is unavailable; infected blood upgrade spending is inactive.")
     end
 
     if Events.ImprovementActivated ~= nil then

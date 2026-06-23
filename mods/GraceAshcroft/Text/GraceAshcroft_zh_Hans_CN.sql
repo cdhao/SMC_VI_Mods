@@ -3,7 +3,7 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '厄尔庇斯协议'),
     ('zh_Hans_CN', 'LOC_CIVILIZATION_ELPIS_PROTOCOL_ADJECTIVE', '厄尔庇斯协议的'),
     ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_NAME', '感染样本管制'),
-    ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '偏好靠近河流与丘陵出生。开局触发“文字”尤里卡。特色区域“方舟”替代学院，方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力。研究“文字”后，击杀蛮族单位可获得战略资源感染者血液，再通过方舟项目转化为战斗强化、战略物资、科研收益或尤里卡。BSAA补给箱：单位击杀敌方作战单位时，获得相当于该单位基础 [ICON_Strength] 战斗力 50% 的 [ICON_Gold] 金币。'),
+    ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '偏好靠近河流与丘陵出生。开局触发“文字”尤里卡。特色区域“方舟”替代学院，方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力。研究“文字”后，击杀蛮族单位可获得战略资源感染者血液，再通过方舟项目转化为战斗强化、战略物资、科研收益或尤里卡。拥有感染者血液时，单位升级金币费用降低 50%；每次成功升级消耗 1 感染者血液。BSAA补给箱：单位击杀敌方作战单位时，获得相当于该单位基础 [ICON_Strength] 战斗力 50% 的 [ICON_Gold] 金币。'),
 
     ('zh_Hans_CN', 'LOC_LEADER_GRACE_ASHCROFT_NAME', '格蕾丝·阿什克罗夫特'),
     ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_NAME', '隔离线调查员'),
@@ -115,4 +115,5 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_DONE', '战略物资合成完成：本次处理 {1_num} 份感染者血液，额外消耗 {2_num}，获得 {3_Name} +{4_num}，剩余血液 {5_num}。'),
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_STRATEGIC_SYNTHESIS_NO_TARGET', '战略物资合成中止：没有可进行合成的战略资源，已返还启动消耗。当前血液：{1_num}。'),
     ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_PATHOLOGY_DONE', '病理人才资助完成：本次处理 {1_num} 份感染者血液，额外消耗 {2_num}，获得 {3_num} 大科学家点数和 {4_num} 科技值，剩余血液 {5_num}。'),
-    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_EUREKA_FALLBACK_PATHOLOGY', '当前时代没有可触发的尤里卡。样本转入病理人才资助，获得 {1_num} 大科学家点数和 {2_num} 科技值。当前血液：{3_num}。');
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_EUREKA_FALLBACK_PATHOLOGY', '当前时代没有可触发的尤里卡。样本转入病理人才资助，获得 {1_num} 大科学家点数和 {2_num} 科技值。当前血液：{3_num}。'),
+    ('zh_Hans_CN', 'LOC_GRACE_NOTIFICATION_UNIT_UPGRADED_BLOOD_SPENT', '单位升级完成：消耗 1 感染者血液，剩余血液 {1_num}。');
