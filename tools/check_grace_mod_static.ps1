@@ -39,10 +39,41 @@ function Assert-DdsHeader {
 
     $height = [BitConverter]::ToInt32($bytes, 12)
     $width = [BitConverter]::ToInt32($bytes, 16)
+    $fourCCValue = [BitConverter]::ToUInt32($bytes, 84)
+    $fourCC = [System.Text.Encoding]::ASCII.GetString($bytes, 84, 4)
     $bitsPerPixel = [BitConverter]::ToInt32($bytes, 88)
+    $redMask = [BitConverter]::ToUInt32($bytes, 92)
+    $greenMask = [BitConverter]::ToUInt32($bytes, 96)
+    $blueMask = [BitConverter]::ToUInt32($bytes, 100)
+    $alphaMask = [BitConverter]::ToUInt32($bytes, 104)
+    $redMaskText = "{0:X8}" -f $redMask
+    $greenMaskText = "{0:X8}" -f $greenMask
+    $blueMaskText = "{0:X8}" -f $blueMask
+    $alphaMaskText = "{0:X8}" -f $alphaMask
 
     if ($width -ne $ExpectedWidth -or $height -ne $ExpectedHeight -or $bitsPerPixel -ne $ExpectedBitsPerPixel) {
         throw "Unexpected DDS header for $Path. Expected ${ExpectedWidth}x${ExpectedHeight}x${ExpectedBitsPerPixel}, got ${width}x${height}x${bitsPerPixel}."
+    }
+
+    $isLegacyRgba =
+        $fourCCValue -eq 0 -and
+        $redMaskText -eq "000000FF" -and
+        $greenMaskText -eq "0000FF00" -and
+        $blueMaskText -eq "00FF0000" -and
+        $alphaMaskText -eq "FF000000"
+
+    $isDx10Rgba = $false
+    if ($fourCCValue -eq 0x30315844) {
+        if ($bytes.Length -lt 148) {
+            throw "DDS DX10 header is missing extended format data: $Path"
+        }
+
+        $dxgiFormat = [BitConverter]::ToUInt32($bytes, 128)
+        $isDx10Rgba = $dxgiFormat -eq 28
+    }
+
+    if (-not ($isLegacyRgba -or $isDx10Rgba)) {
+        throw ("Unexpected DDS pixel format for {0}. Expected legacy RGBA masks R=0x000000FF G=0x0000FF00 B=0x00FF0000 A=0xFF000000 or DX10 DXGI_FORMAT_R8G8B8A8_UNORM. Got FourCC='{1}' R=0x{2} G=0x{3} B=0x{4} A=0x{5}." -f $Path, $fourCC, $redMaskText, $greenMaskText, $blueMaskText, $alphaMaskText)
     }
 }
 

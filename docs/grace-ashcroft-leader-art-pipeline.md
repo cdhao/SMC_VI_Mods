@@ -2,6 +2,32 @@
 
 本文记录 `mods/GraceAshcroft` 的领袖图片资源链。重点是《文明 VI》的开始加载界面和外交界面不是同一条渲染路径，不能简单共用同一张贴图。
 
+另一个独立问题是 DDS 像素通道顺序。`Images/Textures/*.tex` 当前统一声明：
+
+```xml
+<ePixelformat>PF_R8G8B8A8_UNORM</ePixelformat>
+```
+
+因此 DDS 必须是 legacy RGBA masks：
+
+```text
+R = 0x000000FF
+G = 0x0000FF00
+B = 0x00FF0000
+A = 0xFF000000
+```
+
+或 DX10 `DXGI_FORMAT_R8G8B8A8_UNORM`。Pillow 的 `Image.save(..., ".dds")` 会为这些图写出 BGRA masks：
+
+```text
+R = 0x00FF0000
+G = 0x0000FF00
+B = 0x000000FF
+A = 0xFF000000
+```
+
+这会让游戏里背景出现典型的红蓝通道交换。不要通过预先交换 PNG 红蓝通道来规避，应保持 PNG 颜色正常，并生成与 TEX 声明一致的 RGBA DDS。
+
 ## 资源分工
 
 当前使用五类图片资源：
@@ -46,6 +72,8 @@ BackgroundImage = IMG_LOADING_SCENE_GRACE_ASHCROFT
 2. `ForegroundImage` 使用全透明占位图。
 
 因此开始加载界面不再依赖原版人物前景层。
+
+注意：这个蓝色容器只能解释“独立 ForegroundImage 人物变蓝”。如果背景图或 `GraceAshcroft_LoadingScene` 整体偏蓝，原因不是 `PortraitContainer`，而是 DDS 的 RGBA/BGRA 通道顺序与 TEX 声明不一致。
 
 ## 外交界面
 
@@ -98,18 +126,37 @@ FALLBACK_NEUTRAL_GRACE_ASHCROFT -> GraceAshcroft_Foreground_Fallback
 & "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI SDK\AssetModTools\Cooker\Civ6AssetCooker_FinalRelease.exe" --mode XLP --platform Windows --config "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI SDK\AssetModTools\Cooker\Civ6.cfg" --pantry Images --stewpot Platforms\Windows\BLPs --log_path Logs XLPs\leaderfallbacks.xlp
 ```
 
+## DDS 生成
+
+优先使用 Microsoft DirectXTex `texconv.exe`：
+
+```powershell
+texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_Background.png
+texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_Foreground.png
+texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_LoadingScene.png
+texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_LoadingBlank.png
+```
+
+如果本机没有 `texconv.exe`，使用项目脚本写出 legacy RGBA DDS：
+
+```powershell
+python tools\write_rgba_dds.py mods\GraceAshcroft\Images\GraceAshcroft_Background.png mods\GraceAshcroft\Images\GraceAshcroft_Foreground.png mods\GraceAshcroft\Images\GraceAshcroft_LoadingScene.png mods\GraceAshcroft\Images\GraceAshcroft_LoadingBlank.png
+```
+
+该脚本只读取正常 PNG 的 RGBA 像素，直接写出匹配 `PF_R8G8B8A8_UNORM` 的 DDS header 和像素数据。
+
 ## 换图时的建议
 
 如果只换人物立绘：
 
 1. 替换 `GraceAshcroft_Foreground.png`。
-2. 重新生成 `GraceAshcroft_Foreground.dds`。
+2. 使用 `texconv.exe` 或 `tools/write_rgba_dds.py` 重新生成 `GraceAshcroft_Foreground.dds`。
 3. 重新生成 `GraceAshcroft_LoadingScene.png/dds`。
 4. 重新 cook `GraceUITexture.blp` 和 `LeaderFallbacks.blp`。
 
 如果只换背景：
 
 1. 替换 `GraceAshcroft_Background.png`。
-2. 重新生成 `GraceAshcroft_Background.dds`。
+2. 使用 `texconv.exe` 或 `tools/write_rgba_dds.py` 重新生成 `GraceAshcroft_Background.dds`。
 3. 重新生成 `GraceAshcroft_LoadingScene.png/dds`。
 4. 重新 cook `GraceUITexture.blp`。
