@@ -1,1 +1,4 @@
 sample/
+.local-docs/
+*.log
+mods/GraceAshcroft/Logs/

@@ -23,6 +23,19 @@ function Assert-Contains {
     }
 }
 
+function Assert-BinaryContains {
+    param(
+        [string]$Path,
+        [string]$Needle
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    $content = [System.Text.Encoding]::ASCII.GetString($bytes)
+    if (-not $content.Contains($Needle)) {
+        throw "Expected binary '$Needle' in $Path"
+    }
+}
+
 function Assert-NotContains {
     param(
         [string]$Path,
@@ -66,9 +79,18 @@ $text = Join-Path $modRoot "Text\GraceAshcroft_zh_Hans_CN.sql"
 $lua = Join-Path $modRoot "Scripts\GraceGameplay.lua"
 $icons = Join-Path $modRoot "Icons\GraceIcons.sql"
 $districtArtDef = Join-Path $modRoot "ArtDefs\Districts.artdef"
+$fallbackLeaderArtDef = Join-Path $modRoot "ArtDefs\FallbackLeaders.artdef"
 $artDep = Join-Path $modRoot "GraceAshcroft.dep"
+$boardImage = Join-Path $modRoot "Images\GraceAshcroft_Board.png"
+$boardTexture = Join-Path $modRoot "Images\GraceAshcroft_Board.dds"
+$uiTextureEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Board_UI.tex"
+$fallbackTextureEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Board_Fallback.tex"
+$uiTextureXlp = Join-Path $modRoot "XLPs\GraceUITexture.xlp"
+$leaderFallbackXlp = Join-Path $modRoot "XLPs\leaderfallbacks.xlp"
+$uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
+$leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
 
-@($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $artDep) | ForEach-Object {
+@($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $boardImage, $boardTexture, $uiTextureEntity, $fallbackTextureEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
@@ -83,6 +105,15 @@ Assert-Contains $modinfo "Icons/GraceIcons.sql"
 Assert-Contains $modinfo "UpdateArt"
 Assert-Contains $modinfo "GraceAshcroft.dep"
 Assert-Contains $modinfo "ArtDefs/Districts.artdef"
+Assert-Contains $modinfo "ArtDefs/FallbackLeaders.artdef"
+Assert-Contains $modinfo "Images/GraceAshcroft_Board.png"
+Assert-Contains $modinfo "Images/GraceAshcroft_Board.dds"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Board_UI.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Board_Fallback.tex"
+Assert-Contains $modinfo "XLPs/GraceUITexture.xlp"
+Assert-Contains $modinfo "XLPs/leaderfallbacks.xlp"
+Assert-Contains $modinfo "Platforms/Windows/BLPs/GraceUITexture.blp"
+Assert-Contains $modinfo "Platforms/Windows/BLPs/LeaderFallbacks.blp"
 Assert-NotContains $modinfo "AddUserInterfaces"
 Assert-NotContains $modinfo "UI/GraceBloodPanel"
 
@@ -90,10 +121,18 @@ Assert-Contains $config "CIVILIZATION_ELPIS_PROTOCOL"
 Assert-Contains $config "LEADER_GRACE_ASHCROFT"
 Assert-Contains $config "Players:Expansion2_Players"
 Assert-Contains $config "DISTRICT_GRACE_ARK"
+Assert-Contains $config "'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT'"
+Assert-Contains $config "'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
+Assert-NotContains $config "'LEADER_DEFAULT_NEUTRAL'"
+Assert-NotContains $config "'Images/GraceAshcroft_Board.dds'"
 Assert-NotContains $config "BUILDING_RHODES_HILL_SANATORIUM"
 
 Assert-Contains $gameplay "DISTRICT_GRACE_ARK"
 Assert-Contains $gameplay "TRAIT_DISTRICT_GRACE_ARK"
+Assert-Contains $gameplay "'LEADER_GRACE_ASHCROFT', 'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT', 'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
+Assert-Contains $gameplay "'LEADER_GRACE_ASHCROFT', 'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
+Assert-NotContains $gameplay "'LEADER_DEFAULT_NEUTRAL'"
+Assert-NotContains $gameplay "'Images/GraceAshcroft_Board.dds'"
 Assert-Contains $gameplay "RESOURCE_INFECTED_BLOOD"
 Assert-Contains $gameplay "'RESOURCE_INFECTED_BLOOD', 'KIND_RESOURCE'"
 Assert-Contains $gameplay "Resource_Consumption"
@@ -133,7 +172,7 @@ Assert-NotContains $gameplay "WHERE ProjectType = 'PROJECT_ENHANCE_DISTRICT_CAMP
 Assert-Contains $gameplay "'PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS',"
 Assert-Contains $gameplay "'PROJECT_GRACE_ABNORMAL_PATHOLOGY',"
 Assert-Contains $gameplay "'PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS',"
-Assert-Contains $gameplay "1, 'NO_COST_PROGRESSION', NULL, 'TECH_WRITING', 'DISTRICT_GRACE_ARK'"
+Assert-Contains $gameplay "1, 'NO_COST_PROGRESSION', 0, 'TECH_WRITING', 'DISTRICT_GRACE_ARK'"
 Assert-Contains $gameplay "MaxPlayerInstances"
 Assert-Contains $gameplay "ProjectPrereqs"
 Assert-Contains $gameplay "'PROJECT_GRACE_HEMOLYTIC_2', 'PROJECT_GRACE_HEMOLYTIC_1', 1"
@@ -480,8 +519,47 @@ Assert-Contains $districtArtDef "<m_ElementName text=""Campus_UnderConstruction"
 Assert-Contains $districtArtDef "Build_District_Campus"
 Assert-Contains $districtArtDef "PLAY_AMBIENCE_DISTRICT_CAMPUS"
 Assert-Contains $districtArtDef "STOP_AMBIENCE_DISTRICT_CAMPUS"
+Assert-Contains $fallbackLeaderArtDef "<m_TemplateName text=""LeaderFallback""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_Name text=""LEADER_GRACE_ASHCROFT""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_Name text=""DEFAULT""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_EntryName text=""FALLBACK_NEUTRAL_GRACE_ASHCROFT""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_XLPClass text=""LeaderFallback""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_XLPPath text=""leaderfallbacks.xlp""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_BLPPackage text=""LeaderFallbacks""/>"
+Assert-Contains $fallbackLeaderArtDef "<m_LibraryName text=""LeaderFallback""/>"
 Assert-Contains $artDep "<name text=""GraceAshcroft""/>"
 Assert-Contains $artDep "<id text=""6b8f93c1-7c19-4f06-a7c5-9ef0f1c7c911""/>"
 Assert-Contains $artDep "<ArtDefPath text=""Districts.artdef""/>"
+Assert-Contains $artDep "<ConsumerName text=""LeaderFallback""/>"
+Assert-Contains $artDep "<Element text=""FallbackLeaders.artdef""/>"
+Assert-Contains $artDep "<Element text=""LeaderFallback""/>"
+Assert-Contains $artDep "<ConsumerName text=""UI""/>"
+Assert-Contains $artDep "<Element text=""UITexture""/>"
+Assert-Contains $artDep "<ArtDefPath text=""FallbackLeaders.artdef""/>"
+Assert-Contains $artDep "<LibraryName text=""LeaderFallback""/>"
+Assert-Contains $artDep "<Element text=""LeaderFallbacks.blp""/>"
+Assert-Contains $artDep "<LibraryName text=""UITexture""/>"
+Assert-Contains $artDep "<Element text=""GraceUITexture.blp""/>"
+
+Assert-Contains $uiTextureXlp "<m_ClassName text=""UITexture""/>"
+Assert-Contains $uiTextureXlp "<m_PackageName text=""GraceUITexture""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""IMG_LOADING_BACKGROUND_GRACE_ASHCROFT""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""IMG_LOADING_FOREGROUND_GRACE_ASHCROFT""/>"
+Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Board_UI""/>"
+Assert-Contains $leaderFallbackXlp "<m_ClassName text=""LeaderFallback""/>"
+Assert-Contains $leaderFallbackXlp "<m_PackageName text=""LeaderFallbacks""/>"
+Assert-Contains $leaderFallbackXlp "<m_EntryID text=""FALLBACK_NEUTRAL_GRACE_ASHCROFT""/>"
+Assert-Contains $leaderFallbackXlp "<m_ObjectName text=""GraceAshcroft_Board_Fallback""/>"
+
+Assert-Contains $uiTextureEntity "<m_ClassName text=""UISliceTexture""/>"
+Assert-Contains $uiTextureEntity "<m_RelativePath text=""../GraceAshcroft_Board.dds""/>"
+Assert-Contains $uiTextureEntity "<m_Name text=""GraceAshcroft_Board_UI""/>"
+Assert-Contains $fallbackTextureEntity "<m_ClassName text=""Leader_Fallback""/>"
+Assert-Contains $fallbackTextureEntity "<m_RelativePath text=""../GraceAshcroft_Board.dds""/>"
+Assert-Contains $fallbackTextureEntity "<m_Name text=""GraceAshcroft_Board_Fallback""/>"
+
+Assert-BinaryContains $uiTextureBlp "IMG_LOADING_BACKGROUND_GRACE_ASHCROFT"
+Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_GRACE_ASHCROFT"
+Assert-BinaryContains $leaderFallbackBlp "FALLBACK_NEUTRAL_GRACE_ASHCROFT"
 
 Write-Host "Grace Ashcroft mod static validation passed."

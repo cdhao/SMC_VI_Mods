@@ -35,6 +35,24 @@
 			<LibraryDependencies/>
 			<LoadsLibraries>false</LoadsLibraries>
 		</Element>
+		<Element>
+			<ConsumerName text="LeaderFallback"/>
+			<ArtDefDependencyPaths>
+				<Element text="FallbackLeaders.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies>
+				<Element text="LeaderFallback"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
+			<ConsumerName text="UI"/>
+			<ArtDefDependencyPaths/>
+			<LibraryDependencies>
+				<Element text="UITexture"/>
+			</LibraryDependencies>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
 	</SystemDependencies>
 	<ArtDefDependencies>
 		<Element>
@@ -43,6 +61,23 @@
 				<Element text="Districts.artdef"/>
 			</ArtDefDependencyPaths>
 		</Element>
+		<Element>
+			<ArtDefPath text="FallbackLeaders.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
 	</ArtDefDependencies>
-	<LibraryDependencies/>
+	<LibraryDependencies>
+		<Element>
+			<LibraryName text="LeaderFallback"/>
+			<PackageDependencies>
+				<Element text="LeaderFallbacks.blp"/>
+			</PackageDependencies>
+		</Element>
+		<Element>
+			<LibraryName text="UITexture"/>
+			<PackageDependencies>
+				<Element text="GraceUITexture.blp"/>
+			</PackageDependencies>
+		</Element>
+	</LibraryDependencies>
 </AssetObjects..GameDependencyData>

@@ -56,5 +56,14 @@
     <File>Icons/GraceIcons.sql</File>
     <File>GraceAshcroft.dep</File>
     <File>ArtDefs/Districts.artdef</File>
+    <File>ArtDefs/FallbackLeaders.artdef</File>
+    <File>Images/GraceAshcroft_Board.png</File>
+    <File>Images/GraceAshcroft_Board.dds</File>
+    <File>Images/Textures/GraceAshcroft_Board_UI.tex</File>
+    <File>Images/Textures/GraceAshcroft_Board_Fallback.tex</File>
+    <File>XLPs/GraceUITexture.xlp</File>
+    <File>XLPs/leaderfallbacks.xlp</File>
+    <File>Platforms/Windows/BLPs/GraceUITexture.blp</File>
+    <File>Platforms/Windows/BLPs/LeaderFallbacks.blp</File>
   </Files>
 </Mod>
