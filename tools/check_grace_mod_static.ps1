@@ -11,6 +11,41 @@ function Assert-FileExists {
     }
 }
 
+function Assert-FileMissing {
+    param([string]$Path)
+
+    if (Test-Path -LiteralPath $Path -PathType Leaf) {
+        throw "Obsolete file should be removed: $Path"
+    }
+}
+
+function Assert-DdsHeader {
+    param(
+        [string]$Path,
+        [int]$ExpectedWidth,
+        [int]$ExpectedHeight,
+        [int]$ExpectedBitsPerPixel
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    if ($bytes.Length -lt 128) {
+        throw "DDS file is too small: $Path"
+    }
+
+    $magic = [System.Text.Encoding]::ASCII.GetString($bytes, 0, 4)
+    if ($magic -ne "DDS ") {
+        throw "File is not a DDS texture: $Path"
+    }
+
+    $height = [BitConverter]::ToInt32($bytes, 12)
+    $width = [BitConverter]::ToInt32($bytes, 16)
+    $bitsPerPixel = [BitConverter]::ToInt32($bytes, 88)
+
+    if ($width -ne $ExpectedWidth -or $height -ne $ExpectedHeight -or $bitsPerPixel -ne $ExpectedBitsPerPixel) {
+        throw "Unexpected DDS header for $Path. Expected ${ExpectedWidth}x${ExpectedHeight}x${ExpectedBitsPerPixel}, got ${width}x${height}x${bitsPerPixel}."
+    }
+}
+
 function Assert-Contains {
     param(
         [string]$Path,
@@ -33,6 +68,19 @@ function Assert-BinaryContains {
     $content = [System.Text.Encoding]::ASCII.GetString($bytes)
     if (-not $content.Contains($Needle)) {
         throw "Expected binary '$Needle' in $Path"
+    }
+}
+
+function Assert-BinaryNotContains {
+    param(
+        [string]$Path,
+        [string]$Needle
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    $content = [System.Text.Encoding]::ASCII.GetString($bytes)
+    if ($content.Contains($Needle)) {
+        throw "Did not expect binary '$Needle' in $Path"
     }
 }
 
@@ -81,18 +129,41 @@ $icons = Join-Path $modRoot "Icons\GraceIcons.sql"
 $districtArtDef = Join-Path $modRoot "ArtDefs\Districts.artdef"
 $fallbackLeaderArtDef = Join-Path $modRoot "ArtDefs\FallbackLeaders.artdef"
 $artDep = Join-Path $modRoot "GraceAshcroft.dep"
-$boardImage = Join-Path $modRoot "Images\GraceAshcroft_Board.png"
-$boardTexture = Join-Path $modRoot "Images\GraceAshcroft_Board.dds"
-$uiTextureEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Board_UI.tex"
-$fallbackTextureEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Board_Fallback.tex"
+$backgroundImage = Join-Path $modRoot "Images\GraceAshcroft_Background.png"
+$backgroundTexture = Join-Path $modRoot "Images\GraceAshcroft_Background.dds"
+$foregroundImage = Join-Path $modRoot "Images\GraceAshcroft_Foreground.png"
+$foregroundTexture = Join-Path $modRoot "Images\GraceAshcroft_Foreground.dds"
+$loadingSceneImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.png"
+$loadingSceneTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.dds"
+$loadingBlankImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.png"
+$loadingBlankTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.dds"
+$backgroundUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Background_UI.tex"
+$foregroundUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Foreground_UI.tex"
+$foregroundFallbackEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Foreground_Fallback.tex"
+$loadingSceneUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_LoadingScene_UI.tex"
+$loadingBlankUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_LoadingBlank_UI.tex"
+$oldBoardBase = "GraceAshcroft_" + "Board"
+$oldBoardImage = Join-Path $modRoot "Images\$oldBoardBase.png"
+$oldBoardTexture = Join-Path $modRoot "Images\$oldBoardBase.dds"
+$oldBoardUiEntity = Join-Path $modRoot ("Images\Textures\" + $oldBoardBase + "_UI.tex")
+$oldBoardFallbackEntity = Join-Path $modRoot ("Images\Textures\" + $oldBoardBase + "_Fallback.tex")
 $uiTextureXlp = Join-Path $modRoot "XLPs\GraceUITexture.xlp"
 $leaderFallbackXlp = Join-Path $modRoot "XLPs\leaderfallbacks.xlp"
 $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
 $leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
 
-@($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $boardImage, $boardTexture, $uiTextureEntity, $fallbackTextureEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
+@($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
+
+@($oldBoardImage, $oldBoardTexture, $oldBoardUiEntity, $oldBoardFallbackEntity) | ForEach-Object {
+    Assert-FileMissing $_
+}
+
+Assert-DdsHeader $backgroundTexture 2048 1024 32
+Assert-DdsHeader $foregroundTexture 1024 2048 32
+Assert-DdsHeader $loadingSceneTexture 2048 1024 32
+Assert-DdsHeader $loadingBlankTexture 8 8 32
 
 Assert-Contains $modinfo "<Mod id="
 Assert-Contains $modinfo "AddGameplayScripts"
@@ -106,14 +177,24 @@ Assert-Contains $modinfo "UpdateArt"
 Assert-Contains $modinfo "GraceAshcroft.dep"
 Assert-Contains $modinfo "ArtDefs/Districts.artdef"
 Assert-Contains $modinfo "ArtDefs/FallbackLeaders.artdef"
-Assert-Contains $modinfo "Images/GraceAshcroft_Board.png"
-Assert-Contains $modinfo "Images/GraceAshcroft_Board.dds"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Board_UI.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Board_Fallback.tex"
+Assert-Contains $modinfo "Images/GraceAshcroft_Background.png"
+Assert-Contains $modinfo "Images/GraceAshcroft_Background.dds"
+Assert-Contains $modinfo "Images/GraceAshcroft_Foreground.png"
+Assert-Contains $modinfo "Images/GraceAshcroft_Foreground.dds"
+Assert-Contains $modinfo "Images/GraceAshcroft_LoadingScene.png"
+Assert-Contains $modinfo "Images/GraceAshcroft_LoadingScene.dds"
+Assert-Contains $modinfo "Images/GraceAshcroft_LoadingBlank.png"
+Assert-Contains $modinfo "Images/GraceAshcroft_LoadingBlank.dds"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Background_UI.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_UI.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_Fallback.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingScene_UI.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingBlank_UI.tex"
 Assert-Contains $modinfo "XLPs/GraceUITexture.xlp"
 Assert-Contains $modinfo "XLPs/leaderfallbacks.xlp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/GraceUITexture.blp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/LeaderFallbacks.blp"
+Assert-NotContains $modinfo $oldBoardBase
 Assert-NotContains $modinfo "AddUserInterfaces"
 Assert-NotContains $modinfo "UI/GraceBloodPanel"
 
@@ -124,15 +205,16 @@ Assert-Contains $config "DISTRICT_GRACE_ARK"
 Assert-Contains $config "'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT'"
 Assert-Contains $config "'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
 Assert-NotContains $config "'LEADER_DEFAULT_NEUTRAL'"
-Assert-NotContains $config "'Images/GraceAshcroft_Board.dds'"
+Assert-NotContains $config $oldBoardBase
 Assert-NotContains $config "BUILDING_RHODES_HILL_SANATORIUM"
 
 Assert-Contains $gameplay "DISTRICT_GRACE_ARK"
 Assert-Contains $gameplay "TRAIT_DISTRICT_GRACE_ARK"
-Assert-Contains $gameplay "'LEADER_GRACE_ASHCROFT', 'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT', 'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
+Assert-Contains $gameplay "'LEADER_GRACE_ASHCROFT', 'IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT', 'IMG_LOADING_SCENE_GRACE_ASHCROFT'"
+Assert-NotContains $gameplay "'LEADER_GRACE_ASHCROFT', 'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT', 'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
 Assert-Contains $gameplay "'LEADER_GRACE_ASHCROFT', 'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
 Assert-NotContains $gameplay "'LEADER_DEFAULT_NEUTRAL'"
-Assert-NotContains $gameplay "'Images/GraceAshcroft_Board.dds'"
+Assert-NotContains $gameplay $oldBoardBase
 Assert-Contains $gameplay "RESOURCE_INFECTED_BLOOD"
 Assert-Contains $gameplay "'RESOURCE_INFECTED_BLOOD', 'KIND_RESOURCE'"
 Assert-Contains $gameplay "Resource_Consumption"
@@ -545,21 +627,64 @@ Assert-Contains $uiTextureXlp "<m_ClassName text=""UITexture""/>"
 Assert-Contains $uiTextureXlp "<m_PackageName text=""GraceUITexture""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""IMG_LOADING_BACKGROUND_GRACE_ASHCROFT""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""IMG_LOADING_FOREGROUND_GRACE_ASHCROFT""/>"
-Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Board_UI""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""IMG_LOADING_SCENE_GRACE_ASHCROFT""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT""/>"
+Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Background_UI""/>"
+Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Foreground_UI""/>"
+Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingScene_UI""/>"
+Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingBlank_UI""/>"
+Assert-NotContains $uiTextureXlp $oldBoardBase
 Assert-Contains $leaderFallbackXlp "<m_ClassName text=""LeaderFallback""/>"
 Assert-Contains $leaderFallbackXlp "<m_PackageName text=""LeaderFallbacks""/>"
 Assert-Contains $leaderFallbackXlp "<m_EntryID text=""FALLBACK_NEUTRAL_GRACE_ASHCROFT""/>"
-Assert-Contains $leaderFallbackXlp "<m_ObjectName text=""GraceAshcroft_Board_Fallback""/>"
+Assert-Contains $leaderFallbackXlp "<m_ObjectName text=""GraceAshcroft_Foreground_Fallback""/>"
+Assert-NotContains $leaderFallbackXlp $oldBoardBase
 
-Assert-Contains $uiTextureEntity "<m_ClassName text=""UISliceTexture""/>"
-Assert-Contains $uiTextureEntity "<m_RelativePath text=""../GraceAshcroft_Board.dds""/>"
-Assert-Contains $uiTextureEntity "<m_Name text=""GraceAshcroft_Board_UI""/>"
-Assert-Contains $fallbackTextureEntity "<m_ClassName text=""Leader_Fallback""/>"
-Assert-Contains $fallbackTextureEntity "<m_RelativePath text=""../GraceAshcroft_Board.dds""/>"
-Assert-Contains $fallbackTextureEntity "<m_Name text=""GraceAshcroft_Board_Fallback""/>"
+Assert-Contains $backgroundUiEntity "<m_ClassName text=""UserInterface""/>"
+Assert-Contains $backgroundUiEntity "<m_Width>2048</m_Width>"
+Assert-Contains $backgroundUiEntity "<m_Height>1024</m_Height>"
+Assert-Contains $backgroundUiEntity "<m_RelativePath text=""../GraceAshcroft_Background.dds""/>"
+Assert-Contains $backgroundUiEntity "<m_Name text=""GraceAshcroft_Background_UI""/>"
+Assert-Contains $backgroundUiEntity "<Element text=""UserInterface""/>"
+Assert-Contains $foregroundUiEntity "<m_ClassName text=""UserInterface""/>"
+Assert-Contains $foregroundUiEntity "<m_Width>1024</m_Width>"
+Assert-Contains $foregroundUiEntity "<m_Height>2048</m_Height>"
+Assert-Contains $foregroundUiEntity "<m_RelativePath text=""../GraceAshcroft_Foreground.dds""/>"
+Assert-Contains $foregroundUiEntity "<m_Name text=""GraceAshcroft_Foreground_UI""/>"
+Assert-Contains $foregroundUiEntity "<Element text=""UserInterface""/>"
+Assert-Contains $foregroundFallbackEntity "<m_ClassName text=""Leader_Fallback""/>"
+Assert-Contains $foregroundFallbackEntity "<m_Width>1024</m_Width>"
+Assert-Contains $foregroundFallbackEntity "<m_Height>2048</m_Height>"
+Assert-Contains $foregroundFallbackEntity "<m_RelativePath text=""../GraceAshcroft_Foreground.dds""/>"
+Assert-Contains $foregroundFallbackEntity "<m_Name text=""GraceAshcroft_Foreground_Fallback""/>"
+Assert-Contains $foregroundFallbackEntity "<Element text=""Leader_Fallback""/>"
+Assert-Contains $foregroundFallbackEntity "<Element text=""Leader""/>"
+Assert-Contains $foregroundFallbackEntity "<Element text=""Fallback""/>"
+Assert-NotContains $backgroundUiEntity $oldBoardBase
+Assert-NotContains $foregroundUiEntity $oldBoardBase
+Assert-NotContains $foregroundFallbackEntity $oldBoardBase
+Assert-Contains $loadingSceneUiEntity "<m_ClassName text=""UserInterface""/>"
+Assert-Contains $loadingSceneUiEntity "<m_Width>2048</m_Width>"
+Assert-Contains $loadingSceneUiEntity "<m_Height>1024</m_Height>"
+Assert-Contains $loadingSceneUiEntity "<m_RelativePath text=""../GraceAshcroft_LoadingScene.dds""/>"
+Assert-Contains $loadingSceneUiEntity "<m_Name text=""GraceAshcroft_LoadingScene_UI""/>"
+Assert-Contains $loadingSceneUiEntity "<Element text=""UserInterface""/>"
+Assert-Contains $loadingBlankUiEntity "<m_ClassName text=""UserInterface""/>"
+Assert-Contains $loadingBlankUiEntity "<m_Width>8</m_Width>"
+Assert-Contains $loadingBlankUiEntity "<m_Height>8</m_Height>"
+Assert-Contains $loadingBlankUiEntity "<m_RelativePath text=""../GraceAshcroft_LoadingBlank.dds""/>"
+Assert-Contains $loadingBlankUiEntity "<m_Name text=""GraceAshcroft_LoadingBlank_UI""/>"
+Assert-Contains $loadingBlankUiEntity "<Element text=""UserInterface""/>"
+Assert-NotContains $loadingSceneUiEntity $oldBoardBase
+Assert-NotContains $loadingBlankUiEntity $oldBoardBase
 
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_BACKGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_GRACE_ASHCROFT"
+Assert-BinaryContains $uiTextureBlp "IMG_LOADING_SCENE_GRACE_ASHCROFT"
+Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT"
 Assert-BinaryContains $leaderFallbackBlp "FALLBACK_NEUTRAL_GRACE_ASHCROFT"
+Assert-BinaryContains $leaderFallbackBlp "GraceAshcroft_Foreground_Fallback"
+Assert-BinaryNotContains $uiTextureBlp $oldBoardBase
+Assert-BinaryNotContains $leaderFallbackBlp $oldBoardBase
 
 Write-Host "Grace Ashcroft mod static validation passed."

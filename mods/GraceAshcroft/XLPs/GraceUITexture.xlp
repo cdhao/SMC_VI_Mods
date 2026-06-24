@@ -11,11 +11,19 @@
 	<m_Entries>
 		<Element>
 			<m_EntryID text="IMG_LOADING_BACKGROUND_GRACE_ASHCROFT"/>
-			<m_ObjectName text="GraceAshcroft_Board_UI"/>
+			<m_ObjectName text="GraceAshcroft_Background_UI"/>
 		</Element>
 		<Element>
 			<m_EntryID text="IMG_LOADING_FOREGROUND_GRACE_ASHCROFT"/>
-			<m_ObjectName text="GraceAshcroft_Board_UI"/>
+			<m_ObjectName text="GraceAshcroft_Foreground_UI"/>
+		</Element>
+		<Element>
+			<m_EntryID text="IMG_LOADING_SCENE_GRACE_ASHCROFT"/>
+			<m_ObjectName text="GraceAshcroft_LoadingScene_UI"/>
+		</Element>
+		<Element>
+			<m_EntryID text="IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT"/>
+			<m_ObjectName text="GraceAshcroft_LoadingBlank_UI"/>
 		</Element>
 	</m_Entries>
 	<m_AllowedPlatforms>

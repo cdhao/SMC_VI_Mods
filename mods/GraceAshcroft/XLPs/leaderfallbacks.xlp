@@ -11,7 +11,7 @@
 	<m_Entries>
 		<Element>
 			<m_EntryID text="FALLBACK_NEUTRAL_GRACE_ASHCROFT"/>
-			<m_ObjectName text="GraceAshcroft_Board_Fallback"/>
+			<m_ObjectName text="GraceAshcroft_Foreground_Fallback"/>
 		</Element>
 	</m_Entries>
 	<m_AllowedPlatforms>
