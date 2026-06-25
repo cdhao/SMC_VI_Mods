@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $modRoot = Join-Path $root "mods\GraceAshcroft"
+$assetRoot = Join-Path $root "assets\GraceAshcroft"
 
 function Assert-FileExists {
     param([string]$Path)
@@ -160,14 +161,22 @@ $icons = Join-Path $modRoot "Icons\GraceIcons.sql"
 $districtArtDef = Join-Path $modRoot "ArtDefs\Districts.artdef"
 $fallbackLeaderArtDef = Join-Path $modRoot "ArtDefs\FallbackLeaders.artdef"
 $artDep = Join-Path $modRoot "GraceAshcroft.dep"
-$backgroundImage = Join-Path $modRoot "Images\GraceAshcroft_Background.png"
-$backgroundTexture = Join-Path $modRoot "Images\GraceAshcroft_Background.dds"
-$foregroundImage = Join-Path $modRoot "Images\GraceAshcroft_Foreground.png"
-$foregroundTexture = Join-Path $modRoot "Images\GraceAshcroft_Foreground.dds"
-$loadingSceneImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.png"
-$loadingSceneTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.dds"
-$loadingBlankImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.png"
-$loadingBlankTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.dds"
+$backgroundImage = Join-Path $assetRoot "leader-art\png\GraceAshcroft_Background.png"
+$backgroundTexture = Join-Path $assetRoot "leader-art\dds\GraceAshcroft_Background.dds"
+$foregroundImage = Join-Path $assetRoot "leader-art\png\GraceAshcroft_Foreground.png"
+$foregroundTexture = Join-Path $assetRoot "leader-art\dds\GraceAshcroft_Foreground.dds"
+$loadingSceneImage = Join-Path $assetRoot "leader-art\png\GraceAshcroft_LoadingScene.png"
+$loadingSceneTexture = Join-Path $assetRoot "leader-art\dds\GraceAshcroft_LoadingScene.dds"
+$loadingBlankImage = Join-Path $assetRoot "leader-art\png\GraceAshcroft_LoadingBlank.png"
+$loadingBlankTexture = Join-Path $assetRoot "leader-art\dds\GraceAshcroft_LoadingBlank.dds"
+$modBackgroundImage = Join-Path $modRoot "Images\GraceAshcroft_Background.png"
+$modBackgroundTexture = Join-Path $modRoot "Images\GraceAshcroft_Background.dds"
+$modForegroundImage = Join-Path $modRoot "Images\GraceAshcroft_Foreground.png"
+$modForegroundTexture = Join-Path $modRoot "Images\GraceAshcroft_Foreground.dds"
+$modLoadingSceneImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.png"
+$modLoadingSceneTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.dds"
+$modLoadingBlankImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.png"
+$modLoadingBlankTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.dds"
 $backgroundUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Background_UI.tex"
 $foregroundUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Foreground_UI.tex"
 $foregroundFallbackEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Foreground_Fallback.tex"
@@ -182,13 +191,50 @@ $uiTextureXlp = Join-Path $modRoot "XLPs\GraceUITexture.xlp"
 $leaderFallbackXlp = Join-Path $modRoot "XLPs\leaderfallbacks.xlp"
 $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
 $leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
+$iconSizes = @(22, 30, 32, 38, 50, 64, 80, 256)
+$iconBases = @(
+    "GraceAshcroft_Icon_Hemolytic",
+    "GraceAshcroft_Icon_Stabilizer",
+    "GraceAshcroft_Icon_Steroid",
+    "GraceAshcroft_Icon_InfectedBlood",
+    "GraceAshcroft_Icon_Leader"
+)
+$iconSources = @(
+    (Join-Path $assetRoot "source\icons\GraceAshcroft_Hemolytic.png"),
+    (Join-Path $assetRoot "source\icons\GraceAshcroft_Stabilizer.png"),
+    (Join-Path $assetRoot "source\icons\GraceAshcroft_Steroid.png"),
+    (Join-Path $assetRoot "source\icons\GraceAshcroft_InfectedBlood.png"),
+    (Join-Path $assetRoot "source\icons\GraceAshcroft_LeaderIcon.png")
+)
 
 @($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
-@($oldBoardImage, $oldBoardTexture, $oldBoardUiEntity, $oldBoardFallbackEntity) | ForEach-Object {
+@($oldBoardImage, $oldBoardTexture, $oldBoardUiEntity, $oldBoardFallbackEntity, $modBackgroundImage, $modBackgroundTexture, $modForegroundImage, $modForegroundTexture, $modLoadingSceneImage, $modLoadingSceneTexture, $modLoadingBlankImage, $modLoadingBlankTexture) | ForEach-Object {
     Assert-FileMissing $_
+}
+
+$iconSources | ForEach-Object {
+    Assert-FileExists $_
+}
+
+foreach ($iconBase in $iconBases) {
+    foreach ($iconSize in $iconSizes) {
+        $iconName = "${iconBase}_${iconSize}"
+        $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
+        $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
+        $modDds = Join-Path $modRoot "Images\${iconName}.dds"
+        $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+
+        Assert-FileExists $generatedPng
+        Assert-FileExists $generatedDds
+        Assert-FileExists $modTex
+        Assert-FileMissing $modDds
+        Assert-DdsHeader $generatedDds $iconSize $iconSize 32
+        Assert-Contains $modTex "<m_Name text=""${iconName}""/>"
+        Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
+    }
 }
 
 Assert-DdsHeader $backgroundTexture 2048 1024 32
@@ -208,19 +254,24 @@ Assert-Contains $modinfo "UpdateArt"
 Assert-Contains $modinfo "GraceAshcroft.dep"
 Assert-Contains $modinfo "ArtDefs/Districts.artdef"
 Assert-Contains $modinfo "ArtDefs/FallbackLeaders.artdef"
-Assert-Contains $modinfo "Images/GraceAshcroft_Background.png"
-Assert-Contains $modinfo "Images/GraceAshcroft_Background.dds"
-Assert-Contains $modinfo "Images/GraceAshcroft_Foreground.png"
-Assert-Contains $modinfo "Images/GraceAshcroft_Foreground.dds"
-Assert-Contains $modinfo "Images/GraceAshcroft_LoadingScene.png"
-Assert-Contains $modinfo "Images/GraceAshcroft_LoadingScene.dds"
-Assert-Contains $modinfo "Images/GraceAshcroft_LoadingBlank.png"
-Assert-Contains $modinfo "Images/GraceAshcroft_LoadingBlank.dds"
+Assert-NotContains $modinfo "Images/GraceAshcroft_Background.png"
+Assert-NotContains $modinfo "Images/GraceAshcroft_Background.dds"
+Assert-NotContains $modinfo "Images/GraceAshcroft_Foreground.png"
+Assert-NotContains $modinfo "Images/GraceAshcroft_Foreground.dds"
+Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingScene.png"
+Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingScene.dds"
+Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingBlank.png"
+Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingBlank.dds"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Background_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_Fallback.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingScene_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingBlank_UI.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Leader_256.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_256.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Stabilizer_256.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Steroid_256.tex"
 Assert-Contains $modinfo "XLPs/GraceUITexture.xlp"
 Assert-Contains $modinfo "XLPs/leaderfallbacks.xlp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/GraceUITexture.blp"
@@ -235,6 +286,8 @@ Assert-Contains $config "Players:Expansion2_Players"
 Assert-Contains $config "DISTRICT_GRACE_ARK"
 Assert-Contains $config "'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT'"
 Assert-Contains $config "'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
+Assert-Contains $config "'ICON_LEADER_GRACE_ASHCROFT'"
+Assert-NotContains $config "'ICON_LEADER_DEFAULT'"
 Assert-NotContains $config "'LEADER_DEFAULT_NEUTRAL'"
 Assert-NotContains $config $oldBoardBase
 Assert-NotContains $config "BUILDING_RHODES_HILL_SANATORIUM"
@@ -601,6 +654,7 @@ Assert-NotContains $lua "SetProperty(INFECTED_BLOOD"
 
 Assert-Contains $icons "ICON_RESOURCE_INFECTED_BLOOD"
 Assert-Contains $icons "RESOURCE_INFECTED_BLOOD"
+Assert-Contains $icons "ICON_LEADER_GRACE_ASHCROFT"
 Assert-Contains $icons "ICON_DISTRICT_GRACE_ARK"
 Assert-Contains $icons "ICON_DISTRICT_GRACE_ARK_FOW"
 Assert-Contains $icons "ICON_PROJECT_GRACE_HEMOLYTIC_1"
@@ -617,11 +671,23 @@ Assert-DoesNotMatch $icons "ICON_PROJECT_GRACE_STABILIZER['""]"
 Assert-DoesNotMatch $icons "ICON_PROJECT_GRACE_STEROID['""]"
 Assert-Contains $icons "ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS"
 Assert-NotContains $icons "ICON_PROJECT_GRACE_CONTAINMENT_REVIEW"
+Assert-Contains $icons "IconTextureAtlases"
 Assert-Contains $icons "IconDefinitions"
-Assert-Contains $icons "ICON_ATLAS_RESOURCES"
+Assert-Contains $icons "ICON_ATLAS_GRACE_LEADER"
+Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD"
+Assert-Contains $icons "ICON_ATLAS_GRACE_HEMOLYTIC"
+Assert-Contains $icons "ICON_ATLAS_GRACE_STABILIZER"
+Assert-Contains $icons "ICON_ATLAS_GRACE_STEROID"
 Assert-Contains $icons "ICON_ATLAS_FONT_ICON_BASELINE_6"
 Assert-Contains $icons "ICON_ATLAS_DISTRICTS"
 Assert-Contains $icons "ICON_ATLAS_PROJECTS"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_HEMOLYTIC_1', 'ICON_ATLAS_GRACE_HEMOLYTIC', 0"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_STABILIZER_1', 'ICON_ATLAS_GRACE_STABILIZER', 0"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_STEROID_1', 'ICON_ATLAS_GRACE_STEROID', 0"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS', 'ICON_ATLAS_PROJECTS', 16"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_ABNORMAL_PATHOLOGY', 'ICON_ATLAS_PROJECTS', 16"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS', 'ICON_ATLAS_PROJECTS', 16"
+Assert-NotContains $icons "'ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_RESOURCES'"
 
 Assert-Contains $districtArtDef "DISTRICT_GRACE_ARK"
 Assert-Contains $districtArtDef "<m_ElementName text=""DISTRICT_CAMPUS""/>"
@@ -664,6 +730,11 @@ Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Background_UI"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Foreground_UI""/>"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingScene_UI""/>"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingBlank_UI""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Leader_256""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_InfectedBlood_256""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Hemolytic_256""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Stabilizer_256""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Steroid_256""/>"
 Assert-NotContains $uiTextureXlp $oldBoardBase
 Assert-Contains $leaderFallbackXlp "<m_ClassName text=""LeaderFallback""/>"
 Assert-Contains $leaderFallbackXlp "<m_PackageName text=""LeaderFallbacks""/>"
@@ -713,6 +784,11 @@ Assert-BinaryContains $uiTextureBlp "IMG_LOADING_BACKGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_SCENE_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT"
+Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Leader_256"
+Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_InfectedBlood_256"
+Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Hemolytic_256"
+Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Stabilizer_256"
+Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Steroid_256"
 Assert-BinaryContains $leaderFallbackBlp "FALLBACK_NEUTRAL_GRACE_ASHCROFT"
 Assert-BinaryContains $leaderFallbackBlp "GraceAshcroft_Foreground_Fallback"
 Assert-BinaryNotContains $uiTextureBlp $oldBoardBase

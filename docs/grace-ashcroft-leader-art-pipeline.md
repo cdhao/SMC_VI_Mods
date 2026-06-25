@@ -2,6 +2,8 @@
 
 本文记录 `mods/GraceAshcroft` 的领袖图片资源链。重点是《文明 VI》的开始加载界面和外交界面不是同一条渲染路径，不能简单共用同一张贴图。
 
+源图和中间图放在 `assets/GraceAshcroft`，不要留在 `mods/GraceAshcroft`。Mod 目录只保留运行和注册需要的 `.sql/.tex/.xlp/.artdef/.dep/.blp` 等文件。
+
 另一个独立问题是 DDS 像素通道顺序。`Images/Textures/*.tex` 当前统一声明：
 
 ```xml
@@ -30,26 +32,28 @@ A = 0xFF000000
 
 ## 资源分工
 
-当前使用五类图片资源：
+当前领袖大图使用五类图片资源，源文件位于 `assets/GraceAshcroft/leader-art`：
 
-- `Images/GraceAshcroft_Background.png/dds`
+- `leader-art/png/GraceAshcroft_Background.png` 与 `leader-art/dds/GraceAshcroft_Background.dds`
   - 干净背景图，尺寸 `2048x1024`。
   - 用于外交背景和玩家选择界面的 `PortraitBackground`。
 
-- `Images/GraceAshcroft_Foreground.png/dds`
+- `leader-art/png/GraceAshcroft_Foreground.png` 与 `leader-art/dds/GraceAshcroft_Foreground.dds`
   - 透明人物前景，尺寸 `1024x2048`。
   - 用于玩家选择界面的 `Portrait`，以及外交 fallback 人物。
 
-- `Images/GraceAshcroft_LoadingScene.png/dds`
+- `leader-art/png/GraceAshcroft_LoadingScene.png` 与 `leader-art/dds/GraceAshcroft_LoadingScene.dds`
   - 开始加载界面专用合成图，尺寸 `2048x1024`。
   - 内容是背景加人物合成后的整张图。
 
-- `Images/GraceAshcroft_LoadingBlank.png/dds`
+- `leader-art/png/GraceAshcroft_LoadingBlank.png` 与 `leader-art/dds/GraceAshcroft_LoadingBlank.dds`
   - 开始加载界面专用透明占位图，尺寸 `8x8`。
   - 用来占用 `LoadingInfo.ForegroundImage`，避免原版开始界面对前景层染色。
 
 - `Images/Textures/*.tex`
   - Asset Cooker 使用的纹理实例描述文件。
+
+图标源文件位于 `assets/GraceAshcroft/source/icons`，生成文件位于 `assets/GraceAshcroft/generated/icons`。`tools/build_grace_icon_assets.py` 会生成图标 PNG/DDS、写入对应 `.tex`，并把图标 texture entries 加入 `XLPs/GraceUITexture.xlp`。
 
 ## 开始加载界面
 
@@ -140,23 +144,52 @@ texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_LoadingBlan
 如果本机没有 `texconv.exe`，使用项目脚本写出 legacy RGBA DDS：
 
 ```powershell
-python tools\write_rgba_dds.py mods\GraceAshcroft\Images\GraceAshcroft_Background.png mods\GraceAshcroft\Images\GraceAshcroft_Foreground.png mods\GraceAshcroft\Images\GraceAshcroft_LoadingScene.png mods\GraceAshcroft\Images\GraceAshcroft_LoadingBlank.png
+python tools\write_rgba_dds.py --out-dir assets\GraceAshcroft\leader-art\dds assets\GraceAshcroft\leader-art\png\GraceAshcroft_Background.png assets\GraceAshcroft\leader-art\png\GraceAshcroft_Foreground.png assets\GraceAshcroft\leader-art\png\GraceAshcroft_LoadingScene.png assets\GraceAshcroft\leader-art\png\GraceAshcroft_LoadingBlank.png
 ```
 
 该脚本只读取正常 PNG 的 RGBA 像素，直接写出匹配 `PF_R8G8B8A8_UNORM` 的 DDS header 和像素数据。
+
+## 图标生成
+
+五张图标源图：
+
+```text
+assets/GraceAshcroft/source/icons/GraceAshcroft_Hemolytic.png
+assets/GraceAshcroft/source/icons/GraceAshcroft_Stabilizer.png
+assets/GraceAshcroft/source/icons/GraceAshcroft_Steroid.png
+assets/GraceAshcroft/source/icons/GraceAshcroft_InfectedBlood.png
+assets/GraceAshcroft/source/icons/GraceAshcroft_LeaderIcon.png
+```
+
+生成命令：
+
+```powershell
+python tools\build_grace_icon_assets.py
+```
+
+该命令会生成 `22/30/32/38/50/64/80/256` 八个尺寸，并更新：
+
+```text
+assets/GraceAshcroft/generated/icons/png
+assets/GraceAshcroft/generated/icons/dds
+mods/GraceAshcroft/Images/Textures/GraceAshcroft_Icon_*.tex
+mods/GraceAshcroft/XLPs/GraceUITexture.xlp
+```
+
+Cook 前需要把 `assets/GraceAshcroft/leader-art/dds` 和生成的图标 DDS 作为 cooker 输入放到 `mods/GraceAshcroft/Images`。Cook 完后，`mods/GraceAshcroft/Images` 根目录应清空，只保留 `Images/Textures` 子目录。
 
 ## 换图时的建议
 
 如果只换人物立绘：
 
-1. 替换 `GraceAshcroft_Foreground.png`。
+1. 替换 `assets/GraceAshcroft/leader-art/png/GraceAshcroft_Foreground.png`。
 2. 使用 `texconv.exe` 或 `tools/write_rgba_dds.py` 重新生成 `GraceAshcroft_Foreground.dds`。
 3. 重新生成 `GraceAshcroft_LoadingScene.png/dds`。
 4. 重新 cook `GraceUITexture.blp` 和 `LeaderFallbacks.blp`。
 
 如果只换背景：
 
-1. 替换 `GraceAshcroft_Background.png`。
+1. 替换 `assets/GraceAshcroft/leader-art/png/GraceAshcroft_Background.png`。
 2. 使用 `texconv.exe` 或 `tools/write_rgba_dds.py` 重新生成 `GraceAshcroft_Background.dds`。
 3. 重新生成 `GraceAshcroft_LoadingScene.png/dds`。
 4. 重新 cook `GraceUITexture.blp`。

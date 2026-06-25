@@ -8,6 +8,7 @@ source PNG colors unchanged and writes a DDS header whose masks match RGBA.
 
 from __future__ import annotations
 
+import argparse
 import struct
 import sys
 from pathlib import Path
@@ -66,16 +67,19 @@ def write_rgba_dds(source: Path, target: Path) -> None:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) < 2:
-        print("Usage: write_rgba_dds.py <source.png> [<source.png> ...]", file=sys.stderr)
-        return 2
+    parser = argparse.ArgumentParser(
+        description="Write uncompressed legacy RGBA DDS files from PNG inputs."
+    )
+    parser.add_argument("sources", metavar="source.png", nargs="+")
+    parser.add_argument("--out-dir", type=Path, default=None)
+    args = parser.parse_args(argv[1:])
 
-    for arg in argv[1:]:
+    for arg in args.sources:
         source = Path(arg)
         if source.suffix.lower() != ".png":
             print(f"Skipping non-PNG input: {source}", file=sys.stderr)
             continue
-        target = source.with_suffix(".dds")
+        target = (args.out_dir / source.with_suffix(".dds").name) if args.out_dir else source.with_suffix(".dds")
         write_rgba_dds(source, target)
         print(f"Wrote {target}")
 

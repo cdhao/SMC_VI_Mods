@@ -57,19 +57,51 @@
     <File>GraceAshcroft.dep</File>
     <File>ArtDefs/Districts.artdef</File>
     <File>ArtDefs/FallbackLeaders.artdef</File>
-    <File>Images/GraceAshcroft_Background.png</File>
-    <File>Images/GraceAshcroft_Background.dds</File>
-    <File>Images/GraceAshcroft_Foreground.png</File>
-    <File>Images/GraceAshcroft_Foreground.dds</File>
-    <File>Images/GraceAshcroft_LoadingScene.png</File>
-    <File>Images/GraceAshcroft_LoadingScene.dds</File>
-    <File>Images/GraceAshcroft_LoadingBlank.png</File>
-    <File>Images/GraceAshcroft_LoadingBlank.dds</File>
     <File>Images/Textures/GraceAshcroft_Background_UI.tex</File>
     <File>Images/Textures/GraceAshcroft_Foreground_UI.tex</File>
     <File>Images/Textures/GraceAshcroft_Foreground_Fallback.tex</File>
     <File>Images/Textures/GraceAshcroft_LoadingScene_UI.tex</File>
     <File>Images/Textures/GraceAshcroft_LoadingBlank_UI.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_22.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_30.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_32.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_38.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_50.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_64.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_80.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_22.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_256.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_30.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_32.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_38.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_50.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_64.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_InfectedBlood_80.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_22.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_256.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_30.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_32.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_38.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_50.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_64.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Leader_80.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_22.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_256.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_30.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_32.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_38.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_50.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_64.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Stabilizer_80.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_22.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_256.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_30.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_32.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_38.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_50.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_64.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Steroid_80.tex</File>
     <File>XLPs/GraceUITexture.xlp</File>
     <File>XLPs/leaderfallbacks.xlp</File>
     <File>Platforms/Windows/BLPs/GraceUITexture.blp</File>
