@@ -24,6 +24,9 @@
     <UpdateArt id="GraceArtFrontEnd">
       <File>GraceAshcroft.dep</File>
     </UpdateArt>
+    <UpdateColors id="GraceColorsFrontEnd">
+      <File>Data/GraceColors.xml</File>
+    </UpdateColors>
   </FrontEndActions>
   <InGameActions>
     <UpdateDatabase id="GraceGameplay">
@@ -41,6 +44,9 @@
     <UpdateArt id="GraceArtInGame">
       <File>GraceAshcroft.dep</File>
     </UpdateArt>
+    <UpdateColors id="GraceColorsInGame">
+      <File>Data/GraceColors.xml</File>
+    </UpdateColors>
     <AddGameplayScripts id="GraceGameplayScripts">
       <Properties>
         <LoadOrder>1000</LoadOrder>
@@ -51,6 +57,7 @@
   <Files>
     <File>Data/Config.sql</File>
     <File>Data/Gameplay.sql</File>
+    <File>Data/GraceColors.xml</File>
     <File>Text/GraceAshcroft_zh_Hans_CN.sql</File>
     <File>Scripts/GraceGameplay.lua</File>
     <File>Icons/GraceIcons.sql</File>

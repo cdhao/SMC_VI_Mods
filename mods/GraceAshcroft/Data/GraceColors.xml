@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+  <Colors>
+    <Row>
+      <Type>COLOR_PLAYER_GRACE_LIGHT_BLUE</Type>
+      <Color>93,205,236,255</Color>
+    </Row>
+    <Row>
+      <Type>COLOR_PLAYER_GRACE_YELLOW</Type>
+      <Color>246,218,92,255</Color>
+    </Row>
+    <Row>
+      <Type>COLOR_PLAYER_GRACE_PURPLE</Type>
+      <Color>139,98,232,255</Color>
+    </Row>
+  </Colors>
+
+  <PlayerColors>
+    <Row>
+      <Type>LEADER_GRACE_ASHCROFT</Type>
+      <Usage>Unique</Usage>
+      <PrimaryColor>COLOR_PLAYER_GRACE_LIGHT_BLUE</PrimaryColor>
+      <SecondaryColor>COLOR_PLAYER_GRACE_YELLOW</SecondaryColor>
+      <Alt1PrimaryColor>COLOR_PLAYER_GRACE_PURPLE</Alt1PrimaryColor>
+      <Alt1SecondaryColor>COLOR_PLAYER_GRACE_YELLOW</Alt1SecondaryColor>
+      <Alt2PrimaryColor>COLOR_PLAYER_GRACE_YELLOW</Alt2PrimaryColor>
+      <Alt2SecondaryColor>COLOR_PLAYER_GRACE_PURPLE</Alt2SecondaryColor>
+      <Alt3PrimaryColor>COLOR_PLAYER_GRACE_LIGHT_BLUE</Alt3PrimaryColor>
+      <Alt3SecondaryColor>COLOR_PLAYER_GRACE_PURPLE</Alt3SecondaryColor>
+    </Row>
+  </PlayerColors>
+</GameData>

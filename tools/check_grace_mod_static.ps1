@@ -155,6 +155,7 @@ function Assert-Matches {
 $modinfo = Join-Path $modRoot "GraceAshcroft.modinfo"
 $config = Join-Path $modRoot "Data\Config.sql"
 $gameplay = Join-Path $modRoot "Data\Gameplay.sql"
+$colors = Join-Path $modRoot "Data\GraceColors.xml"
 $text = Join-Path $modRoot "Text\GraceAshcroft_zh_Hans_CN.sql"
 $lua = Join-Path $modRoot "Scripts\GraceGameplay.lua"
 $icons = Join-Path $modRoot "Icons\GraceIcons.sql"
@@ -207,7 +208,7 @@ $iconSources = @(
     (Join-Path $assetRoot "source\icons\GraceAshcroft_LeaderIcon.png")
 )
 
-@($modinfo, $config, $gameplay, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
+@($modinfo, $config, $gameplay, $colors, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
@@ -252,6 +253,8 @@ Assert-Contains $modinfo "UpdateIcons"
 Assert-Contains $modinfo "Icons/GraceIcons.sql"
 Assert-Contains $modinfo "UpdateArt"
 Assert-Contains $modinfo "GraceAshcroft.dep"
+Assert-Contains $modinfo "UpdateColors"
+Assert-Contains $modinfo "Data/GraceColors.xml"
 Assert-Contains $modinfo "ArtDefs/Districts.artdef"
 Assert-Contains $modinfo "ArtDefs/FallbackLeaders.artdef"
 Assert-NotContains $modinfo "Images/GraceAshcroft_Background.png"
@@ -489,6 +492,21 @@ Assert-NotContains $gameplay "GRACE_STEROID_2_COMBAT"
 Assert-NotContains $gameplay "GRACE_STEROID_3_COMBAT"
 Assert-NotContains $gameplay "GRACE_STEROID_DEFENSE"
 Assert-NotContains $gameplay "BUILDING_RHODES_HILL_SANATORIUM"
+
+Assert-Contains $colors "<Colors>"
+Assert-Contains $colors "<PlayerColors>"
+Assert-Contains $colors "<Type>LEADER_GRACE_ASHCROFT</Type>"
+Assert-Contains $colors "<Usage>Unique</Usage>"
+Assert-Contains $colors "<Type>COLOR_PLAYER_GRACE_LIGHT_BLUE</Type>"
+Assert-Contains $colors "<Type>COLOR_PLAYER_GRACE_YELLOW</Type>"
+Assert-Contains $colors "<Type>COLOR_PLAYER_GRACE_PURPLE</Type>"
+Assert-Contains $colors "<Color>93,205,236,255</Color>"
+Assert-Contains $colors "<Color>246,218,92,255</Color>"
+Assert-Contains $colors "<Color>139,98,232,255</Color>"
+Assert-Contains $colors "<PrimaryColor>COLOR_PLAYER_GRACE_LIGHT_BLUE</PrimaryColor>"
+Assert-Contains $colors "<SecondaryColor>COLOR_PLAYER_GRACE_YELLOW</SecondaryColor>"
+Assert-Contains $colors "<Alt1PrimaryColor>COLOR_PLAYER_GRACE_PURPLE</Alt1PrimaryColor>"
+Assert-Contains $colors "<Alt1SecondaryColor>COLOR_PLAYER_GRACE_YELLOW</Alt1SecondaryColor>"
 
 Assert-Contains $text "LOC_CIVILIZATION_ELPIS_PROTOCOL_NAME"
 Assert-Contains $text "LOC_LEADER_GRACE_ASHCROFT_NAME"
