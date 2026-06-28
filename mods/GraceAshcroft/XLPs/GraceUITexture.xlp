@@ -182,14 +182,6 @@
 			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_22"/>
 		</Element>
 		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_30"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_30"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_32"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_32"/>
-		</Element>
-		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_38"/>
 			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_38"/>
 		</Element>
@@ -200,10 +192,6 @@
 		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_64"/>
 			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_64"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_80"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_80"/>
 		</Element>
 		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_256"/>

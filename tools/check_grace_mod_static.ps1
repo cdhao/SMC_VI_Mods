@@ -196,11 +196,13 @@ $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
 $leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
 $iconSizes = @(22, 30, 32, 38, 50, 64, 80, 256)
 $civilizationIconSizes = @(22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
+$infectedBloodTextureSizes = @(22, 38, 50, 64, 256)
+$infectedBloodResourceAtlasSizes = @(38, 50, 64, 256)
+$obsoleteInfectedBloodTextureSizes = @(30, 32, 36, 44, 45, 48, 80, 128, 200)
 $iconBases = @(
     "GraceAshcroft_Icon_Hemolytic",
     "GraceAshcroft_Icon_Stabilizer",
     "GraceAshcroft_Icon_Steroid",
-    "GraceAshcroft_Icon_InfectedBlood",
     "GraceAshcroft_Icon_Leader"
 )
 $civilizationIconSource = Join-Path $assetRoot "source\icons\GraceAshcroft_Civilization.png"
@@ -259,6 +261,29 @@ foreach ($iconSize in $civilizationIconSizes) {
     Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
 }
 
+foreach ($iconSize in $infectedBloodTextureSizes) {
+    $iconName = "GraceAshcroft_Icon_InfectedBlood_${iconSize}"
+    $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
+    $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
+    $modDds = Join-Path $modRoot "Images\${iconName}.dds"
+    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+
+    Assert-FileExists $generatedPng
+    Assert-FileExists $generatedDds
+    Assert-FileExists $modTex
+    Assert-FileMissing $modDds
+    Assert-DdsHeader $generatedDds $iconSize $iconSize 32
+    Assert-Contains $modTex "<m_Name text=""${iconName}""/>"
+    Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
+}
+
+foreach ($iconSize in $obsoleteInfectedBloodTextureSizes) {
+    $iconName = "GraceAshcroft_Icon_InfectedBlood_${iconSize}"
+    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+
+    Assert-FileMissing $modTex
+}
+
 Assert-DdsHeader $backgroundTexture 2048 1024 32
 Assert-DdsHeader $foregroundTexture 1024 2048 32
 Assert-DdsHeader $loadingSceneTexture 2048 1024 32
@@ -267,6 +292,8 @@ Assert-DdsHeader $loadingBlankTexture 8 8 32
 Assert-Contains $iconBuildScript "copy_loading_cooker_inputs"
 Assert-Contains $iconBuildScript "cleanup_mod_dds"
 Assert-Contains $iconBuildScript "--cleanup-mod-dds"
+Assert-Contains $iconBuildScript "RESOURCE_ICON_SIZES"
+Assert-Contains $iconBuildScript """GraceAshcroft_Icon_InfectedBlood"": RESOURCE_ICON_SIZES"
 Assert-Contains $iconBuildScript "GraceAshcroft_Background.dds"
 Assert-Contains $iconBuildScript "GraceAshcroft_LoadingScene.dds"
 
@@ -325,6 +352,7 @@ Assert-Contains $config "LOC_GRACE_PLAYER_ITEM_ENHANCERS_NAME"
 Assert-Contains $config "LOC_GRACE_PLAYER_ITEM_SAMPLE_CONVERSION_NAME"
 Assert-Contains $config "'PROJECT_GRACE_HEMOLYTIC_1'"
 Assert-Contains $config "'PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS'"
+Assert-Matches $config "'PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS'\s*,\s*'ICON_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS'"
 Assert-NotContains $config "'ICON_CIVILIZATION_UNKNOWN'"
 Assert-NotContains $config "ICON_PROJECT_CAMPUS_RESEARCH_GRANTS"
 Assert-NotContains $config "LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_NAME"
@@ -743,19 +771,37 @@ Assert-Contains $icons "IconDefinitions"
 Assert-Contains $icons "ICON_ATLAS_GRACE_CIVILIZATION"
 Assert-Contains $icons "ICON_ATLAS_GRACE_LEADER"
 Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD"
+Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT"
 Assert-Contains $icons "ICON_ATLAS_GRACE_HEMOLYTIC"
 Assert-Contains $icons "ICON_ATLAS_GRACE_STABILIZER"
 Assert-Contains $icons "ICON_ATLAS_GRACE_STEROID"
-Assert-Contains $icons "ICON_ATLAS_FONT_ICON_BASELINE_6"
 Assert-Contains $icons "ICON_ATLAS_DISTRICTS"
-Assert-NotContains $icons "ICON_ATLAS_PROJECTS"
+Assert-Contains $icons "ICON_ATLAS_PROJECTS"
 Assert-Contains $icons "'ICON_CIVILIZATION_ELPIS_PROTOCOL', 'ICON_ATLAS_GRACE_CIVILIZATION', 0"
+Assert-Contains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT', 6, 22, 1, 1, 'GraceAshcroft_Icon_InfectedBlood_22')"
+Assert-Contains $icons "'ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD', 0"
+Assert-Contains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT', 0"
+Assert-NotContains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD', 0"
+Assert-NotContains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_FONT_ICON_BASELINE_6', 95"
+Assert-NotContains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD', 22,"
+foreach ($size in $infectedBloodResourceAtlasSizes) {
+    Assert-Contains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD', $size, 1, 1, 'GraceAshcroft_Icon_InfectedBlood_$size')"
+}
+foreach ($size in $infectedBloodTextureSizes) {
+    Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_$size.tex"
+    Assert-Contains $uiTextureXlp "GraceAshcroft_Icon_InfectedBlood_$size"
+}
+foreach ($size in $obsoleteInfectedBloodTextureSizes) {
+    Assert-NotContains $icons "GraceAshcroft_Icon_InfectedBlood_$size"
+    Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_$size.tex"
+    Assert-NotContains $uiTextureXlp "GraceAshcroft_Icon_InfectedBlood_$size"
+}
 Assert-Contains $icons "'ICON_PROJECT_GRACE_HEMOLYTIC_1', 'ICON_ATLAS_GRACE_HEMOLYTIC', 0"
 Assert-Contains $icons "'ICON_PROJECT_GRACE_STABILIZER_1', 'ICON_ATLAS_GRACE_STABILIZER', 0"
 Assert-Contains $icons "'ICON_PROJECT_GRACE_STEROID_1', 'ICON_ATLAS_GRACE_STEROID', 0"
-Assert-Contains $icons "'ICON_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS', 'ICON_ATLAS_GRACE_HEMOLYTIC', 0"
-Assert-Contains $icons "'ICON_PROJECT_GRACE_ABNORMAL_PATHOLOGY', 'ICON_ATLAS_GRACE_STABILIZER', 0"
-Assert-Contains $icons "'ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS', 'ICON_ATLAS_GRACE_STEROID', 0"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS', 'ICON_ATLAS_PROJECTS', 16"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_ABNORMAL_PATHOLOGY', 'ICON_ATLAS_PROJECTS', 16"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS', 'ICON_ATLAS_PROJECTS', 16"
 Assert-NotContains $icons "'ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_RESOURCES'"
 
 Assert-Contains $districtArtDef "DISTRICT_GRACE_ARK"

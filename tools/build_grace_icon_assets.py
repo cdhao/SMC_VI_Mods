@@ -30,6 +30,7 @@ GRACE_UI_XLP = MOD_ROOT / "XLPs" / "GraceUITexture.xlp"
 
 ICON_SIZES = (22, 30, 32, 38, 50, 64, 80, 256)
 CIVILIZATION_ICON_SIZES = (22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
+RESOURCE_ICON_SIZES = (22, 38, 50, 64, 256)
 
 ICONS = {
     "GraceAshcroft_Icon_Civilization": "GraceAshcroft_Civilization.png",
@@ -42,6 +43,7 @@ ICONS = {
 
 ICON_SIZE_OVERRIDES = {
     "GraceAshcroft_Icon_Civilization": CIVILIZATION_ICON_SIZES,
+    "GraceAshcroft_Icon_InfectedBlood": RESOURCE_ICON_SIZES,
 }
 
 LOADING_DDS_INPUTS = (
