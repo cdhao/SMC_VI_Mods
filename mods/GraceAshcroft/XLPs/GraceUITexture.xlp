@@ -178,26 +178,6 @@
 			<m_ObjectName text="GraceAshcroft_Icon_Steroid_256"/>
 		</Element>
 		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_22"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_22"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_38"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_38"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_50"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_50"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_64"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_64"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_InfectedBlood_256"/>
-			<m_ObjectName text="GraceAshcroft_Icon_InfectedBlood_256"/>
-		</Element>
-		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_Leader_22"/>
 			<m_ObjectName text="GraceAshcroft_Icon_Leader_22"/>
 		</Element>

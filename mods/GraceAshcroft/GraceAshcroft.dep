@@ -90,6 +90,7 @@
 			<LibraryName text="UITexture"/>
 			<PackageDependencies>
 				<Element text="GraceUITexture.blp"/>
+				<Element text="GraceResourceIconsV2.blp"/>
 			</PackageDependencies>
 		</Element>
 	</LibraryDependencies>

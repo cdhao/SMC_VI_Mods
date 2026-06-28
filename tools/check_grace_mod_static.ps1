@@ -191,13 +191,20 @@ $oldBoardTexture = Join-Path $modRoot "Images\$oldBoardBase.dds"
 $oldBoardUiEntity = Join-Path $modRoot ("Images\Textures\" + $oldBoardBase + "_UI.tex")
 $oldBoardFallbackEntity = Join-Path $modRoot ("Images\Textures\" + $oldBoardBase + "_Fallback.tex")
 $uiTextureXlp = Join-Path $modRoot "XLPs\GraceUITexture.xlp"
+$resourceIconsXlp = Join-Path $modRoot "XLPs\GraceResourceIconsV2.xlp"
 $leaderFallbackXlp = Join-Path $modRoot "XLPs\leaderfallbacks.xlp"
 $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
+$resourceIconsBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceResourceIconsV2.blp"
 $leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
 $iconSizes = @(22, 30, 32, 38, 50, 64, 80, 256)
 $civilizationIconSizes = @(22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
-$infectedBloodTextureSizes = @(22, 38, 50, 64, 256)
-$infectedBloodResourceAtlasSizes = @(38, 50, 64, 256)
+$modVersion = 2
+$resourceAssetVersion = 2
+$resourcePackageName = "GraceResourceIconsV2"
+$resourceIconPrefix = "GraceResource_InfectedBlood_V2"
+$resourceIconSizes = @(22, 38, 50, 64, 256)
+$normalResourceIconSizes = @(38, 50, 64, 256)
+$oldInfectedBloodTextureSizes = @(22, 38, 50, 64, 256)
 $obsoleteInfectedBloodTextureSizes = @(30, 32, 36, 44, 45, 48, 80, 128, 200)
 $iconBases = @(
     "GraceAshcroft_Icon_Hemolytic",
@@ -214,7 +221,7 @@ $iconSources = @(
     (Join-Path $assetRoot "source\icons\GraceAshcroft_LeaderIcon.png")
 )
 
-@($modinfo, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
+@($modinfo, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $resourceIconsXlp, $leaderFallbackXlp, $uiTextureBlp, $resourceIconsBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
@@ -261,8 +268,8 @@ foreach ($iconSize in $civilizationIconSizes) {
     Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
 }
 
-foreach ($iconSize in $infectedBloodTextureSizes) {
-    $iconName = "GraceAshcroft_Icon_InfectedBlood_${iconSize}"
+foreach ($iconSize in $resourceIconSizes) {
+    $iconName = "${resourceIconPrefix}_${iconSize}"
     $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
     $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
     $modDds = Join-Path $modRoot "Images\${iconName}.dds"
@@ -277,7 +284,7 @@ foreach ($iconSize in $infectedBloodTextureSizes) {
     Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
 }
 
-foreach ($iconSize in $obsoleteInfectedBloodTextureSizes) {
+foreach ($iconSize in $oldInfectedBloodTextureSizes + $obsoleteInfectedBloodTextureSizes) {
     $iconName = "GraceAshcroft_Icon_InfectedBlood_${iconSize}"
     $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
 
@@ -292,12 +299,17 @@ Assert-DdsHeader $loadingBlankTexture 8 8 32
 Assert-Contains $iconBuildScript "copy_loading_cooker_inputs"
 Assert-Contains $iconBuildScript "cleanup_mod_dds"
 Assert-Contains $iconBuildScript "--cleanup-mod-dds"
+Assert-Contains $iconBuildScript "MOD_VERSION = 2"
+Assert-Contains $iconBuildScript "RESOURCE_ASSET_VERSION = 2"
 Assert-Contains $iconBuildScript "RESOURCE_ICON_SIZES"
-Assert-Contains $iconBuildScript """GraceAshcroft_Icon_InfectedBlood"": RESOURCE_ICON_SIZES"
+Assert-Contains $iconBuildScript 'RESOURCE_PACKAGE_NAME = f"GraceResourceIconsV{RESOURCE_ASSET_VERSION}"'
+Assert-Contains $iconBuildScript "def infected_blood_entry_name"
+Assert-Contains $iconBuildScript "write_grace_resource_xlp"
 Assert-Contains $iconBuildScript "GraceAshcroft_Background.dds"
 Assert-Contains $iconBuildScript "GraceAshcroft_LoadingScene.dds"
 
 Assert-Contains $modinfo "<Mod id="
+Assert-Contains $modinfo "version=""$modVersion"""
 Assert-Contains $modinfo "AddGameplayScripts"
 Assert-Contains $modinfo "Data/Config.sql"
 Assert-Contains $modinfo "Data/Gameplay.sql"
@@ -327,13 +339,20 @@ Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingScene_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingBlank_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Civilization_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Leader_256.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_256.tex"
+foreach ($size in $resourceIconSizes) {
+    Assert-Contains $modinfo "Images/Textures/${resourceIconPrefix}_$size.tex"
+}
+foreach ($size in $oldInfectedBloodTextureSizes + $obsoleteInfectedBloodTextureSizes) {
+    Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_$size.tex"
+}
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Stabilizer_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Steroid_256.tex"
 Assert-Contains $modinfo "XLPs/GraceUITexture.xlp"
+Assert-Contains $modinfo "XLPs/$resourcePackageName.xlp"
 Assert-Contains $modinfo "XLPs/leaderfallbacks.xlp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/GraceUITexture.blp"
+Assert-Contains $modinfo "Platforms/Windows/BLPs/$resourcePackageName.blp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/LeaderFallbacks.blp"
 Assert-NotContains $modinfo $oldBoardBase
 Assert-NotContains $modinfo "AddUserInterfaces"
@@ -770,28 +789,32 @@ Assert-Contains $icons "IconTextureAtlases"
 Assert-Contains $icons "IconDefinitions"
 Assert-Contains $icons "ICON_ATLAS_GRACE_CIVILIZATION"
 Assert-Contains $icons "ICON_ATLAS_GRACE_LEADER"
-Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD"
-Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT"
+Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD_V2"
+Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT_V2"
 Assert-Contains $icons "ICON_ATLAS_GRACE_HEMOLYTIC"
 Assert-Contains $icons "ICON_ATLAS_GRACE_STABILIZER"
 Assert-Contains $icons "ICON_ATLAS_GRACE_STEROID"
 Assert-Contains $icons "ICON_ATLAS_DISTRICTS"
 Assert-Contains $icons "ICON_ATLAS_PROJECTS"
 Assert-Contains $icons "'ICON_CIVILIZATION_ELPIS_PROTOCOL', 'ICON_ATLAS_GRACE_CIVILIZATION', 0"
-Assert-Contains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT', 6, 22, 1, 1, 'GraceAshcroft_Icon_InfectedBlood_22')"
-Assert-Contains $icons "'ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD', 0"
-Assert-Contains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT', 0"
+Assert-Contains $icons "DELETE FROM IconDefinitions"
+Assert-Contains $icons "DELETE FROM IconTextureAtlases"
+Assert-Contains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT_V2', 6, 22, 1, 1, '${resourceIconPrefix}_22')"
+Assert-Contains $icons "'ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD_V2', 0"
+Assert-Contains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT_V2', 0"
 Assert-NotContains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD', 0"
 Assert-NotContains $icons "'RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_FONT_ICON_BASELINE_6', 95"
-Assert-NotContains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD', 22,"
-foreach ($size in $infectedBloodResourceAtlasSizes) {
-    Assert-Contains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD', $size, 1, 1, 'GraceAshcroft_Icon_InfectedBlood_$size')"
+Assert-NotContains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD_V2', 22,"
+foreach ($size in $normalResourceIconSizes) {
+    Assert-Contains $icons "('ICON_ATLAS_GRACE_INFECTED_BLOOD_V2', $size, 1, 1, '${resourceIconPrefix}_$size')"
 }
-foreach ($size in $infectedBloodTextureSizes) {
-    Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_$size.tex"
-    Assert-Contains $uiTextureXlp "GraceAshcroft_Icon_InfectedBlood_$size"
+foreach ($size in $resourceIconSizes) {
+    $entry = "${resourceIconPrefix}_$size"
+    Assert-Contains $modinfo "Images/Textures/$entry.tex"
+    Assert-Contains $resourceIconsXlp $entry
+    Assert-BinaryContains $resourceIconsBlp $entry
 }
-foreach ($size in $obsoleteInfectedBloodTextureSizes) {
+foreach ($size in $oldInfectedBloodTextureSizes + $obsoleteInfectedBloodTextureSizes) {
     Assert-NotContains $icons "GraceAshcroft_Icon_InfectedBlood_$size"
     Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_$size.tex"
     Assert-NotContains $uiTextureXlp "GraceAshcroft_Icon_InfectedBlood_$size"
@@ -845,6 +868,7 @@ Assert-Contains $artDep "<LibraryName text=""LeaderFallback""/>"
 Assert-Contains $artDep "<Element text=""LeaderFallbacks.blp""/>"
 Assert-Contains $artDep "<LibraryName text=""UITexture""/>"
 Assert-Contains $artDep "<Element text=""GraceUITexture.blp""/>"
+Assert-Contains $artDep "<Element text=""$resourcePackageName.blp""/>"
 
 Assert-Contains $uiTextureXlp "<m_ClassName text=""UITexture""/>"
 Assert-Contains $uiTextureXlp "<m_PackageName text=""GraceUITexture""/>"
@@ -858,7 +882,14 @@ Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingScene_U
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingBlank_UI""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Civilization_256""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Leader_256""/>"
-Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_InfectedBlood_256""/>"
+Assert-NotContains $uiTextureXlp "GraceAshcroft_Icon_InfectedBlood_"
+Assert-Contains $resourceIconsXlp "<m_ClassName text=""UITexture""/>"
+Assert-Contains $resourceIconsXlp "<m_PackageName text=""$resourcePackageName""/>"
+foreach ($size in $resourceIconSizes) {
+    $entry = "${resourceIconPrefix}_$size"
+    Assert-Contains $resourceIconsXlp "<m_EntryID text=""$entry""/>"
+    Assert-Contains $resourceIconsXlp "<m_ObjectName text=""$entry""/>"
+}
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Hemolytic_256""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Stabilizer_256""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Steroid_256""/>"
@@ -913,7 +944,10 @@ Assert-BinaryContains $uiTextureBlp "IMG_LOADING_SCENE_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Civilization_256"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Leader_256"
-Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_InfectedBlood_256"
+Assert-BinaryNotContains $uiTextureBlp "GraceAshcroft_Icon_InfectedBlood_"
+foreach ($size in $resourceIconSizes) {
+    Assert-BinaryContains $resourceIconsBlp "${resourceIconPrefix}_$size"
+}
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Hemolytic_256"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Stabilizer_256"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Steroid_256"

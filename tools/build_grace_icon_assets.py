@@ -4,7 +4,7 @@
 Inputs live outside the mod in assets/GraceAshcroft/source/icons. The script
 generates intermediate PNG/DDS files under assets/GraceAshcroft/generated/icons,
 copies cooker DDS inputs into mods/GraceAshcroft/Images, writes TextureInstance
-files, and refreshes GraceUITexture.xlp entries.
+files, and refreshes GraceUITexture.xlp plus the versioned resource icon XLP.
 """
 
 from __future__ import annotations
@@ -27,23 +27,26 @@ MOD_ROOT = ROOT / "mods" / "GraceAshcroft"
 MOD_IMAGES = MOD_ROOT / "Images"
 MOD_TEXTURES = MOD_IMAGES / "Textures"
 GRACE_UI_XLP = MOD_ROOT / "XLPs" / "GraceUITexture.xlp"
+MOD_VERSION = 2
+RESOURCE_ASSET_VERSION = 2
+RESOURCE_PACKAGE_NAME = f"GraceResourceIconsV{RESOURCE_ASSET_VERSION}"
+GRACE_RESOURCE_XLP = MOD_ROOT / "XLPs" / f"{RESOURCE_PACKAGE_NAME}.xlp"
 
 ICON_SIZES = (22, 30, 32, 38, 50, 64, 80, 256)
 CIVILIZATION_ICON_SIZES = (22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
 RESOURCE_ICON_SIZES = (22, 38, 50, 64, 256)
+INFECTED_BLOOD_SOURCE = "GraceAshcroft_InfectedBlood.png"
 
 ICONS = {
     "GraceAshcroft_Icon_Civilization": "GraceAshcroft_Civilization.png",
     "GraceAshcroft_Icon_Hemolytic": "GraceAshcroft_Hemolytic.png",
     "GraceAshcroft_Icon_Stabilizer": "GraceAshcroft_Stabilizer.png",
     "GraceAshcroft_Icon_Steroid": "GraceAshcroft_Steroid.png",
-    "GraceAshcroft_Icon_InfectedBlood": "GraceAshcroft_InfectedBlood.png",
     "GraceAshcroft_Icon_Leader": "GraceAshcroft_LeaderIcon.png",
 }
 
 ICON_SIZE_OVERRIDES = {
     "GraceAshcroft_Icon_Civilization": CIVILIZATION_ICON_SIZES,
-    "GraceAshcroft_Icon_InfectedBlood": RESOURCE_ICON_SIZES,
 }
 
 LOADING_DDS_INPUTS = (
@@ -166,11 +169,17 @@ def icon_sizes_for(entry_base: str) -> tuple[int, ...]:
 
 
 def icon_entry_names() -> list[str]:
-    return [
+    entries = [
         f"{entry_base}_{size}"
         for entry_base in ICONS
         for size in icon_sizes_for(entry_base)
     ]
+    entries.extend(infected_blood_entry_name(size) for size in RESOURCE_ICON_SIZES)
+    return entries
+
+
+def infected_blood_entry_name(size: int) -> str:
+    return f"GraceResource_InfectedBlood_V{RESOURCE_ASSET_VERSION}_{size}"
 
 
 def temporary_mod_dds_paths() -> list[Path]:
@@ -287,6 +296,32 @@ def write_grace_ui_xlp(icon_entries: list[str]) -> None:
     GRACE_UI_XLP.write_text(content, encoding="utf-8", newline="\n")
 
 
+def write_grace_resource_xlp(resource_entries: list[str]) -> None:
+    entry_block = "\n".join(xlp_entry(entry, entry) for entry in resource_entries)
+    content = f'''<?xml version="1.0" encoding="UTF-8" ?>
+<AssetObjects..XLP>
+\t<m_Version>
+\t\t<major>4</major>
+\t\t<minor>0</minor>
+\t\t<build>410</build>
+\t\t<revision>536</revision>
+\t</m_Version>
+\t<m_ClassName text="UITexture"/>
+\t<m_PackageName text="{RESOURCE_PACKAGE_NAME}"/>
+\t<m_Entries>
+{entry_block}
+\t</m_Entries>
+\t<m_AllowedPlatforms>
+\t\t<Element>WINDOWS</Element>
+\t\t<Element>LINUX</Element>
+\t\t<Element>MACOS</Element>
+\t\t<Element>IOS</Element>
+\t</m_AllowedPlatforms>
+</AssetObjects..XLP>
+'''
+    GRACE_RESOURCE_XLP.write_text(content, encoding="utf-8", newline="\n")
+
+
 def build() -> None:
     GENERATED_PNG_DIR.mkdir(parents=True, exist_ok=True)
     GENERATED_DDS_DIR.mkdir(parents=True, exist_ok=True)
@@ -317,8 +352,31 @@ def build() -> None:
                 newline="\n",
             )
 
+    resource_source = SOURCE_DIR / INFECTED_BLOOD_SOURCE
+    if not resource_source.exists():
+        raise FileNotFoundError(f"Missing source icon: {resource_source}")
+    resource_prepared = prepare_icon(resource_source, "GraceResource_InfectedBlood")
+    resource_entries: list[str] = []
+    for size in RESOURCE_ICON_SIZES:
+        entry_name = infected_blood_entry_name(size)
+        resource_entries.append(entry_name)
+        icon = resize_icon(resource_prepared, size)
+        png_target = GENERATED_PNG_DIR / f"{entry_name}.png"
+        dds_target = GENERATED_DDS_DIR / f"{entry_name}.dds"
+        cooker_dds_target = MOD_IMAGES / f"{entry_name}.dds"
+        png_target.parent.mkdir(parents=True, exist_ok=True)
+        icon.save(png_target)
+        write_rgba_dds(icon, dds_target)
+        write_rgba_dds(icon, cooker_dds_target)
+        (MOD_TEXTURES / f"{entry_name}.tex").write_text(
+            texture_instance(entry_name, size),
+            encoding="utf-8",
+            newline="\n",
+        )
+
     write_grace_ui_xlp(icon_entries)
-    print(f"Generated {len(icon_entries)} icon texture entries.")
+    write_grace_resource_xlp(resource_entries)
+    print(f"Generated {len(icon_entries)} UI icon texture entries and {len(resource_entries)} resource icon entries.")
 
 
 if __name__ == "__main__":
