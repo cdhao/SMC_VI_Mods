@@ -15,6 +15,7 @@
 			<ConsumerName text="Audio"/>
 			<ArtDefDependencyPaths>
 				<Element text="Districts.artdef"/>
+				<Element text="Civilizations.artdef"/>
 			</ArtDefDependencyPaths>
 			<LibraryDependencies/>
 			<LoadsLibraries>false</LoadsLibraries>
@@ -36,6 +37,14 @@
 			<LoadsLibraries>false</LoadsLibraries>
 		</Element>
 		<Element>
+			<ConsumerName text="Civilizations"/>
+			<ArtDefDependencyPaths>
+				<Element text="Civilizations.artdef"/>
+			</ArtDefDependencyPaths>
+			<LibraryDependencies/>
+			<LoadsLibraries>true</LoadsLibraries>
+		</Element>
+		<Element>
 			<ConsumerName text="LeaderFallback"/>
 			<ArtDefDependencyPaths>
 				<Element text="FallbackLeaders.artdef"/>
@@ -55,6 +64,10 @@
 		</Element>
 	</SystemDependencies>
 	<ArtDefDependencies>
+		<Element>
+			<ArtDefPath text="Civilizations.artdef"/>
+			<ArtDefDependencyPaths/>
+		</Element>
 		<Element>
 			<ArtDefPath text="Districts.artdef"/>
 			<ArtDefDependencyPaths>

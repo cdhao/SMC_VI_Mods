@@ -9,6 +9,8 @@ files, and refreshes GraceUITexture.xlp entries.
 
 from __future__ import annotations
 
+import argparse
+import shutil
 import struct
 from pathlib import Path
 
@@ -18,6 +20,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 ASSET_ROOT = ROOT / "assets" / "GraceAshcroft"
 SOURCE_DIR = ASSET_ROOT / "source" / "icons"
+LEADER_ART_DDS_DIR = ASSET_ROOT / "leader-art" / "dds"
 GENERATED_PNG_DIR = ASSET_ROOT / "generated" / "icons" / "png"
 GENERATED_DDS_DIR = ASSET_ROOT / "generated" / "icons" / "dds"
 MOD_ROOT = ROOT / "mods" / "GraceAshcroft"
@@ -26,14 +29,27 @@ MOD_TEXTURES = MOD_IMAGES / "Textures"
 GRACE_UI_XLP = MOD_ROOT / "XLPs" / "GraceUITexture.xlp"
 
 ICON_SIZES = (22, 30, 32, 38, 50, 64, 80, 256)
+CIVILIZATION_ICON_SIZES = (22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
 
 ICONS = {
+    "GraceAshcroft_Icon_Civilization": "GraceAshcroft_Civilization.png",
     "GraceAshcroft_Icon_Hemolytic": "GraceAshcroft_Hemolytic.png",
     "GraceAshcroft_Icon_Stabilizer": "GraceAshcroft_Stabilizer.png",
     "GraceAshcroft_Icon_Steroid": "GraceAshcroft_Steroid.png",
     "GraceAshcroft_Icon_InfectedBlood": "GraceAshcroft_InfectedBlood.png",
     "GraceAshcroft_Icon_Leader": "GraceAshcroft_LeaderIcon.png",
 }
+
+ICON_SIZE_OVERRIDES = {
+    "GraceAshcroft_Icon_Civilization": CIVILIZATION_ICON_SIZES,
+}
+
+LOADING_DDS_INPUTS = (
+    "GraceAshcroft_Background.dds",
+    "GraceAshcroft_Foreground.dds",
+    "GraceAshcroft_LoadingScene.dds",
+    "GraceAshcroft_LoadingBlank.dds",
+)
 
 BASE_XLP_ENTRIES = (
     ("IMG_LOADING_BACKGROUND_GRACE_ASHCROFT", "GraceAshcroft_Background_UI"),
@@ -143,6 +159,41 @@ def resize_icon(image: Image.Image, size: int) -> Image.Image:
     return canvas
 
 
+def icon_sizes_for(entry_base: str) -> tuple[int, ...]:
+    return ICON_SIZE_OVERRIDES.get(entry_base, ICON_SIZES)
+
+
+def icon_entry_names() -> list[str]:
+    return [
+        f"{entry_base}_{size}"
+        for entry_base in ICONS
+        for size in icon_sizes_for(entry_base)
+    ]
+
+
+def temporary_mod_dds_paths() -> list[Path]:
+    paths = [MOD_IMAGES / dds_name for dds_name in LOADING_DDS_INPUTS]
+    paths.extend(MOD_IMAGES / f"{entry_name}.dds" for entry_name in icon_entry_names())
+    return paths
+
+
+def copy_loading_cooker_inputs() -> None:
+    for dds_name in LOADING_DDS_INPUTS:
+        source = LEADER_ART_DDS_DIR / dds_name
+        if not source.exists():
+            raise FileNotFoundError(f"Missing loading DDS source: {source}")
+        shutil.copyfile(source, MOD_IMAGES / dds_name)
+
+
+def cleanup_mod_dds() -> None:
+    removed = 0
+    for target in temporary_mod_dds_paths():
+        if target.exists():
+            target.unlink()
+            removed += 1
+    print(f"Removed {removed} temporary cooker DDS files from {MOD_IMAGES}.")
+
+
 def texture_instance(entry_name: str, size: int) -> str:
     dds_name = f"{entry_name}.dds"
     return f'''<?xml version="1.0" encoding="UTF-8" ?>
@@ -239,6 +290,7 @@ def build() -> None:
     GENERATED_DDS_DIR.mkdir(parents=True, exist_ok=True)
     MOD_IMAGES.mkdir(parents=True, exist_ok=True)
     MOD_TEXTURES.mkdir(parents=True, exist_ok=True)
+    copy_loading_cooker_inputs()
 
     icon_entries: list[str] = []
     for entry_base, source_name in ICONS.items():
@@ -246,7 +298,7 @@ def build() -> None:
         if not source.exists():
             raise FileNotFoundError(f"Missing source icon: {source}")
         prepared = prepare_icon(source, entry_base)
-        for size in ICON_SIZES:
+        for size in icon_sizes_for(entry_base):
             entry_name = f"{entry_base}_{size}"
             icon_entries.append(entry_name)
             icon = resize_icon(prepared, size)
@@ -268,4 +320,15 @@ def build() -> None:
 
 
 if __name__ == "__main__":
-    build()
+    parser = argparse.ArgumentParser(description="Build Grace Ashcroft Civ VI icon assets.")
+    parser.add_argument(
+        "--cleanup-mod-dds",
+        action="store_true",
+        help="Remove temporary DDS cooker inputs from mods/GraceAshcroft/Images after cooking.",
+    )
+    args = parser.parse_args()
+
+    if args.cleanup_mod_dds:
+        cleanup_mod_dds()
+    else:
+        build()

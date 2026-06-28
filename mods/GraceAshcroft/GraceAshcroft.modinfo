@@ -62,6 +62,7 @@
     <File>Scripts/GraceGameplay.lua</File>
     <File>Icons/GraceIcons.sql</File>
     <File>GraceAshcroft.dep</File>
+    <File>ArtDefs/Civilizations.artdef</File>
     <File>ArtDefs/Districts.artdef</File>
     <File>ArtDefs/FallbackLeaders.artdef</File>
     <File>Images/Textures/GraceAshcroft_Background_UI.tex</File>
@@ -69,6 +70,20 @@
     <File>Images/Textures/GraceAshcroft_Foreground_Fallback.tex</File>
     <File>Images/Textures/GraceAshcroft_LoadingScene_UI.tex</File>
     <File>Images/Textures/GraceAshcroft_LoadingBlank_UI.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_22.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_256.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_30.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_32.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_36.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_38.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_44.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_45.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_48.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_50.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_64.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_80.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_128.tex</File>
+    <File>Images/Textures/GraceAshcroft_Icon_Civilization_200.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_22.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_30.tex</File>

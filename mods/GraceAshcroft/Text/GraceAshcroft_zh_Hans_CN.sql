@@ -3,13 +3,13 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '厄尔庇斯协议'),
     ('zh_Hans_CN', 'LOC_CIVILIZATION_ELPIS_PROTOCOL_ADJECTIVE', '厄尔庇斯协议的'),
     ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_NAME', '感染样本管制'),
-    ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '偏好靠近河流与丘陵出生。开局触发“文字”尤里卡。特色区域“方舟”替代学院，方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力。研究“文字”后，击杀蛮族单位可获得战略资源感染者血液，再通过方舟项目转化为战斗强化、战略物资、科研收益或尤里卡。拥有感染者血液时，单位升级金币费用降低 50%；每次成功升级消耗 1 感染者血液。BSAA补给箱：单位击杀敌方作战单位时，获得相当于该单位基础 [ICON_Strength] 战斗力 50% 的 [ICON_Gold] 金币。'),
+    ('zh_Hans_CN', 'LOC_TRAIT_CIVILIZATION_ELPIS_PROTOCOL_DESCRIPTION', '开局触发“文字”尤里卡。感染者血液可用于单位升级和方舟项目。拥有感染者血液时，单位升级 [ICON_Gold] 金币费用降低 50%；每次升级消耗 1 份感染者血液。'),
 
     ('zh_Hans_CN', 'LOC_LEADER_GRACE_ASHCROFT_NAME', '格蕾丝·阿什克罗夫特'),
     ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_NAME', '隔离线调查员'),
-    ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_DESCRIPTION', '清剿蛮族威胁并回收感染样本。通过短周期城市项目将感染者血液制备为溶血剂、稳定剂、类固醇，或转化为后勤与科研成果。'),
+    ('zh_Hans_CN', 'LOC_TRAIT_LEADER_GRACE_ASHCROFT_DESCRIPTION', '研究“文字”后，击杀蛮族单位获得 1 份感染者血液，清除蛮族营地获得 2 份感染者血液。单位击杀敌方作战单位时，获得等同于该单位基础 [ICON_Strength] 战斗力 50% 的 [ICON_Gold] 金币。'),
     ('zh_Hans_CN', 'LOC_PEDIA_LEADERS_PAGE_LEADER_GRACE_ASHCROFT_QUOTE', '每一份样本都是下一次生还的证据。'),
-    ('zh_Hans_CN', 'LOC_LOADING_INFO_LEADER_GRACE_ASHCROFT', '格蕾丝·阿什克罗夫特，隔离线的灯仍未熄灭。厄尔庇斯协议会清剿失控威胁，回收危险样本，用方舟和BSAA补给箱把恐惧转化为秩序、后勤、治疗和真相。'),
+    ('zh_Hans_CN', 'LOC_LOADING_INFO_LEADER_GRACE_ASHCROFT', '我始终无法忘记那一天。[NEWLINE][NEWLINE]严苛的训练和任务几乎要了我的命，过去无法改变，但这一次，我们会做好准备。'),
 
     ('zh_Hans_CN', 'LOC_CITY_NAME_RHODES_HILL', '罗兹山'),
     ('zh_Hans_CN', 'LOC_CITY_NAME_ELPIS_SITE', '厄尔庇斯站点'),
@@ -20,7 +20,7 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_RESOURCE_INFECTED_BLOOD_NAME', '感染者血液'),
 
     ('zh_Hans_CN', 'LOC_DISTRICT_GRACE_ARK_NAME', '方舟'),
-    ('zh_Hans_CN', 'LOC_DISTRICT_GRACE_ARK_DESCRIPTION', '厄尔庇斯协议特色科技区域，替代学院，并继承学院的科技相邻规则。相邻市中心提供 +2 [ICON_Science] 科技值；每个其他相邻区域和每个相邻可建造改良设施提供 +1 [ICON_Science] 科技值。方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力。方舟为相邻专业区域提供 +1 对应主要产出的相邻加成，并拥有军营式防御能力。研究“货币”后，驻扎在方舟中的陆地远程单位获得 +1 攻击距离和 +1 视野。'),
+    ('zh_Hans_CN', 'LOC_DISTRICT_GRACE_ARK_DESCRIPTION', '替代学院，继承学院的基础效果和科技相邻规则。相邻市中心提供 +2 [ICON_Science] 科技值；其他相邻区域和相邻可建造改良设施各提供 +1 [ICON_Science] 科技值。方舟的科技相邻加成同时提供等额 [ICON_Production] 生产力，并为相邻专业区域提供 +1 对应主要产出。方舟具有军营式防御能力。研究“货币”后，驻扎在方舟中的陆地远程单位获得 +1 攻击距离和 +1 视野。'),
     ('zh_Hans_CN', 'LOC_TRAIT_DISTRICT_GRACE_ARK_NAME', '{LOC_DISTRICT_GRACE_ARK_NAME}'),
     ('zh_Hans_CN', 'LOC_TRAIT_DISTRICT_GRACE_ARK_DESCRIPTION', '{LOC_DISTRICT_GRACE_ARK_DESCRIPTION}'),
 
@@ -34,6 +34,11 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_GRACE_ARK_TO_PRODUCTION_DESCRIPTION', '+{1_Num} [ICON_Production] 生产力，来自相邻方舟。'),
     ('zh_Hans_CN', 'LOC_GRACE_ARK_GARRISON_RANGE_PREVIEW', '方舟火控：+1 攻击距离。'),
     ('zh_Hans_CN', 'LOC_GRACE_ARK_GARRISON_SIGHT_PREVIEW', '方舟观察：+1 视野。'),
+
+    ('zh_Hans_CN', 'LOC_GRACE_PLAYER_ITEM_ENHANCERS_NAME', '强化剂制备'),
+    ('zh_Hans_CN', 'LOC_GRACE_PLAYER_ITEM_ENHANCERS_DESCRIPTION', '在方舟中消耗感染者血液，永久提升三类强化剂等级，高级效果覆盖低级效果。[NEWLINE][NEWLINE]溶血剂：所有单位对蛮族单位获得 +5／+10／+15 [ICON_Strength] 战斗力。[NEWLINE]稳定剂：所有单位获得 +5／+10／+15 [ICON_Strength] 战斗力。[NEWLINE]类固醇：每回合开始时，所有受伤单位恢复 5／10／15 点生命值。'),
+    ('zh_Hans_CN', 'LOC_GRACE_PLAYER_ITEM_SAMPLE_CONVERSION_NAME', '样本转化项目'),
+    ('zh_Hans_CN', 'LOC_GRACE_PLAYER_ITEM_SAMPLE_CONVERSION_DESCRIPTION', '方舟可以通过三种项目，将感染者血液转化为科研成果或战略资源。[NEWLINE][NEWLINE]血液样本分析：消耗 1 份感染者血液，随机触发一个当前时代可用的尤里卡。[NEWLINE]病理人才资助：处理 1—4 份感染者血液，根据项目所在城市的科技值、大科学家点数产出和当前时代，获得一次性科技值与大科学家点数。[NEWLINE]战略物资合成：处理 1—5 份感染者血液，每份样本转化为 2 点同一种已解锁战略资源，优先补充库存最低的资源。'),
 
     ('zh_Hans_CN', 'LOC_PROJECT_GRACE_HEMOLYTIC_1_NAME', '溶血剂制备 I'),
     ('zh_Hans_CN', 'LOC_PROJECT_GRACE_HEMOLYTIC_1_SHORT_NAME', '溶血剂 I'),

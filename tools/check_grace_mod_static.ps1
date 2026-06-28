@@ -159,6 +159,8 @@ $colors = Join-Path $modRoot "Data\GraceColors.xml"
 $text = Join-Path $modRoot "Text\GraceAshcroft_zh_Hans_CN.sql"
 $lua = Join-Path $modRoot "Scripts\GraceGameplay.lua"
 $icons = Join-Path $modRoot "Icons\GraceIcons.sql"
+$iconBuildScript = Join-Path $root "tools\build_grace_icon_assets.py"
+$civilizationsArtDef = Join-Path $modRoot "ArtDefs\Civilizations.artdef"
 $districtArtDef = Join-Path $modRoot "ArtDefs\Districts.artdef"
 $fallbackLeaderArtDef = Join-Path $modRoot "ArtDefs\FallbackLeaders.artdef"
 $artDep = Join-Path $modRoot "GraceAshcroft.dep"
@@ -193,6 +195,7 @@ $leaderFallbackXlp = Join-Path $modRoot "XLPs\leaderfallbacks.xlp"
 $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
 $leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
 $iconSizes = @(22, 30, 32, 38, 50, 64, 80, 256)
+$civilizationIconSizes = @(22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
 $iconBases = @(
     "GraceAshcroft_Icon_Hemolytic",
     "GraceAshcroft_Icon_Stabilizer",
@@ -200,6 +203,7 @@ $iconBases = @(
     "GraceAshcroft_Icon_InfectedBlood",
     "GraceAshcroft_Icon_Leader"
 )
+$civilizationIconSource = Join-Path $assetRoot "source\icons\GraceAshcroft_Civilization.png"
 $iconSources = @(
     (Join-Path $assetRoot "source\icons\GraceAshcroft_Hemolytic.png"),
     (Join-Path $assetRoot "source\icons\GraceAshcroft_Stabilizer.png"),
@@ -208,7 +212,7 @@ $iconSources = @(
     (Join-Path $assetRoot "source\icons\GraceAshcroft_LeaderIcon.png")
 )
 
-@($modinfo, $config, $gameplay, $colors, $text, $lua, $icons, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
+@($modinfo, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $leaderFallbackXlp, $uiTextureBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
@@ -219,6 +223,7 @@ $iconSources = @(
 $iconSources | ForEach-Object {
     Assert-FileExists $_
 }
+Assert-FileExists $civilizationIconSource
 
 foreach ($iconBase in $iconBases) {
     foreach ($iconSize in $iconSizes) {
@@ -238,10 +243,32 @@ foreach ($iconBase in $iconBases) {
     }
 }
 
+foreach ($iconSize in $civilizationIconSizes) {
+    $iconName = "GraceAshcroft_Icon_Civilization_${iconSize}"
+    $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
+    $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
+    $modDds = Join-Path $modRoot "Images\${iconName}.dds"
+    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+
+    Assert-FileExists $generatedPng
+    Assert-FileExists $generatedDds
+    Assert-FileExists $modTex
+    Assert-FileMissing $modDds
+    Assert-DdsHeader $generatedDds $iconSize $iconSize 32
+    Assert-Contains $modTex "<m_Name text=""${iconName}""/>"
+    Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
+}
+
 Assert-DdsHeader $backgroundTexture 2048 1024 32
 Assert-DdsHeader $foregroundTexture 1024 2048 32
 Assert-DdsHeader $loadingSceneTexture 2048 1024 32
 Assert-DdsHeader $loadingBlankTexture 8 8 32
+
+Assert-Contains $iconBuildScript "copy_loading_cooker_inputs"
+Assert-Contains $iconBuildScript "cleanup_mod_dds"
+Assert-Contains $iconBuildScript "--cleanup-mod-dds"
+Assert-Contains $iconBuildScript "GraceAshcroft_Background.dds"
+Assert-Contains $iconBuildScript "GraceAshcroft_LoadingScene.dds"
 
 Assert-Contains $modinfo "<Mod id="
 Assert-Contains $modinfo "AddGameplayScripts"
@@ -255,6 +282,7 @@ Assert-Contains $modinfo "UpdateArt"
 Assert-Contains $modinfo "GraceAshcroft.dep"
 Assert-Contains $modinfo "UpdateColors"
 Assert-Contains $modinfo "Data/GraceColors.xml"
+Assert-Contains $modinfo "ArtDefs/Civilizations.artdef"
 Assert-Contains $modinfo "ArtDefs/Districts.artdef"
 Assert-Contains $modinfo "ArtDefs/FallbackLeaders.artdef"
 Assert-NotContains $modinfo "Images/GraceAshcroft_Background.png"
@@ -270,6 +298,7 @@ Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_Fallback.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingScene_UI.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingBlank_UI.tex"
+Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Civilization_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Leader_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex"
@@ -290,6 +319,16 @@ Assert-Contains $config "DISTRICT_GRACE_ARK"
 Assert-Contains $config "'IMG_LOADING_FOREGROUND_GRACE_ASHCROFT'"
 Assert-Contains $config "'IMG_LOADING_BACKGROUND_GRACE_ASHCROFT'"
 Assert-Contains $config "'ICON_LEADER_GRACE_ASHCROFT'"
+Assert-Contains $config "'ICON_CIVILIZATION_ELPIS_PROTOCOL'"
+Assert-Contains $config "'ICON_RESOURCE_INFECTED_BLOOD'"
+Assert-Contains $config "LOC_GRACE_PLAYER_ITEM_ENHANCERS_NAME"
+Assert-Contains $config "LOC_GRACE_PLAYER_ITEM_SAMPLE_CONVERSION_NAME"
+Assert-Contains $config "'PROJECT_GRACE_HEMOLYTIC_1'"
+Assert-Contains $config "'PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS'"
+Assert-NotContains $config "'ICON_CIVILIZATION_UNKNOWN'"
+Assert-NotContains $config "ICON_PROJECT_CAMPUS_RESEARCH_GRANTS"
+Assert-NotContains $config "LOC_PROJECT_GRACE_ABNORMAL_PATHOLOGY_NAME"
+Assert-NotContains $config "LOC_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS_NAME"
 Assert-NotContains $config "'ICON_LEADER_DEFAULT'"
 Assert-NotContains $config "'LEADER_DEFAULT_NEUTRAL'"
 Assert-NotContains $config $oldBoardBase
@@ -530,11 +569,20 @@ Assert-Contains $text "稳定剂 III"
 Assert-Contains $text "类固醇 III"
 Assert-Contains $text "每回合开始时所有受伤单位恢复 +15 [ICON_Damaged] 生命值"
 Assert-Contains $text "方舟"
-Assert-Contains $text "方舟的 [ICON_Science] 科技相邻加成也提供等额 [ICON_Production] 生产力"
-Assert-Contains $text "每个其他相邻区域"
-Assert-Contains $text "每个相邻可建造改良设施"
+Assert-Contains $text "我始终无法忘记那一天"
+Assert-Contains $text "严苛的训练和任务几乎要了我的命"
+Assert-Contains $text "研究“文字”后，击杀蛮族单位获得 1 份感染者血液"
+Assert-Contains $text "清除蛮族营地获得 2 份感染者血液"
+Assert-Contains $text "开局触发“文字”尤里卡"
+Assert-Contains $text "感染者血液可用于单位升级和方舟项目"
+Assert-Contains $text "方舟的科技相邻加成同时提供等额 [ICON_Production] 生产力"
+Assert-Contains $text "其他相邻区域和相邻可建造改良设施各提供 +1 [ICON_Science] 科技值"
 Assert-Contains $text "研究“货币”后"
 Assert-Contains $text "陆地远程单位获得 +1 攻击距离和 +1 视野"
+Assert-Contains $text "LOC_GRACE_PLAYER_ITEM_ENHANCERS_NAME"
+Assert-Contains $text "LOC_GRACE_PLAYER_ITEM_ENHANCERS_DESCRIPTION"
+Assert-Contains $text "LOC_GRACE_PLAYER_ITEM_SAMPLE_CONVERSION_NAME"
+Assert-Contains $text "LOC_GRACE_PLAYER_ITEM_SAMPLE_CONVERSION_DESCRIPTION"
 Assert-Contains $text "LOC_GRACE_ARK_GARRISON_RANGE_PREVIEW"
 Assert-Contains $text "LOC_GRACE_ARK_GARRISON_SIGHT_PREVIEW"
 Assert-NotContains $text "LOC_GRACE_ARK_PRODUCTION_MIRROR_DESCRIPTION"
@@ -549,8 +597,8 @@ Assert-Contains $text "LOC_GRACE_NOTIFICATION_PATHOLOGY_DONE"
 Assert-Contains $text "LOC_GRACE_NOTIFICATION_EUREKA_FALLBACK_PATHOLOGY"
 Assert-Contains $text "消耗 1 感染者血液"
 Assert-Contains $text "BSAA补给箱"
-Assert-Contains $text "拥有感染者血液时，单位升级金币费用降低 50%"
-Assert-Contains $text "每次成功升级消耗 1 感染者血液"
+Assert-Contains $text "拥有感染者血液时，单位升级 [ICON_Gold] 金币费用降低 50%"
+Assert-Contains $text "每次升级消耗 1 份感染者血液"
 Assert-Contains $text "病理人才资助"
 Assert-Contains $text "战略物资合成"
 Assert-Contains $text "当前城市每回合"
@@ -672,6 +720,7 @@ Assert-NotContains $lua "SetProperty(INFECTED_BLOOD"
 
 Assert-Contains $icons "ICON_RESOURCE_INFECTED_BLOOD"
 Assert-Contains $icons "RESOURCE_INFECTED_BLOOD"
+Assert-Contains $icons "ICON_CIVILIZATION_ELPIS_PROTOCOL"
 Assert-Contains $icons "ICON_LEADER_GRACE_ASHCROFT"
 Assert-Contains $icons "ICON_DISTRICT_GRACE_ARK"
 Assert-Contains $icons "ICON_DISTRICT_GRACE_ARK_FOW"
@@ -691,6 +740,7 @@ Assert-Contains $icons "ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS"
 Assert-NotContains $icons "ICON_PROJECT_GRACE_CONTAINMENT_REVIEW"
 Assert-Contains $icons "IconTextureAtlases"
 Assert-Contains $icons "IconDefinitions"
+Assert-Contains $icons "ICON_ATLAS_GRACE_CIVILIZATION"
 Assert-Contains $icons "ICON_ATLAS_GRACE_LEADER"
 Assert-Contains $icons "ICON_ATLAS_GRACE_INFECTED_BLOOD"
 Assert-Contains $icons "ICON_ATLAS_GRACE_HEMOLYTIC"
@@ -698,13 +748,14 @@ Assert-Contains $icons "ICON_ATLAS_GRACE_STABILIZER"
 Assert-Contains $icons "ICON_ATLAS_GRACE_STEROID"
 Assert-Contains $icons "ICON_ATLAS_FONT_ICON_BASELINE_6"
 Assert-Contains $icons "ICON_ATLAS_DISTRICTS"
-Assert-Contains $icons "ICON_ATLAS_PROJECTS"
+Assert-NotContains $icons "ICON_ATLAS_PROJECTS"
+Assert-Contains $icons "'ICON_CIVILIZATION_ELPIS_PROTOCOL', 'ICON_ATLAS_GRACE_CIVILIZATION', 0"
 Assert-Contains $icons "'ICON_PROJECT_GRACE_HEMOLYTIC_1', 'ICON_ATLAS_GRACE_HEMOLYTIC', 0"
 Assert-Contains $icons "'ICON_PROJECT_GRACE_STABILIZER_1', 'ICON_ATLAS_GRACE_STABILIZER', 0"
 Assert-Contains $icons "'ICON_PROJECT_GRACE_STEROID_1', 'ICON_ATLAS_GRACE_STEROID', 0"
-Assert-Contains $icons "'ICON_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS', 'ICON_ATLAS_PROJECTS', 16"
-Assert-Contains $icons "'ICON_PROJECT_GRACE_ABNORMAL_PATHOLOGY', 'ICON_ATLAS_PROJECTS', 16"
-Assert-Contains $icons "'ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS', 'ICON_ATLAS_PROJECTS', 16"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_BLOOD_SAMPLE_ANALYSIS', 'ICON_ATLAS_GRACE_HEMOLYTIC', 0"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_ABNORMAL_PATHOLOGY', 'ICON_ATLAS_GRACE_STABILIZER', 0"
+Assert-Contains $icons "'ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS', 'ICON_ATLAS_GRACE_STEROID', 0"
 Assert-NotContains $icons "'ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_RESOURCES'"
 
 Assert-Contains $districtArtDef "DISTRICT_GRACE_ARK"
@@ -716,6 +767,14 @@ Assert-Contains $districtArtDef "<m_ElementName text=""Campus_UnderConstruction"
 Assert-Contains $districtArtDef "Build_District_Campus"
 Assert-Contains $districtArtDef "PLAY_AMBIENCE_DISTRICT_CAMPUS"
 Assert-Contains $districtArtDef "STOP_AMBIENCE_DISTRICT_CAMPUS"
+Assert-Contains $civilizationsArtDef "<m_TemplateName text=""Civilizations""/>"
+Assert-Contains $civilizationsArtDef "<m_CollectionName text=""Civilization""/>"
+Assert-Contains $civilizationsArtDef "<m_CollectionName text=""Audio""/>"
+Assert-Contains $civilizationsArtDef "<m_Value text=""China""/>"
+Assert-Contains $civilizationsArtDef "<m_ParamName text=""XrefName""/>"
+Assert-Contains $civilizationsArtDef "<m_Name text=""CIVILIZATION_ELPIS_PROTOCOL""/>"
+Assert-NotContains $civilizationsArtDef "CIVILIZATION_CHINA"
+Assert-NotContains $civilizationsArtDef "China_Music"
 Assert-Contains $fallbackLeaderArtDef "<m_TemplateName text=""LeaderFallback""/>"
 Assert-Contains $fallbackLeaderArtDef "<m_Name text=""LEADER_GRACE_ASHCROFT""/>"
 Assert-Contains $fallbackLeaderArtDef "<m_Name text=""DEFAULT""/>"
@@ -730,8 +789,11 @@ Assert-Contains $artDep "<ArtDefPath text=""Districts.artdef""/>"
 Assert-Contains $artDep "<ConsumerName text=""LeaderFallback""/>"
 Assert-Contains $artDep "<Element text=""FallbackLeaders.artdef""/>"
 Assert-Contains $artDep "<Element text=""LeaderFallback""/>"
+Assert-Contains $artDep "<ConsumerName text=""Civilizations""/>"
+Assert-Contains $artDep "<Element text=""Civilizations.artdef""/>"
 Assert-Contains $artDep "<ConsumerName text=""UI""/>"
 Assert-Contains $artDep "<Element text=""UITexture""/>"
+Assert-Contains $artDep "<ArtDefPath text=""Civilizations.artdef""/>"
 Assert-Contains $artDep "<ArtDefPath text=""FallbackLeaders.artdef""/>"
 Assert-Contains $artDep "<LibraryName text=""LeaderFallback""/>"
 Assert-Contains $artDep "<Element text=""LeaderFallbacks.blp""/>"
@@ -748,6 +810,7 @@ Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Background_UI"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Foreground_UI""/>"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingScene_UI""/>"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingBlank_UI""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Civilization_256""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Leader_256""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_InfectedBlood_256""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Hemolytic_256""/>"
@@ -802,6 +865,7 @@ Assert-BinaryContains $uiTextureBlp "IMG_LOADING_BACKGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_SCENE_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT"
+Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Civilization_256"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Leader_256"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_InfectedBlood_256"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Hemolytic_256"
