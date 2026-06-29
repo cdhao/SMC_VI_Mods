@@ -16,10 +16,19 @@ if (-not (Test-Path -LiteralPath $source -PathType Container)) {
     throw "GraceAshcroft source directory not found: $source"
 }
 
-if (Test-Path -LiteralPath $target) {
-    Remove-Item -LiteralPath $target -Recurse -Force
+$resolvedModsRoot = [System.IO.Path]::GetFullPath($ModsRoot)
+$resolvedTarget = [System.IO.Path]::GetFullPath($target)
+if (-not $resolvedTarget.StartsWith($resolvedModsRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Refusing to deploy outside ModsRoot: $resolvedTarget"
 }
-New-Item -ItemType Directory -Path $ModsRoot -Force | Out-Null
-Copy-Item -LiteralPath $source -Destination $target -Recurse -Force
+if (-not $resolvedTarget.EndsWith("\GraceAshcroft", [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "Refusing unexpected GraceAshcroft target path: $resolvedTarget"
+}
 
-Write-Host "GraceAshcroft deployed to: $target"
+New-Item -ItemType Directory -Path $resolvedModsRoot -Force | Out-Null
+if (Test-Path -LiteralPath $resolvedTarget) {
+    Remove-Item -LiteralPath $resolvedTarget -Recurse -Force
+}
+Copy-Item -LiteralPath $source -Destination $resolvedTarget -Recurse -Force
+
+Write-Host "GraceAshcroft deployed to: $resolvedTarget"

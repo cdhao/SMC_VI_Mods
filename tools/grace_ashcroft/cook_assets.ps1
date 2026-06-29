@@ -8,7 +8,8 @@ $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $modRoot = Join-Path $repoRoot "mods\GraceAshcroft"
 $buildScript = Join-Path $PSScriptRoot "build_assets.py"
 $checkScript = Join-Path $PSScriptRoot "check_static.ps1"
-$resourcePackage = "GraceResourceIconsV2"
+$infectedBloodAssetVersion = 2
+$resourcePackage = "GraceResourceIconsV$infectedBloodAssetVersion"
 
 if (-not $SdkRoot) {
     $SdkRoot = "C:\Program Files (x86)\Steam\steamapps\common\Sid Meier's Civilization VI SDK"

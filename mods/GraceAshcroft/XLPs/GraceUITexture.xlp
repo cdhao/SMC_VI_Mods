@@ -194,8 +194,20 @@
 			<m_ObjectName text="GraceAshcroft_Icon_Leader_38"/>
 		</Element>
 		<Element>
+			<m_EntryID text="GraceAshcroft_Icon_Leader_45"/>
+			<m_ObjectName text="GraceAshcroft_Icon_Leader_45"/>
+		</Element>
+		<Element>
+			<m_EntryID text="GraceAshcroft_Icon_Leader_48"/>
+			<m_ObjectName text="GraceAshcroft_Icon_Leader_48"/>
+		</Element>
+		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_Leader_50"/>
 			<m_ObjectName text="GraceAshcroft_Icon_Leader_50"/>
+		</Element>
+		<Element>
+			<m_EntryID text="GraceAshcroft_Icon_Leader_55"/>
+			<m_ObjectName text="GraceAshcroft_Icon_Leader_55"/>
 		</Element>
 		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_Leader_64"/>

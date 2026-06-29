@@ -159,7 +159,7 @@ $colors = Join-Path $modRoot "Data\GraceColors.xml"
 $text = Join-Path $modRoot "Text\GraceAshcroft_zh_Hans_CN.sql"
 $lua = Join-Path $modRoot "Scripts\GraceGameplay.lua"
 $icons = Join-Path $modRoot "Icons\GraceIcons.sql"
-$iconBuildScript = Join-Path $root "tools\build_grace_icon_assets.py"
+$iconBuildScript = Join-Path $root "tools\grace_ashcroft\build_assets.py"
 $civilizationsArtDef = Join-Path $modRoot "ArtDefs\Civilizations.artdef"
 $districtArtDef = Join-Path $modRoot "ArtDefs\Districts.artdef"
 $fallbackLeaderArtDef = Join-Path $modRoot "ArtDefs\FallbackLeaders.artdef"
@@ -197,6 +197,7 @@ $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
 $resourceIconsBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceResourceIconsV2.blp"
 $leaderFallbackBlp = Join-Path $modRoot "Platforms\Windows\BLPs\LeaderFallbacks.blp"
 $iconSizes = @(22, 30, 32, 38, 50, 64, 80, 256)
+$leaderIconSizes = @(22, 30, 32, 38, 45, 48, 50, 55, 64, 80, 256)
 $civilizationIconSizes = @(22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
 $modVersion = 2
 $resourceAssetVersion = 2
@@ -252,6 +253,27 @@ foreach ($iconBase in $iconBases) {
     }
 }
 
+foreach ($iconSize in $leaderIconSizes) {
+    $iconName = "GraceAshcroft_Icon_Leader_${iconSize}"
+    $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
+    $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
+    $modDds = Join-Path $modRoot "Images\${iconName}.dds"
+    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+
+    Assert-FileExists $generatedPng
+    Assert-FileExists $generatedDds
+    Assert-FileExists $modTex
+    Assert-FileMissing $modDds
+    Assert-DdsHeader $generatedDds $iconSize $iconSize 32
+    Assert-Contains $modTex "<m_Name text=""${iconName}""/>"
+    Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
+    Assert-Contains $modinfo "Images/Textures/${iconName}.tex"
+    Assert-Contains $icons "('ICON_ATLAS_GRACE_LEADER', $iconSize, 1, 1, '${iconName}')"
+    Assert-Contains $uiTextureXlp "<m_EntryID text=""$iconName""/>"
+    Assert-Contains $uiTextureXlp "<m_ObjectName text=""$iconName""/>"
+    Assert-BinaryContains $uiTextureBlp $iconName
+}
+
 foreach ($iconSize in $civilizationIconSizes) {
     $iconName = "GraceAshcroft_Icon_Civilization_${iconSize}"
     $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
@@ -299,12 +321,13 @@ Assert-DdsHeader $loadingBlankTexture 8 8 32
 Assert-Contains $iconBuildScript "copy_loading_cooker_inputs"
 Assert-Contains $iconBuildScript "cleanup_mod_dds"
 Assert-Contains $iconBuildScript "--cleanup-mod-dds"
-Assert-Contains $iconBuildScript "MOD_VERSION = 2"
-Assert-Contains $iconBuildScript "RESOURCE_ASSET_VERSION = 2"
-Assert-Contains $iconBuildScript "RESOURCE_ICON_SIZES"
-Assert-Contains $iconBuildScript 'RESOURCE_PACKAGE_NAME = f"GraceResourceIconsV{RESOURCE_ASSET_VERSION}"'
+Assert-Contains $iconBuildScript "INFECTED_BLOOD_ASSET_VERSION = 2"
+Assert-Contains $iconBuildScript "INFECTED_BLOOD_ICON_SIZES"
+Assert-Contains $iconBuildScript "LEADER_ICON_SIZES"
+Assert-Contains $iconBuildScript 'INFECTED_BLOOD_PACKAGE_NAME = f"GraceResourceIconsV{INFECTED_BLOOD_ASSET_VERSION}"'
+Assert-Contains $iconBuildScript 'f"GraceResource_InfectedBlood_V{INFECTED_BLOOD_ASSET_VERSION}"'
 Assert-Contains $iconBuildScript "def infected_blood_entry_name"
-Assert-Contains $iconBuildScript "write_grace_resource_xlp"
+Assert-Contains $iconBuildScript "GRACE_RESOURCE_XLP.write_text"
 Assert-Contains $iconBuildScript "GraceAshcroft_Background.dds"
 Assert-Contains $iconBuildScript "GraceAshcroft_LoadingScene.dds"
 
