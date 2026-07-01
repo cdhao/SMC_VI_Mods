@@ -37,6 +37,12 @@
 			<LoadsLibraries>false</LoadsLibraries>
 		</Element>
 		<Element>
+			<ConsumerName text="IconManager"/>
+			<ArtDefDependencyPaths/>
+			<LibraryDependencies/>
+			<LoadsLibraries>false</LoadsLibraries>
+		</Element>
+		<Element>
 			<ConsumerName text="Civilizations"/>
 			<ArtDefDependencyPaths>
 				<Element text="Civilizations.artdef"/>
@@ -90,6 +96,7 @@
 			<LibraryName text="UITexture"/>
 			<PackageDependencies>
 				<Element text="GraceUITexture.blp"/>
+				<Element text="GraceCivilizationIconsV2.blp"/>
 				<Element text="GraceResourceIconsV2.blp"/>
 			</PackageDependencies>
 		</Element>

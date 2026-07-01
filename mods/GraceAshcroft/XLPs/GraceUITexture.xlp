@@ -26,62 +26,6 @@
 			<m_ObjectName text="GraceAshcroft_LoadingBlank_UI"/>
 		</Element>
 		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_22"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_22"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_30"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_30"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_32"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_32"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_36"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_36"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_38"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_38"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_44"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_44"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_45"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_45"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_48"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_48"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_50"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_50"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_64"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_64"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_80"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_80"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_128"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_128"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_200"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_200"/>
-		</Element>
-		<Element>
-			<m_EntryID text="GraceAshcroft_Icon_Civilization_256"/>
-			<m_ObjectName text="GraceAshcroft_Icon_Civilization_256"/>
-		</Element>
-		<Element>
 			<m_EntryID text="GraceAshcroft_Icon_Hemolytic_22"/>
 			<m_ObjectName text="GraceAshcroft_Icon_Hemolytic_22"/>
 		</Element>

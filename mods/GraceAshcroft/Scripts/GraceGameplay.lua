@@ -1,4 +1,5 @@
 local CIVILIZATION_ELPIS_PROTOCOL = "CIVILIZATION_ELPIS_PROTOCOL"
+local LEADER_GRACE_ASHCROFT = "LEADER_GRACE_ASHCROFT"
 local RESOURCE_INFECTED_BLOOD = "RESOURCE_INFECTED_BLOOD"
 local WRITING_BOOST_GRANTED = "GRACE_WRITING_BOOST_GRANTED"
 
@@ -88,7 +89,9 @@ local function IsGracePlayer(playerID)
         return false
     end
 
-    return PlayerConfigurations[playerID]:GetCivilizationTypeName() == CIVILIZATION_ELPIS_PROTOCOL
+    local config = PlayerConfigurations[playerID]
+    return config:GetCivilizationTypeName() == CIVILIZATION_ELPIS_PROTOCOL
+        and config:GetLeaderTypeName() == LEADER_GRACE_ASHCROFT
 end
 
 local function IsBarbarianPlayer(playerID)

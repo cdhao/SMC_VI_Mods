@@ -70,20 +70,20 @@
     <File>Images/Textures/GraceAshcroft_Foreground_Fallback.tex</File>
     <File>Images/Textures/GraceAshcroft_LoadingScene_UI.tex</File>
     <File>Images/Textures/GraceAshcroft_LoadingBlank_UI.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_22.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_256.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_30.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_32.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_36.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_38.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_44.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_45.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_48.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_50.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_64.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_80.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_128.tex</File>
-    <File>Images/Textures/GraceAshcroft_Icon_Civilization_200.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_22.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_256.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_30.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_32.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_36.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_38.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_44.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_45.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_48.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_50.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_64.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_80.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_128.tex</File>
+    <File>Images/Textures/GraceCivilization_ElpisProtocol_V2_200.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_22.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Hemolytic_30.tex</File>
@@ -125,9 +125,11 @@
     <File>Images/Textures/GraceAshcroft_Icon_Steroid_64.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Steroid_80.tex</File>
     <File>XLPs/GraceUITexture.xlp</File>
+    <File>XLPs/GraceCivilizationIconsV2.xlp</File>
     <File>XLPs/GraceResourceIconsV2.xlp</File>
     <File>XLPs/leaderfallbacks.xlp</File>
     <File>Platforms/Windows/BLPs/GraceUITexture.blp</File>
+    <File>Platforms/Windows/BLPs/GraceCivilizationIconsV2.blp</File>
     <File>Platforms/Windows/BLPs/GraceResourceIconsV2.blp</File>
     <File>Platforms/Windows/BLPs/LeaderFallbacks.blp</File>
   </Files>

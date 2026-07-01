@@ -33,6 +33,15 @@ MOD_IMAGES = MOD_ROOT / "Images"
 MOD_TEXTURES = MOD_IMAGES / "Textures"
 GRACE_UI_XLP = MOD_ROOT / "XLPs" / "GraceUITexture.xlp"
 
+CIVILIZATION_ASSET_VERSION = 2
+CIVILIZATION_PACKAGE_NAME = f"GraceCivilizationIconsV{CIVILIZATION_ASSET_VERSION}"
+CIVILIZATION_ENTRY_PREFIX = (
+    f"GraceCivilization_ElpisProtocol_V{CIVILIZATION_ASSET_VERSION}"
+)
+GRACE_CIVILIZATION_XLP = MOD_ROOT / "XLPs" / f"{CIVILIZATION_PACKAGE_NAME}.xlp"
+GRACE_CIVILIZATION_BLP = (
+    MOD_ROOT / "Platforms" / "Windows" / "BLPs" / f"{CIVILIZATION_PACKAGE_NAME}.blp"
+)
 INFECTED_BLOOD_ASSET_VERSION = 2
 INFECTED_BLOOD_PACKAGE_NAME = f"GraceResourceIconsV{INFECTED_BLOOD_ASSET_VERSION}"
 INFECTED_BLOOD_ENTRY_PREFIX = (
@@ -47,10 +56,10 @@ ICON_SIZES = (22, 30, 32, 38, 50, 64, 80, 256)
 LEADER_ICON_SIZES = (22, 30, 32, 38, 45, 48, 50, 55, 64, 80, 256)
 CIVILIZATION_ICON_SIZES = (22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
 INFECTED_BLOOD_ICON_SIZES = (22, 38, 50, 64, 256)
+CIVILIZATION_ICON_SOURCE = "GraceAshcroft_Civilization.png"
 INFECTED_BLOOD_SOURCE = "GraceAshcroft_InfectedBlood.png"
 
 ICONS = {
-    "GraceAshcroft_Icon_Civilization": "GraceAshcroft_Civilization.png",
     "GraceAshcroft_Icon_Hemolytic": "GraceAshcroft_Hemolytic.png",
     "GraceAshcroft_Icon_Stabilizer": "GraceAshcroft_Stabilizer.png",
     "GraceAshcroft_Icon_Steroid": "GraceAshcroft_Steroid.png",
@@ -58,7 +67,6 @@ ICONS = {
 }
 
 ICON_SIZE_OVERRIDES = {
-    "GraceAshcroft_Icon_Civilization": CIVILIZATION_ICON_SIZES,
     "GraceAshcroft_Icon_Leader": LEADER_ICON_SIZES,
 }
 
@@ -79,6 +87,9 @@ BASE_XLP_ENTRIES = (
 LEGACY_INFECTED_BLOOD_PREFIX = "GraceAshcroft_Icon_InfectedBlood_"
 VERSIONED_INFECTED_BLOOD_PATTERN = re.compile(r"^GraceResource_InfectedBlood_V\d+_\d+$")
 VERSIONED_PACKAGE_PATTERN = re.compile(r"^GraceResourceIconsV\d+$")
+LEGACY_CIVILIZATION_PREFIX = "GraceAshcroft_Icon_Civilization_"
+VERSIONED_CIVILIZATION_PATTERN = re.compile(r"^GraceCivilization_ElpisProtocol_V\d+_\d+$")
+VERSIONED_CIVILIZATION_PACKAGE_PATTERN = re.compile(r"^GraceCivilizationIconsV\d+$")
 
 
 def prepare_icon(source: Path, entry_base: str) -> Image.Image:
@@ -101,6 +112,10 @@ def infected_blood_entry_name(size: int) -> str:
     return f"{INFECTED_BLOOD_ENTRY_PREFIX}_{size}"
 
 
+def civilization_entry_name(size: int) -> str:
+    return f"{CIVILIZATION_ENTRY_PREFIX}_{size}"
+
+
 def ui_icon_entry_names() -> list[str]:
     return [
         f"{entry_base}_{size}"
@@ -113,9 +128,14 @@ def infected_blood_entry_names() -> list[str]:
     return [infected_blood_entry_name(size) for size in INFECTED_BLOOD_ICON_SIZES]
 
 
+def civilization_entry_names() -> list[str]:
+    return [civilization_entry_name(size) for size in CIVILIZATION_ICON_SIZES]
+
+
 def temporary_mod_dds_paths() -> list[Path]:
     paths = [MOD_IMAGES / dds_name for dds_name in LOADING_DDS_INPUTS]
     paths.extend(MOD_IMAGES / f"{entry}.dds" for entry in ui_icon_entry_names())
+    paths.extend(MOD_IMAGES / f"{entry}.dds" for entry in civilization_entry_names())
     paths.extend(MOD_IMAGES / f"{entry}.dds" for entry in infected_blood_entry_names())
     return paths
 
@@ -124,6 +144,57 @@ def _is_infected_blood_stem(stem: str) -> bool:
     return stem.startswith(LEGACY_INFECTED_BLOOD_PREFIX) or bool(
         VERSIONED_INFECTED_BLOOD_PATTERN.fullmatch(stem)
     )
+
+
+def _is_civilization_stem(stem: str) -> bool:
+    return stem.startswith(LEGACY_CIVILIZATION_PREFIX) or bool(
+        VERSIONED_CIVILIZATION_PATTERN.fullmatch(stem)
+    )
+
+
+def cleanup_obsolete_civilization_assets() -> int:
+    """Remove stale civilization emblem files before generating current assets."""
+    expected_entries = set(civilization_entry_names())
+    removed = 0
+
+    for directory, suffixes in (
+        (GENERATED_PNG_DIR, {".png"}),
+        (GENERATED_DDS_DIR, {".dds"}),
+        (MOD_TEXTURES, {".tex"}),
+        (MOD_IMAGES, {".dds"}),
+    ):
+        if not directory.exists():
+            continue
+        for path in directory.iterdir():
+            if not path.is_file() or path.suffix.lower() not in suffixes:
+                continue
+            if _is_civilization_stem(path.stem) and path.stem not in expected_entries:
+                path.unlink()
+                removed += 1
+
+    xlp_dir = MOD_ROOT / "XLPs"
+    if xlp_dir.exists():
+        for path in xlp_dir.glob("GraceCivilizationIconsV*.xlp"):
+            if (
+                VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem)
+                and path.stem != CIVILIZATION_PACKAGE_NAME
+            ):
+                path.unlink()
+                removed += 1
+
+    blp_dir = MOD_ROOT / "Platforms" / "Windows" / "BLPs"
+    if blp_dir.exists():
+        for path in blp_dir.glob("GraceCivilizationIconsV*.blp"):
+            if (
+                VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem)
+                and path.stem != CIVILIZATION_PACKAGE_NAME
+            ):
+                path.unlink()
+                removed += 1
+
+    if removed:
+        print(f"Removed {removed} obsolete civilization emblem asset files.")
+    return removed
 
 
 def cleanup_obsolete_infected_blood_assets() -> int:
@@ -234,6 +305,7 @@ def write_texture_files(entry_name: str, size: int, icon: Image.Image) -> None:
 
 
 def build() -> None:
+    cleanup_obsolete_civilization_assets()
     cleanup_obsolete_infected_blood_assets()
     GENERATED_PNG_DIR.mkdir(parents=True, exist_ok=True)
     GENERATED_DDS_DIR.mkdir(parents=True, exist_ok=True)
@@ -252,6 +324,16 @@ def build() -> None:
             ui_entries.append(entry_name)
             write_texture_files(entry_name, size, resize_icon(prepared, size))
 
+    civilization_source = SOURCE_DIR / CIVILIZATION_ICON_SOURCE
+    if not civilization_source.exists():
+        raise FileNotFoundError(f"Missing source icon: {civilization_source}")
+    civilization_prepared = prepare_icon(civilization_source, "GraceCivilization_ElpisProtocol")
+    civilization_entries: list[str] = []
+    for size in CIVILIZATION_ICON_SIZES:
+        entry_name = civilization_entry_name(size)
+        civilization_entries.append(entry_name)
+        write_texture_files(entry_name, size, resize_icon(civilization_prepared, size))
+
     resource_source = SOURCE_DIR / INFECTED_BLOOD_SOURCE
     if not resource_source.exists():
         raise FileNotFoundError(f"Missing source icon: {resource_source}")
@@ -267,6 +349,14 @@ def build() -> None:
     GRACE_UI_XLP.write_text(
         xlp_document("GraceUITexture", ui_xlp_entries), encoding="utf-8", newline="\n"
     )
+    GRACE_CIVILIZATION_XLP.write_text(
+        xlp_document(
+            CIVILIZATION_PACKAGE_NAME,
+            [(entry, entry) for entry in civilization_entries],
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
     GRACE_RESOURCE_XLP.write_text(
         xlp_document(INFECTED_BLOOD_PACKAGE_NAME, [(entry, entry) for entry in resource_entries]),
         encoding="utf-8",
@@ -275,6 +365,7 @@ def build() -> None:
 
     print(
         f"Generated {len(ui_entries)} UI icon entries and "
+        f"{len(civilization_entries)} civilization emblem entries in {CIVILIZATION_PACKAGE_NAME}, and "
         f"{len(resource_entries)} infected-blood entries in {INFECTED_BLOOD_PACKAGE_NAME}."
     )
 
@@ -289,13 +380,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--cleanup-obsolete",
         action="store_true",
-        help="Only remove obsolete infected-blood assets and exit.",
+        help="Only remove obsolete versioned assets and exit.",
     )
     args = parser.parse_args(argv)
 
     if args.cleanup_mod_dds:
         cleanup_mod_dds()
     elif args.cleanup_obsolete:
+        cleanup_obsolete_civilization_assets()
         cleanup_obsolete_infected_blood_assets()
     else:
         build()

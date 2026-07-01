@@ -1,20 +1,20 @@
 INSERT OR REPLACE INTO IconTextureAtlases
     (Name, IconSize, IconsPerRow, IconsPerColumn, Filename)
 VALUES
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 22, 1, 1, 'GraceAshcroft_Icon_Civilization_22'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 30, 1, 1, 'GraceAshcroft_Icon_Civilization_30'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 32, 1, 1, 'GraceAshcroft_Icon_Civilization_32'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 36, 1, 1, 'GraceAshcroft_Icon_Civilization_36'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 38, 1, 1, 'GraceAshcroft_Icon_Civilization_38'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 44, 1, 1, 'GraceAshcroft_Icon_Civilization_44'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 45, 1, 1, 'GraceAshcroft_Icon_Civilization_45'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 48, 1, 1, 'GraceAshcroft_Icon_Civilization_48'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 50, 1, 1, 'GraceAshcroft_Icon_Civilization_50'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 64, 1, 1, 'GraceAshcroft_Icon_Civilization_64'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 80, 1, 1, 'GraceAshcroft_Icon_Civilization_80'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 128, 1, 1, 'GraceAshcroft_Icon_Civilization_128'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 200, 1, 1, 'GraceAshcroft_Icon_Civilization_200'),
-    ('ICON_ATLAS_GRACE_CIVILIZATION', 256, 1, 1, 'GraceAshcroft_Icon_Civilization_256'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 22, 1, 1, 'GraceCivilization_ElpisProtocol_V2_22'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 30, 1, 1, 'GraceCivilization_ElpisProtocol_V2_30'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 32, 1, 1, 'GraceCivilization_ElpisProtocol_V2_32'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 36, 1, 1, 'GraceCivilization_ElpisProtocol_V2_36'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 38, 1, 1, 'GraceCivilization_ElpisProtocol_V2_38'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 44, 1, 1, 'GraceCivilization_ElpisProtocol_V2_44'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 45, 1, 1, 'GraceCivilization_ElpisProtocol_V2_45'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 48, 1, 1, 'GraceCivilization_ElpisProtocol_V2_48'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 50, 1, 1, 'GraceCivilization_ElpisProtocol_V2_50'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 64, 1, 1, 'GraceCivilization_ElpisProtocol_V2_64'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 80, 1, 1, 'GraceCivilization_ElpisProtocol_V2_80'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 128, 1, 1, 'GraceCivilization_ElpisProtocol_V2_128'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 200, 1, 1, 'GraceCivilization_ElpisProtocol_V2_200'),
+    ('ICON_ATLAS_GRACE_CIVILIZATION_V2', 256, 1, 1, 'GraceCivilization_ElpisProtocol_V2_256'),
 
     ('ICON_ATLAS_GRACE_LEADER', 22, 1, 1, 'GraceAshcroft_Icon_Leader_22'),
     ('ICON_ATLAS_GRACE_LEADER', 30, 1, 1, 'GraceAshcroft_Icon_Leader_30'),
@@ -57,6 +57,9 @@ VALUES
 
 DELETE FROM IconDefinitions
 WHERE Name IN (
+    'ICON_CIVILIZATION_ELPIS_PROTOCOL',
+    'CIVILIZATION_ELPIS_PROTOCOL',
+    'ICON_LEADER_GRACE_ASHCROFT',
     'ICON_RESOURCE_INFECTED_BLOOD',
     'ICON_RESOURCE_INFECTED_BLOOD_FOW',
     'RESOURCE_INFECTED_BLOOD'
@@ -64,11 +67,19 @@ WHERE Name IN (
 
 DELETE FROM IconTextureAtlases
 WHERE Name IN (
+    'ICON_ATLAS_GRACE_CIVILIZATION',
+    'ICON_ATLAS_GRACE_CIVILIZATION_FONT',
+    'ICON_ATLAS_GRACE_CIVILIZATION_FONT_V2',
     'ICON_ATLAS_GRACE_INFECTED_BLOOD',
     'ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT',
     'ICON_ATLAS_GRACE_INFECTED_BLOOD_V2',
     'ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT_V2'
 );
+
+INSERT INTO IconTextureAtlases
+    (Name, Baseline, IconSize, IconsPerRow, IconsPerColumn, Filename)
+VALUES
+    ('ICON_ATLAS_GRACE_CIVILIZATION_FONT_V2', 6, 22, 1, 1, 'GraceCivilization_ElpisProtocol_V2_22');
 
 INSERT INTO IconTextureAtlases
     (Name, IconSize, IconsPerRow, IconsPerColumn, Filename)
@@ -86,7 +97,8 @@ VALUES
 INSERT OR REPLACE INTO IconDefinitions
     (Name, Atlas, 'Index')
 VALUES
-    ('ICON_CIVILIZATION_ELPIS_PROTOCOL', 'ICON_ATLAS_GRACE_CIVILIZATION', 0),
+    ('ICON_CIVILIZATION_ELPIS_PROTOCOL', 'ICON_ATLAS_GRACE_CIVILIZATION_V2', 0),
+    ('CIVILIZATION_ELPIS_PROTOCOL', 'ICON_ATLAS_GRACE_CIVILIZATION_FONT_V2', 0),
     ('ICON_LEADER_GRACE_ASHCROFT', 'ICON_ATLAS_GRACE_LEADER', 0),
     ('ICON_RESOURCE_INFECTED_BLOOD', 'ICON_ATLAS_GRACE_INFECTED_BLOOD_V2', 0),
     ('ICON_RESOURCE_INFECTED_BLOOD_FOW', 'ICON_ATLAS_GRACE_INFECTED_BLOOD_V2', 0),
