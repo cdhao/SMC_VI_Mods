@@ -137,11 +137,9 @@
     <File>Images/Textures/GraceAshcroft_Icon_Steroid_64.tex</File>
     <File>Images/Textures/GraceAshcroft_Icon_Steroid_80.tex</File>
     <File>XLPs/GraceUITexture.xlp</File>
-    <File>XLPs/GraceCivilizationIconsV2.xlp</File>
     <File>XLPs/GraceResourceIconsV2.xlp</File>
     <File>XLPs/leaderfallbacks.xlp</File>
     <File>Platforms/Windows/BLPs/GraceUITexture.blp</File>
-    <File>Platforms/Windows/BLPs/GraceCivilizationIconsV2.blp</File>
     <File>Platforms/Windows/BLPs/GraceResourceIconsV2.blp</File>
     <File>Platforms/Windows/BLPs/LeaderFallbacks.blp</File>
   </Files>

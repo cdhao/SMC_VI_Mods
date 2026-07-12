@@ -230,9 +230,6 @@
     <Content Include="Images\Textures\GraceResource_InfectedBlood_V2_64.tex">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Platforms\Windows\BLPs\GraceCivilizationIconsV2.blp">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Platforms\Windows\BLPs\GraceResourceIconsV2.blp">
       <SubType>Content</SubType>
     </Content>
@@ -246,9 +243,6 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Text\GraceAshcroft_zh_Hans_CN.sql">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="XLPs\GraceCivilizationIconsV2.xlp">
       <SubType>Content</SubType>
     </Content>
     <Content Include="XLPs\GraceResourceIconsV2.xlp">

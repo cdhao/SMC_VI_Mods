@@ -258,11 +258,11 @@ $iconSources = @(
     (Join-Path $assetRoot "source\icons\GraceAshcroft_LeaderIcon.png")
 )
 
-@($modinfo, $modBuddyProject, $modBuddyArtSpec, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $civilizationIconsXlp, $resourceIconsXlp, $leaderFallbackXlp, $uiTextureBlp, $civilizationIconsBlp, $resourceIconsBlp, $leaderFallbackBlp) | ForEach-Object {
+@($modinfo, $modBuddyProject, $modBuddyArtSpec, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $resourceIconsXlp, $leaderFallbackXlp, $uiTextureBlp, $resourceIconsBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
-@($oldBoardImage, $oldBoardTexture, $oldBoardUiEntity, $oldBoardFallbackEntity, $modBackgroundImage, $modBackgroundTexture, $modForegroundImage, $modForegroundTexture, $modLoadingSceneImage, $modLoadingSceneTexture, $modLoadingBlankImage, $modLoadingBlankTexture) | ForEach-Object {
+@($oldBoardImage, $oldBoardTexture, $oldBoardUiEntity, $oldBoardFallbackEntity, $modBackgroundImage, $modBackgroundTexture, $modForegroundImage, $modForegroundTexture, $modLoadingSceneImage, $modLoadingSceneTexture, $modLoadingBlankImage, $modLoadingBlankTexture, $civilizationIconsXlp, $civilizationIconsBlp) | ForEach-Object {
     Assert-FileMissing $_
 }
 
@@ -335,11 +335,11 @@ foreach ($iconSize in $civilizationIconSizes) {
     Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
     Assert-Contains $modinfo "Images/Textures/${iconName}.tex"
     Assert-NotContains $modinfo "Images/Textures/${oldIconName}.tex"
-    Assert-Contains $civilizationIconsXlp "<m_EntryID text=""$iconName""/>"
-    Assert-Contains $civilizationIconsXlp "<m_ObjectName text=""$iconName""/>"
+    Assert-Contains $uiTextureXlp "<m_EntryID text=""$iconName""/>"
+    Assert-Contains $uiTextureXlp "<m_ObjectName text=""$iconName""/>"
     Assert-NotContains $uiTextureXlp "<m_EntryID text=""$oldIconName""/>"
     Assert-NotContains $uiTextureXlp "<m_ObjectName text=""$oldIconName""/>"
-    Assert-BinaryContains $civilizationIconsBlp $iconName
+    Assert-BinaryContains $uiTextureBlp $iconName
     Assert-BinaryNotContains $uiTextureBlp $oldIconName
 }
 
@@ -376,11 +376,12 @@ Assert-Contains $iconBuildScript "cleanup_mod_dds"
 Assert-Contains $iconBuildScript "--cleanup-mod-dds"
 Assert-Contains $iconBuildScript "CIVILIZATION_ASSET_VERSION = 2"
 Assert-Contains $iconBuildScript "CIVILIZATION_ICON_SIZES"
-Assert-Contains $iconBuildScript 'CIVILIZATION_PACKAGE_NAME = f"GraceCivilizationIconsV{CIVILIZATION_ASSET_VERSION}"'
+Assert-NotContains $iconBuildScript 'CIVILIZATION_PACKAGE_NAME = f"GraceCivilizationIconsV{CIVILIZATION_ASSET_VERSION}"'
 Assert-Contains $iconBuildScript 'f"GraceCivilization_ElpisProtocol_V{CIVILIZATION_ASSET_VERSION}"'
 Assert-Contains $iconBuildScript "def civilization_entry_name"
 Assert-Contains $iconBuildScript "cleanup_obsolete_civilization_assets"
-Assert-Contains $iconBuildScript "GRACE_CIVILIZATION_XLP.write_text"
+Assert-NotContains $iconBuildScript "GRACE_CIVILIZATION_XLP.write_text"
+Assert-Contains $iconBuildScript "ui_xlp_entries.extend((entry, entry) for entry in civilization_entries)"
 Assert-Contains $iconBuildScript "INFECTED_BLOOD_ASSET_VERSION = 2"
 Assert-Contains $iconBuildScript "INFECTED_BLOOD_ICON_SIZES"
 Assert-Contains $iconBuildScript "LEADER_ICON_SIZES"
@@ -438,11 +439,11 @@ Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Stabilizer_256.tex"
 Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Steroid_256.tex"
 Assert-Contains $modinfo "XLPs/GraceUITexture.xlp"
-Assert-Contains $modinfo "XLPs/$civilizationPackageName.xlp"
+Assert-NotContains $modinfo "XLPs/$civilizationPackageName.xlp"
 Assert-Contains $modinfo "XLPs/$resourcePackageName.xlp"
 Assert-Contains $modinfo "XLPs/leaderfallbacks.xlp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/GraceUITexture.blp"
-Assert-Contains $modinfo "Platforms/Windows/BLPs/$civilizationPackageName.blp"
+Assert-NotContains $modinfo "Platforms/Windows/BLPs/$civilizationPackageName.blp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/$resourcePackageName.blp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/LeaderFallbacks.blp"
 Assert-NotContains $modinfo $oldBoardBase
@@ -905,6 +906,8 @@ Assert-Contains $icons "ICON_PROJECT_GRACE_STRATEGIC_MATERIAL_SYNTHESIS"
 Assert-NotContains $icons "ICON_PROJECT_GRACE_CONTAINMENT_REVIEW"
 Assert-Contains $icons "IconTextureAtlases"
 Assert-Contains $icons "IconDefinitions"
+Assert-NotContains $icons "INSERT OR REPLACE INTO IconTextureAtlases"
+Assert-Matches $icons "DELETE FROM IconTextureAtlases\s+WHERE Name IN \([^;]*'ICON_ATLAS_GRACE_CIVILIZATION_V2'[^;]*'ICON_ATLAS_GRACE_LEADER'[^;]*'ICON_ATLAS_GRACE_HEMOLYTIC'[^;]*'ICON_ATLAS_GRACE_STABILIZER'[^;]*'ICON_ATLAS_GRACE_STEROID'[^;]*\);"
 Assert-Contains $icons "ICON_ATLAS_GRACE_CIVILIZATION_V2"
 Assert-Contains $icons "ICON_ATLAS_GRACE_CIVILIZATION_FONT_V2"
 Assert-Contains $icons "ICON_ATLAS_GRACE_LEADER"
@@ -994,7 +997,7 @@ Assert-Contains $artDep "<LibraryName text=""LeaderFallback""/>"
 Assert-Contains $artDep "<Element text=""LeaderFallbacks.blp""/>"
 Assert-Contains $artDep "<LibraryName text=""UITexture""/>"
 Assert-Contains $artDep "<Element text=""GraceUITexture.blp""/>"
-Assert-Contains $artDep "<Element text=""$civilizationPackageName.blp""/>"
+Assert-NotContains $artDep "<Element text=""$civilizationPackageName.blp""/>"
 Assert-Contains $artDep "<Element text=""$resourcePackageName.blp""/>"
 
 Assert-Contains $modBuddyArtSpec "<AssetObjects..GameArtSpecification>"
@@ -1012,7 +1015,7 @@ Assert-Contains $modBuddyArtSpec "<libraryName text=""LeaderFallback""/>"
 Assert-Contains $modBuddyArtSpec "<Element text=""LeaderFallbacks.blp""/>"
 Assert-Contains $modBuddyArtSpec "<libraryName text=""UITexture""/>"
 Assert-Contains $modBuddyArtSpec "<Element text=""GraceUITexture.blp""/>"
-Assert-Contains $modBuddyArtSpec "<Element text=""$civilizationPackageName.blp""/>"
+Assert-NotContains $modBuddyArtSpec "<Element text=""$civilizationPackageName.blp""/>"
 Assert-Contains $modBuddyArtSpec "<Element text=""$resourcePackageName.blp""/>"
 Assert-Contains $modBuddyArtSpec "<id text=""cb2f71b7-843e-4af3-9ca7-992acda9c195""/>"
 Assert-NotContains $modBuddyArtSpec "GraceAshcroft_Icon_Civilization_"
@@ -1028,9 +1031,9 @@ Assert-Contains $modBuddyProject "<Content Include=""Data\GraceColors.xml"">"
 Assert-Contains $modBuddyProject "<Content Include=""Icons\GraceIcons.sql"">"
 Assert-Contains $modBuddyProject "<Content Include=""Images\Textures\${civilizationIconPrefix}_256.tex"">"
 Assert-Contains $modBuddyProject "<Content Include=""Images\Textures\${resourceIconPrefix}_256.tex"">"
-Assert-Contains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$civilizationPackageName.blp"">"
+Assert-NotContains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$civilizationPackageName.blp"">"
 Assert-Contains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$resourcePackageName.blp"">"
-Assert-Contains $modBuddyProject "<Content Include=""XLPs\$civilizationPackageName.xlp"">"
+Assert-NotContains $modBuddyProject "<Content Include=""XLPs\$civilizationPackageName.xlp"">"
 Assert-Contains $modBuddyProject "<Content Include=""XLPs\$resourcePackageName.xlp"">"
 Assert-Contains $modBuddyProject '<Import Project="$(MSBuildLocalExtensionPath)Civ6.targets" />'
 Assert-NotContains $modBuddyProject "GraceAshcroft_Icon_Civilization_"
@@ -1046,10 +1049,9 @@ Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_Foreground_UI"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingScene_UI""/>"
 Assert-Contains $uiTextureXlp "<m_ObjectName text=""GraceAshcroft_LoadingBlank_UI""/>"
 Assert-Contains $uiTextureXlp "<m_EntryID text=""GraceAshcroft_Icon_Leader_256""/>"
+Assert-Contains $uiTextureXlp "<m_EntryID text=""${civilizationIconPrefix}_256""/>"
 Assert-NotContains $uiTextureXlp "GraceAshcroft_Icon_Civilization_"
 Assert-NotContains $uiTextureXlp "GraceAshcroft_Icon_InfectedBlood_"
-Assert-Contains $civilizationIconsXlp "<m_ClassName text=""UITexture""/>"
-Assert-Contains $civilizationIconsXlp "<m_PackageName text=""$civilizationPackageName""/>"
 Assert-Contains $resourceIconsXlp "<m_ClassName text=""UITexture""/>"
 Assert-Contains $resourceIconsXlp "<m_PackageName text=""$resourcePackageName""/>"
 foreach ($size in $resourceIconSizes) {
@@ -1109,7 +1111,7 @@ Assert-BinaryContains $uiTextureBlp "IMG_LOADING_BACKGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_SCENE_GRACE_ASHCROFT"
 Assert-BinaryContains $uiTextureBlp "IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT"
-Assert-BinaryContains $civilizationIconsBlp "${civilizationIconPrefix}_256"
+Assert-BinaryContains $uiTextureBlp "${civilizationIconPrefix}_256"
 Assert-BinaryNotContains $uiTextureBlp "GraceAshcroft_Icon_Civilization_"
 Assert-BinaryContains $uiTextureBlp "GraceAshcroft_Icon_Leader_256"
 Assert-BinaryNotContains $uiTextureBlp "GraceAshcroft_Icon_InfectedBlood_"

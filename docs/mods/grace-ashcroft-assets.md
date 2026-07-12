@@ -25,17 +25,13 @@ powershell -ExecutionPolicy Bypass -File tools/check_grace_mod_static.ps1
 Contains:
 
 - Grace loading background and foreground assets;
+- civilization emblem entries;
 - leader icons;
 - project icons;
 - other general Grace UI textures.
 
-It must not contain the civilization-emblem or infected-blood texture entries.
-
-### `GraceCivilizationIconsV2.blp`
-
-Contains only the Elpis Protocol civilization emblem at the UI sizes registered by
-`ICON_ATLAS_GRACE_CIVILIZATION_V2` and the 22px font-icon entry registered by
-`ICON_ATLAS_GRACE_CIVILIZATION_FONT_V2`.
+It must not contain the infected-blood texture entries. The civilization emblem is
+kept in this main package while the first-load package-registration issue is tested.
 
 ### `GraceResourceIconsV2.blp`
 
@@ -86,11 +82,10 @@ Current-version files are preserved. Cleanup covers generated PNG/DDS files, mod
 
 ## BLP loading
 
-`GraceAshcroft.dep` loads three UITexture packages:
+`GraceAshcroft.dep` loads two UITexture packages:
 
 ```text
 GraceUITexture.blp
-GraceCivilizationIconsV2.blp
 GraceResourceIconsV2.blp
 ```
 
@@ -109,15 +104,15 @@ The static registration chain is complete: the front-end player data references
 the atlas points to versioned texture entries, and the XLP, BLP, DEP, and Modinfo contain
 those entries. This makes a damaged source image or missing atlas registration unlikely.
 
-The current working hypothesis is that `GraceCivilizationIconsV2.blp` is not yet available
-to the first front-end texture lookup. This is not a confirmed root cause. Candidate variables
+The current working hypothesis is that the former independent civilization package was not yet
+available to the first front-end texture lookup. This is not a confirmed root cause. Candidate variables
 are front-end action ordering, separate UITexture package registration, and differences between
 the hand-maintained Art specification and generated DEP data.
 
 Validation must change one variable at a time:
 
 1. Keep all assets unchanged and explicitly order only the front-end actions: Art `0`, Icons `10`, Config and Colors `20`.
-2. If that does not resolve a fresh-process first lookup, merge the civilization entries back into `GraceUITexture.blp` for an A/B test.
+2. Merge the civilization entries back into `GraceUITexture.blp` for an A/B test while keeping entry and Atlas names unchanged.
 3. If the package test does not resolve it, generate a complete DEP with ModBuddy and compare its consumers, libraries, package order, and `LoadsLibraries` values before replacing the current DEP.
 
 Do not lower the in-game `GraceGameplay` action from LoadOrder `1000` as part of this front-end experiment.

@@ -74,7 +74,6 @@
       <libraryName text="UITexture"/>
       <relativePackagePaths>
         <Element text="GraceUITexture.blp"/>
-        <Element text="GraceCivilizationIconsV2.blp"/>
         <Element text="GraceResourceIconsV2.blp"/>
       </relativePackagePaths>
     </Element>

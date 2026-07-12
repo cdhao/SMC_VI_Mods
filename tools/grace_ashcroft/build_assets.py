@@ -34,13 +34,8 @@ MOD_TEXTURES = MOD_IMAGES / "Textures"
 GRACE_UI_XLP = MOD_ROOT / "XLPs" / "GraceUITexture.xlp"
 
 CIVILIZATION_ASSET_VERSION = 2
-CIVILIZATION_PACKAGE_NAME = f"GraceCivilizationIconsV{CIVILIZATION_ASSET_VERSION}"
 CIVILIZATION_ENTRY_PREFIX = (
     f"GraceCivilization_ElpisProtocol_V{CIVILIZATION_ASSET_VERSION}"
-)
-GRACE_CIVILIZATION_XLP = MOD_ROOT / "XLPs" / f"{CIVILIZATION_PACKAGE_NAME}.xlp"
-GRACE_CIVILIZATION_BLP = (
-    MOD_ROOT / "Platforms" / "Windows" / "BLPs" / f"{CIVILIZATION_PACKAGE_NAME}.blp"
 )
 INFECTED_BLOOD_ASSET_VERSION = 2
 INFECTED_BLOOD_PACKAGE_NAME = f"GraceResourceIconsV{INFECTED_BLOOD_ASSET_VERSION}"
@@ -175,20 +170,14 @@ def cleanup_obsolete_civilization_assets() -> int:
     xlp_dir = MOD_ROOT / "XLPs"
     if xlp_dir.exists():
         for path in xlp_dir.glob("GraceCivilizationIconsV*.xlp"):
-            if (
-                VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem)
-                and path.stem != CIVILIZATION_PACKAGE_NAME
-            ):
+            if VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem):
                 path.unlink()
                 removed += 1
 
     blp_dir = MOD_ROOT / "Platforms" / "Windows" / "BLPs"
     if blp_dir.exists():
         for path in blp_dir.glob("GraceCivilizationIconsV*.blp"):
-            if (
-                VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem)
-                and path.stem != CIVILIZATION_PACKAGE_NAME
-            ):
+            if VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem):
                 path.unlink()
                 removed += 1
 
@@ -346,16 +335,9 @@ def build() -> None:
 
     ui_xlp_entries = list(BASE_XLP_ENTRIES)
     ui_xlp_entries.extend((entry, entry) for entry in ui_entries)
+    ui_xlp_entries.extend((entry, entry) for entry in civilization_entries)
     GRACE_UI_XLP.write_text(
         xlp_document("GraceUITexture", ui_xlp_entries), encoding="utf-8", newline="\n"
-    )
-    GRACE_CIVILIZATION_XLP.write_text(
-        xlp_document(
-            CIVILIZATION_PACKAGE_NAME,
-            [(entry, entry) for entry in civilization_entries],
-        ),
-        encoding="utf-8",
-        newline="\n",
     )
     GRACE_RESOURCE_XLP.write_text(
         xlp_document(INFECTED_BLOOD_PACKAGE_NAME, [(entry, entry) for entry in resource_entries]),
@@ -365,7 +347,7 @@ def build() -> None:
 
     print(
         f"Generated {len(ui_entries)} UI icon entries and "
-        f"{len(civilization_entries)} civilization emblem entries in {CIVILIZATION_PACKAGE_NAME}, and "
+        f"{len(civilization_entries)} civilization emblem entries in GraceUITexture, and "
         f"{len(resource_entries)} infected-blood entries in {INFECTED_BLOOD_PACKAGE_NAME}."
     )
 
