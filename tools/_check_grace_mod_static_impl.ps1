@@ -404,6 +404,11 @@ Assert-Contains $modinfo "UpdateArt"
 Assert-Contains $modinfo "GraceAshcroft.dep"
 Assert-Contains $modinfo "UpdateColors"
 Assert-Contains $modinfo "Data/GraceColors.xml"
+Assert-Matches $modinfo '<UpdateDatabase id="GraceConfig">\s*<Properties>\s*<LoadOrder>20</LoadOrder>\s*</Properties>'
+Assert-Matches $modinfo '<UpdateIcons id="GraceIconsFrontEnd">\s*<Properties>\s*<LoadOrder>10</LoadOrder>\s*</Properties>'
+Assert-Matches $modinfo '<UpdateArt id="GraceArtFrontEnd">\s*<Properties>\s*<LoadOrder>0</LoadOrder>\s*</Properties>'
+Assert-Matches $modinfo '<UpdateColors id="GraceColorsFrontEnd">\s*<Properties>\s*<LoadOrder>20</LoadOrder>\s*</Properties>'
+Assert-Matches $modinfo '<UpdateDatabase id="GraceGameplay">\s*<Properties>\s*<LoadOrder>1000</LoadOrder>\s*</Properties>'
 Assert-Contains $modinfo "ArtDefs/Civilizations.artdef"
 Assert-Contains $modinfo "ArtDefs/Districts.artdef"
 Assert-Contains $modinfo "ArtDefs/FallbackLeaders.artdef"

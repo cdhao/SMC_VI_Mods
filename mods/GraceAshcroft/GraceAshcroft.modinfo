@@ -13,18 +13,30 @@
   </Dependencies>
   <FrontEndActions>
     <UpdateDatabase id="GraceConfig">
+      <Properties>
+        <LoadOrder>20</LoadOrder>
+      </Properties>
       <File>Data/Config.sql</File>
     </UpdateDatabase>
     <UpdateText id="GraceTextFrontEnd">
       <File>Text/GraceAshcroft_zh_Hans_CN.sql</File>
     </UpdateText>
     <UpdateIcons id="GraceIconsFrontEnd">
+      <Properties>
+        <LoadOrder>10</LoadOrder>
+      </Properties>
       <File>Icons/GraceIcons.sql</File>
     </UpdateIcons>
     <UpdateArt id="GraceArtFrontEnd">
+      <Properties>
+        <LoadOrder>0</LoadOrder>
+      </Properties>
       <File>GraceAshcroft.dep</File>
     </UpdateArt>
     <UpdateColors id="GraceColorsFrontEnd">
+      <Properties>
+        <LoadOrder>20</LoadOrder>
+      </Properties>
       <File>Data/GraceColors.xml</File>
     </UpdateColors>
   </FrontEndActions>
