@@ -153,6 +153,8 @@ function Assert-Matches {
 }
 
 $modinfo = Join-Path $modRoot "GraceAshcroft.modinfo"
+$modBuddyProject = Join-Path $modRoot "GraceAshcroft.civ6proj"
+$modBuddyArtSpec = Join-Path $modRoot "GraceAshcroft.Art.xml"
 $config = Join-Path $modRoot "Data\Config.sql"
 $gameplay = Join-Path $modRoot "Data\Gameplay.sql"
 $colors = Join-Path $modRoot "Data\GraceColors.xml"
@@ -256,7 +258,7 @@ $iconSources = @(
     (Join-Path $assetRoot "source\icons\GraceAshcroft_LeaderIcon.png")
 )
 
-@($modinfo, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $civilizationIconsXlp, $resourceIconsXlp, $leaderFallbackXlp, $uiTextureBlp, $civilizationIconsBlp, $resourceIconsBlp, $leaderFallbackBlp) | ForEach-Object {
+@($modinfo, $modBuddyProject, $modBuddyArtSpec, $config, $gameplay, $colors, $text, $lua, $icons, $iconBuildScript, $civilizationsArtDef, $districtArtDef, $fallbackLeaderArtDef, $artDep, $backgroundImage, $backgroundTexture, $foregroundImage, $foregroundTexture, $loadingSceneImage, $loadingSceneTexture, $loadingBlankImage, $loadingBlankTexture, $backgroundUiEntity, $foregroundUiEntity, $foregroundFallbackEntity, $loadingSceneUiEntity, $loadingBlankUiEntity, $uiTextureXlp, $civilizationIconsXlp, $resourceIconsXlp, $leaderFallbackXlp, $uiTextureBlp, $civilizationIconsBlp, $resourceIconsBlp, $leaderFallbackBlp) | ForEach-Object {
     Assert-FileExists $_
 }
 
@@ -989,6 +991,44 @@ Assert-Contains $artDep "<LibraryName text=""UITexture""/>"
 Assert-Contains $artDep "<Element text=""GraceUITexture.blp""/>"
 Assert-Contains $artDep "<Element text=""$civilizationPackageName.blp""/>"
 Assert-Contains $artDep "<Element text=""$resourcePackageName.blp""/>"
+
+Assert-Contains $modBuddyArtSpec "<AssetObjects..GameArtSpecification>"
+Assert-Contains $modBuddyArtSpec "<name text=""GraceAshcroft""/>"
+Assert-Contains $modBuddyArtSpec "<id text=""8cf6756d-3ec5-43d4-9857-c16f46a9a440""/>"
+Assert-Contains $modBuddyArtSpec "<consumerName text=""Audio""/>"
+Assert-Contains $modBuddyArtSpec "<consumerName text=""IconManager""/>"
+Assert-Contains $modBuddyArtSpec "<consumerName text=""Civilizations""/>"
+Assert-Contains $modBuddyArtSpec "<consumerName text=""LeaderFallback""/>"
+Assert-Contains $modBuddyArtSpec "<consumerName text=""UI""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""Civilizations.artdef""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""Districts.artdef""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""FallbackLeaders.artdef""/>"
+Assert-Contains $modBuddyArtSpec "<libraryName text=""LeaderFallback""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""LeaderFallbacks.blp""/>"
+Assert-Contains $modBuddyArtSpec "<libraryName text=""UITexture""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""GraceUITexture.blp""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""$civilizationPackageName.blp""/>"
+Assert-Contains $modBuddyArtSpec "<Element text=""$resourcePackageName.blp""/>"
+Assert-Contains $modBuddyArtSpec "<id text=""cb2f71b7-843e-4af3-9ca7-992acda9c195""/>"
+Assert-NotContains $modBuddyArtSpec "GraceAshcroft_Icon_Civilization_"
+
+Assert-Contains $modBuddyProject "<Project ToolsVersion=""12.0"" DefaultTargets=""Default"""
+Assert-Contains $modBuddyProject "<Name>GraceAshcroft</Name>"
+Assert-Contains $modBuddyProject "<Guid>8cf6756d-3ec5-43d4-9857-c16f46a9a440</Guid>"
+Assert-Contains $modBuddyProject "<ProjectGuid>1f77e2a1-c977-4eb4-a3e2-6cb1b9b60b49</ProjectGuid>"
+Assert-Contains $modBuddyProject "<ModVersion>$modVersion</ModVersion>"
+Assert-Contains $modBuddyProject "<None Include=""GraceAshcroft.Art.xml"" />"
+Assert-Contains $modBuddyProject "<Content Include=""ArtDefs\Civilizations.artdef"">"
+Assert-Contains $modBuddyProject "<Content Include=""Data\GraceColors.xml"">"
+Assert-Contains $modBuddyProject "<Content Include=""Icons\GraceIcons.sql"">"
+Assert-Contains $modBuddyProject "<Content Include=""Images\Textures\${civilizationIconPrefix}_256.tex"">"
+Assert-Contains $modBuddyProject "<Content Include=""Images\Textures\${resourceIconPrefix}_256.tex"">"
+Assert-Contains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$civilizationPackageName.blp"">"
+Assert-Contains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$resourcePackageName.blp"">"
+Assert-Contains $modBuddyProject "<Content Include=""XLPs\$civilizationPackageName.xlp"">"
+Assert-Contains $modBuddyProject "<Content Include=""XLPs\$resourcePackageName.xlp"">"
+Assert-Contains $modBuddyProject '<Import Project="$(MSBuildLocalExtensionPath)Civ6.targets" />'
+Assert-NotContains $modBuddyProject "GraceAshcroft_Icon_Civilization_"
 
 Assert-Contains $uiTextureXlp "<m_ClassName text=""UITexture""/>"
 Assert-Contains $uiTextureXlp "<m_PackageName text=""GraceUITexture""/>"

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AssetObjects..GameArtSpecification>
+  <id>
+    <name text="GraceAshcroft"/>
+    <id text="8cf6756d-3ec5-43d4-9857-c16f46a9a440"/>
+  </id>
+  <artConsumers>
+    <Element>
+      <consumerName text="Audio"/>
+      <relativeArtDefPaths>
+        <Element text="Districts.artdef"/>
+        <Element text="Civilizations.artdef"/>
+      </relativeArtDefPaths>
+      <libraryDependencies/>
+      <loadsLibraries>false</loadsLibraries>
+    </Element>
+    <Element>
+      <consumerName text="StrategicView_Translate"/>
+      <relativeArtDefPaths>
+        <Element text="Districts.artdef"/>
+      </relativeArtDefPaths>
+      <libraryDependencies/>
+      <loadsLibraries>false</loadsLibraries>
+    </Element>
+    <Element>
+      <consumerName text="WorldView_Translate"/>
+      <relativeArtDefPaths>
+        <Element text="Districts.artdef"/>
+      </relativeArtDefPaths>
+      <libraryDependencies/>
+      <loadsLibraries>false</loadsLibraries>
+    </Element>
+    <Element>
+      <consumerName text="IconManager"/>
+      <relativeArtDefPaths/>
+      <libraryDependencies/>
+      <loadsLibraries>false</loadsLibraries>
+    </Element>
+    <Element>
+      <consumerName text="Civilizations"/>
+      <relativeArtDefPaths>
+        <Element text="Civilizations.artdef"/>
+      </relativeArtDefPaths>
+      <libraryDependencies/>
+      <loadsLibraries>false</loadsLibraries>
+    </Element>
+    <Element>
+      <consumerName text="LeaderFallback"/>
+      <relativeArtDefPaths>
+        <Element text="FallbackLeaders.artdef"/>
+      </relativeArtDefPaths>
+      <libraryDependencies>
+        <Element text="LeaderFallback"/>
+      </libraryDependencies>
+      <loadsLibraries>true</loadsLibraries>
+    </Element>
+    <Element>
+      <consumerName text="UI"/>
+      <relativeArtDefPaths/>
+      <libraryDependencies>
+        <Element text="UITexture"/>
+      </libraryDependencies>
+      <loadsLibraries>true</loadsLibraries>
+    </Element>
+  </artConsumers>
+  <gameLibraries>
+    <Element>
+      <libraryName text="LeaderFallback"/>
+      <relativePackagePaths>
+        <Element text="LeaderFallbacks.blp"/>
+      </relativePackagePaths>
+    </Element>
+    <Element>
+      <libraryName text="UITexture"/>
+      <relativePackagePaths>
+        <Element text="GraceUITexture.blp"/>
+        <Element text="GraceCivilizationIconsV2.blp"/>
+        <Element text="GraceResourceIconsV2.blp"/>
+      </relativePackagePaths>
+    </Element>
+  </gameLibraries>
+  <requiredGameArtIDs>
+    <Element>
+      <name text="Civ6"/>
+      <id text="cb2f71b7-843e-4af3-9ca7-992acda9c195"/>
+    </Element>
+  </requiredGameArtIDs>
+</AssetObjects..GameArtSpecification>
