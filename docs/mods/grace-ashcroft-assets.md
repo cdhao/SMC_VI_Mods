@@ -7,7 +7,7 @@ Canonical commands:
 ```powershell
 python tools/grace_ashcroft/build_assets.py
 powershell -ExecutionPolicy Bypass -File tools/grace_ashcroft/cook_assets.ps1
-powershell -ExecutionPolicy Bypass -File tools/grace_ashcroft/check_static.ps1
+python tools/grace_ashcroft/check_static.py
 powershell -ExecutionPolicy Bypass -File tools/grace_ashcroft/deploy.ps1
 ```
 
@@ -31,6 +31,13 @@ mods/GraceAshcroft                deployable runtime files only
 `mods/GraceAshcroft` intentionally contains no `Images`, `XLPs`, cooker logs,
 `.tex`, `.xlp`, `.civ6proj`, `.civ6sln`, or `.Art.xml`. Runtime texture loading uses
 the cooked BLP packages listed in `GraceAshcroft.dep` and `GraceAshcroft.modinfo`.
+
+The PowerShell checker remains valid for compatibility, but only forwards to the
+Python checker:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/grace_ashcroft/check_static.ps1
+```
 
 ## Package responsibilities
 
@@ -105,7 +112,7 @@ GraceResourceIconsV2.blp
 
 After changing XLP, TEX, BLP, atlas, or entry names, fully restart Civilization VI before testing.
 
-## Icon registration result and remaining front-end issue
+## Icon registration and save-list behavior
 
 Verified in game after replacing `INSERT OR REPLACE INTO IconTextureAtlases` with
 explicit atlas deletion followed by ordinary insertion:
@@ -114,16 +121,15 @@ explicit atlas deletion followed by ordinary insertion:
 - city-state relationship leader icons resolve correctly;
 - exact 50px runtime atlas lookups resolve after a cold game start.
 
-Remaining observed behavior:
+The temporary first-click save-list blank icon was reproduced only with saves created
+before the current resource and civilization icon packages were finalized. New saves made
+with the current V2 asset set load their civilization emblem and leader icon normally on a
+cold front-end start. Treat an old save as stale metadata during asset-package iteration;
+do not change atlas SQL or action LoadOrder based only on that old-save symptom.
 
-- On a fresh Civilization VI launch, the Elpis Protocol emblem can be blank when a save is selected for the first time.
-- Selecting another save and returning, or entering a game before opening the load-game view, makes the emblem appear.
-- The colored icon backing is present while the emblem texture is blank.
-
-The first-click save-list failure is isolated to front-end initialization timing and is
-not considered fixed by the in-game atlas correction. Selecting another save and returning
-causes the icon to appear. Keep this as a known issue and investigate it separately without
-changing the validated in-game SQL registration or lowering `GraceGameplay` LoadOrder `1000`.
+Use `IconManager:FindIconAtlasNearestSize` in FireTuner to distinguish an actual
+registration problem from save metadata. The current runtime contract requires the
+infected-blood trade icon to resolve exactly to the V2 50px entry.
 
 ## Audio
 

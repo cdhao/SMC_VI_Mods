@@ -2,7 +2,9 @@
 
 本文记录 `mods/GraceAshcroft` 的领袖图片资源链。重点是《文明 VI》的开始加载界面和外交界面不是同一条渲染路径，不能简单共用同一张贴图。
 
-源图和中间图放在 `assets/GraceAshcroft`，不要留在 `mods/GraceAshcroft`。Mod 目录只保留运行和注册需要的 `.sql/.tex/.xlp/.artdef/.dep/.blp` 等文件。
+源图和中间图放在 `assets/GraceAshcroft`，不要留在 `mods/GraceAshcroft`。
+`mods/GraceAshcroft` 只保留运行和注册需要的 `.sql/.artdef/.dep/.blp` 等文件；
+`.tex` 与 `.xlp` 是 Cooker 输入，位于 `assets/GraceAshcroft/cooker`。
 
 另一个独立问题是 DDS 像素通道顺序。`Images/Textures/*.tex` 当前统一声明：
 
@@ -50,10 +52,11 @@ A = 0xFF000000
   - 开始加载界面专用透明占位图，尺寸 `8x8`。
   - 用来占用 `LoadingInfo.ForegroundImage`，避免原版开始界面对前景层染色。
 
-- `Images/Textures/*.tex`
+- `assets/GraceAshcroft/cooker/Images/Textures/*.tex`
   - Asset Cooker 使用的纹理实例描述文件。
 
-图标源文件位于 `assets/GraceAshcroft/source/icons`，生成文件位于 `assets/GraceAshcroft/generated/icons`。`tools/build_grace_icon_assets.py` 会生成图标 PNG/DDS、写入对应 `.tex`，并把图标 texture entries 加入 `XLPs/GraceUITexture.xlp`。
+图标源文件位于 `assets/GraceAshcroft/source/icons`，生成文件位于 `assets/GraceAshcroft/generated/icons`。
+`tools/grace_ashcroft/build_assets.py` 会生成图标 PNG/DDS、写入 Cooker 对应 `.tex`，并把图标 texture entries 加入 `assets/GraceAshcroft/cooker/XLPs/GraceUITexture.xlp`。
 
 ## 开始加载界面
 
@@ -108,7 +111,7 @@ PortraitBackground = IMG_LOADING_BACKGROUND_GRACE_ASHCROFT
 
 ## BLP 注册
 
-`XLPs/GraceUITexture.xlp` 注册 UI 贴图：
+`assets/GraceAshcroft/cooker/XLPs/GraceUITexture.xlp` 注册 UI 贴图：
 
 ```text
 IMG_LOADING_BACKGROUND_GRACE_ASHCROFT -> GraceAshcroft_Background_UI
@@ -117,7 +120,7 @@ IMG_LOADING_SCENE_GRACE_ASHCROFT -> GraceAshcroft_LoadingScene_UI
 IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT -> GraceAshcroft_LoadingBlank_UI
 ```
 
-`XLPs/leaderfallbacks.xlp` 注册外交 fallback：
+`assets/GraceAshcroft/cooker/XLPs/leaderfallbacks.xlp` 注册外交 fallback：
 
 ```text
 FALLBACK_NEUTRAL_GRACE_ASHCROFT -> GraceAshcroft_Foreground_Fallback
@@ -164,7 +167,7 @@ assets/GraceAshcroft/source/icons/GraceAshcroft_LeaderIcon.png
 生成命令：
 
 ```powershell
-python tools\build_grace_icon_assets.py
+python tools\grace_ashcroft\build_assets.py
 ```
 
 该命令会生成 `22/30/32/38/50/64/80/256` 八个尺寸，并更新：
@@ -172,11 +175,13 @@ python tools\build_grace_icon_assets.py
 ```text
 assets/GraceAshcroft/generated/icons/png
 assets/GraceAshcroft/generated/icons/dds
-mods/GraceAshcroft/Images/Textures/GraceAshcroft_Icon_*.tex
-mods/GraceAshcroft/XLPs/GraceUITexture.xlp
+assets/GraceAshcroft/cooker/Images/Textures/GraceAshcroft_Icon_*.tex
+assets/GraceAshcroft/cooker/XLPs/GraceUITexture.xlp
 ```
 
-Cook 前需要把 `assets/GraceAshcroft/leader-art/dds` 和生成的图标 DDS 作为 cooker 输入放到 `mods/GraceAshcroft/Images`。Cook 完后，`mods/GraceAshcroft/Images` 根目录应清空，只保留 `Images/Textures` 子目录。
+构建脚本会把 `assets/GraceAshcroft/leader-art/dds` 与生成的图标 DDS
+复制到 `assets/GraceAshcroft/cooker/Images`。Cook 完后会清理该目录中的
+临时 DDS；运行时 Mod 目录不接收这些中间文件。
 
 ## 换图时的建议
 

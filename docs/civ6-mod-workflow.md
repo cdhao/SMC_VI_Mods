@@ -47,7 +47,8 @@ Civilization names, leader names, package names, atlas names, icon lists, and cl
 5. Confirm the expected BLP files were created in the cooker output and copy only those BLP files into `mods/<ModName>/Platforms/Windows/BLPs`.
 6. Remove temporary cooker DDS inputs from the cooker workspace.
 7. Confirm the runtime mod contains no TEX, XLP, cooker logs, or ModBuddy project files.
-8. Run the mod-specific static checker.
+8. Run the mod-specific Python static checker. The PowerShell command remains a
+   compatibility wrapper for existing local workflows.
 9. Deploy by deleting the old installed mod directory and copying the complete new directory.
 10. Fully restart Civilization VI when icon SQL, XLP, BLP, or package names change.
 
@@ -87,3 +88,19 @@ Use integer resource versions such as `V1`, `V2`, and `V3`. Do not mix decimal-s
 ## Compatibility entry points
 
 Older root-level tool commands may remain as thin wrappers while scripts move into `tools/<mod>/`. New documentation and automation should use the mod-specific paths.
+
+## Tool ownership
+
+Use Python for deterministic validation: reading text contracts, inspecting DDS
+headers, checking BLP entry strings, and confirming the runtime directory has no
+build inputs. Keep PowerShell for Windows-specific orchestration: running Asset
+Cooker, deploying a Mod directory, and cleaning temporary workspace files.
+
+For Grace Ashcroft, the canonical validation command is:
+
+```powershell
+python tools/grace_ashcroft/check_static.py
+```
+
+`tools/grace_ashcroft/check_static.ps1` and the root-level checker are retained
+only as compatibility entry points; they forward to the Python checker.
