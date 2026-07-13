@@ -18,6 +18,20 @@ python tools/build_grace_icon_assets.py
 powershell -ExecutionPolicy Bypass -File tools/check_grace_mod_static.ps1
 ```
 
+## Directory responsibilities
+
+```text
+assets/GraceAshcroft/source       editable source images
+assets/GraceAshcroft/generated    generated review PNG/DDS files
+assets/GraceAshcroft/cooker       cooker Images, TEX, XLP, logs, and temporary BLP output
+projects/GraceAshcroft            ModBuddy solution, project, and Art specification
+mods/GraceAshcroft                deployable runtime files only
+```
+
+`mods/GraceAshcroft` intentionally contains no `Images`, `XLPs`, cooker logs,
+`.tex`, `.xlp`, `.civ6proj`, `.civ6sln`, or `.Art.xml`. Runtime texture loading uses
+the cooked BLP packages listed in `GraceAshcroft.dep` and `GraceAshcroft.modinfo`.
+
 ## Package responsibilities
 
 ### `GraceUITexture.blp`
@@ -31,7 +45,7 @@ Contains:
 - other general Grace UI textures.
 
 It must not contain the infected-blood texture entries. The civilization emblem is
-kept in this main package while the first-load package-registration issue is tested.
+kept in this main package.
 
 ### `GraceResourceIconsV2.blp`
 
@@ -78,7 +92,7 @@ GraceResourceIconsV*.xlp
 GraceResourceIconsV*.blp
 ```
 
-Current-version files are preserved. Cleanup covers generated PNG/DDS files, mod TEX files, temporary cooker DDS files, and obsolete versioned resource packages.
+Current-version files are preserved. Cleanup covers generated PNG/DDS files, cooker TEX/DDS files, and obsolete versioned runtime packages.
 
 ## BLP loading
 
@@ -91,31 +105,25 @@ GraceResourceIconsV2.blp
 
 After changing XLP, TEX, BLP, atlas, or entry names, fully restart Civilization VI before testing.
 
-## First front-end icon load investigation
+## Icon registration result and remaining front-end issue
 
-Observed behavior:
+Verified in game after replacing `INSERT OR REPLACE INTO IconTextureAtlases` with
+explicit atlas deletion followed by ordinary insertion:
 
-- On a fresh Civilization VI launch, the Elpis Protocol emblem can be blank when a save or city-state panel is opened for the first time.
-- Selecting another save and returning, or entering a game before opening the same front-end view, makes the emblem appear.
+- world-ranking civilization emblems resolve correctly;
+- city-state relationship leader icons resolve correctly;
+- exact 50px runtime atlas lookups resolve after a cold game start.
+
+Remaining observed behavior:
+
+- On a fresh Civilization VI launch, the Elpis Protocol emblem can be blank when a save is selected for the first time.
+- Selecting another save and returning, or entering a game before opening the load-game view, makes the emblem appear.
 - The colored icon backing is present while the emblem texture is blank.
 
-The static registration chain is complete: the front-end player data references
-`ICON_CIVILIZATION_ELPIS_PROTOCOL`, the icon definition points to the civilization atlas,
-the atlas points to versioned texture entries, and the XLP, BLP, DEP, and Modinfo contain
-those entries. This makes a damaged source image or missing atlas registration unlikely.
-
-The current working hypothesis is that the former independent civilization package was not yet
-available to the first front-end texture lookup. This is not a confirmed root cause. Candidate variables
-are front-end action ordering, separate UITexture package registration, and differences between
-the hand-maintained Art specification and generated DEP data.
-
-Validation must change one variable at a time:
-
-1. Keep all assets unchanged and explicitly order only the front-end actions: Art `0`, Icons `10`, Config and Colors `20`.
-2. Merge the civilization entries back into `GraceUITexture.blp` for an A/B test while keeping entry and Atlas names unchanged.
-3. If the package test does not resolve it, generate a complete DEP with ModBuddy and compare its consumers, libraries, package order, and `LoadsLibraries` values before replacing the current DEP.
-
-Do not lower the in-game `GraceGameplay` action from LoadOrder `1000` as part of this front-end experiment.
+The first-click save-list failure is isolated to front-end initialization timing and is
+not considered fixed by the in-game atlas correction. Selecting another save and returning
+causes the icon to appear. Keep this as a known issue and investigate it separately without
+changing the validated in-game SQL registration or lowering `GraceGameplay` LoadOrder `1000`.
 
 ## Audio
 

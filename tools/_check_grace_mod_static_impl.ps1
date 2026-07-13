@@ -3,6 +3,8 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $modRoot = Join-Path $root "mods\GraceAshcroft"
 $assetRoot = Join-Path $root "assets\GraceAshcroft"
+$cookerRoot = Join-Path $assetRoot "cooker"
+$projectRoot = Join-Path $root "projects\GraceAshcroft"
 
 function Assert-FileExists {
     param([string]$Path)
@@ -153,8 +155,8 @@ function Assert-Matches {
 }
 
 $modinfo = Join-Path $modRoot "GraceAshcroft.modinfo"
-$modBuddyProject = Join-Path $modRoot "GraceAshcroft.civ6proj"
-$modBuddyArtSpec = Join-Path $modRoot "GraceAshcroft.Art.xml"
+$modBuddyProject = Join-Path $projectRoot "GraceAshcroft.civ6proj"
+$modBuddyArtSpec = Join-Path $projectRoot "GraceAshcroft.Art.xml"
 $config = Join-Path $modRoot "Data\Config.sql"
 $gameplay = Join-Path $modRoot "Data\Gameplay.sql"
 $colors = Join-Path $modRoot "Data\GraceColors.xml"
@@ -211,20 +213,20 @@ $modLoadingSceneImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.pn
 $modLoadingSceneTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingScene.dds"
 $modLoadingBlankImage = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.png"
 $modLoadingBlankTexture = Join-Path $modRoot "Images\GraceAshcroft_LoadingBlank.dds"
-$backgroundUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Background_UI.tex"
-$foregroundUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Foreground_UI.tex"
-$foregroundFallbackEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_Foreground_Fallback.tex"
-$loadingSceneUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_LoadingScene_UI.tex"
-$loadingBlankUiEntity = Join-Path $modRoot "Images\Textures\GraceAshcroft_LoadingBlank_UI.tex"
+$backgroundUiEntity = Join-Path $cookerRoot "Images\Textures\GraceAshcroft_Background_UI.tex"
+$foregroundUiEntity = Join-Path $cookerRoot "Images\Textures\GraceAshcroft_Foreground_UI.tex"
+$foregroundFallbackEntity = Join-Path $cookerRoot "Images\Textures\GraceAshcroft_Foreground_Fallback.tex"
+$loadingSceneUiEntity = Join-Path $cookerRoot "Images\Textures\GraceAshcroft_LoadingScene_UI.tex"
+$loadingBlankUiEntity = Join-Path $cookerRoot "Images\Textures\GraceAshcroft_LoadingBlank_UI.tex"
 $oldBoardBase = "GraceAshcroft_" + "Board"
 $oldBoardImage = Join-Path $modRoot "Images\$oldBoardBase.png"
 $oldBoardTexture = Join-Path $modRoot "Images\$oldBoardBase.dds"
 $oldBoardUiEntity = Join-Path $modRoot ("Images\Textures\" + $oldBoardBase + "_UI.tex")
 $oldBoardFallbackEntity = Join-Path $modRoot ("Images\Textures\" + $oldBoardBase + "_Fallback.tex")
-$uiTextureXlp = Join-Path $modRoot "XLPs\GraceUITexture.xlp"
-$civilizationIconsXlp = Join-Path $modRoot "XLPs\GraceCivilizationIconsV2.xlp"
-$resourceIconsXlp = Join-Path $modRoot "XLPs\GraceResourceIconsV2.xlp"
-$leaderFallbackXlp = Join-Path $modRoot "XLPs\leaderfallbacks.xlp"
+$uiTextureXlp = Join-Path $cookerRoot "XLPs\GraceUITexture.xlp"
+$civilizationIconsXlp = Join-Path $cookerRoot "XLPs\GraceCivilizationIconsV2.xlp"
+$resourceIconsXlp = Join-Path $cookerRoot "XLPs\GraceResourceIconsV2.xlp"
+$leaderFallbackXlp = Join-Path $cookerRoot "XLPs\leaderfallbacks.xlp"
 $uiTextureBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceUITexture.blp"
 $civilizationIconsBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceCivilizationIconsV2.blp"
 $resourceIconsBlp = Join-Path $modRoot "Platforms\Windows\BLPs\GraceResourceIconsV2.blp"
@@ -276,8 +278,8 @@ foreach ($iconBase in $iconBases) {
         $iconName = "${iconBase}_${iconSize}"
         $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
         $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
-        $modDds = Join-Path $modRoot "Images\${iconName}.dds"
-        $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+        $modDds = Join-Path $cookerRoot "Images\${iconName}.dds"
+        $modTex = Join-Path $cookerRoot "Images\Textures\${iconName}.tex"
 
         Assert-FileExists $generatedPng
         Assert-FileExists $generatedDds
@@ -293,8 +295,8 @@ foreach ($iconSize in $leaderIconSizes) {
     $iconName = "GraceAshcroft_Icon_Leader_${iconSize}"
     $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
     $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
-    $modDds = Join-Path $modRoot "Images\${iconName}.dds"
-    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+    $modDds = Join-Path $cookerRoot "Images\${iconName}.dds"
+    $modTex = Join-Path $cookerRoot "Images\Textures\${iconName}.tex"
 
     Assert-FileExists $generatedPng
     Assert-FileExists $generatedDds
@@ -303,7 +305,7 @@ foreach ($iconSize in $leaderIconSizes) {
     Assert-DdsHeader $generatedDds $iconSize $iconSize 32
     Assert-Contains $modTex "<m_Name text=""${iconName}""/>"
     Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
-    Assert-Contains $modinfo "Images/Textures/${iconName}.tex"
+    Assert-NotContains $modinfo "Images/Textures/${iconName}.tex"
     Assert-Contains $icons "('ICON_ATLAS_GRACE_LEADER', $iconSize, 1, 1, '${iconName}')"
     Assert-Contains $uiTextureXlp "<m_EntryID text=""$iconName""/>"
     Assert-Contains $uiTextureXlp "<m_ObjectName text=""$iconName""/>"
@@ -315,12 +317,12 @@ foreach ($iconSize in $civilizationIconSizes) {
     $oldIconName = "GraceAshcroft_Icon_Civilization_${iconSize}"
     $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
     $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
-    $modDds = Join-Path $modRoot "Images\${iconName}.dds"
-    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+    $modDds = Join-Path $cookerRoot "Images\${iconName}.dds"
+    $modTex = Join-Path $cookerRoot "Images\Textures\${iconName}.tex"
     $oldGeneratedPng = Join-Path $assetRoot "generated\icons\png\${oldIconName}.png"
     $oldGeneratedDds = Join-Path $assetRoot "generated\icons\dds\${oldIconName}.dds"
-    $oldModDds = Join-Path $modRoot "Images\${oldIconName}.dds"
-    $oldModTex = Join-Path $modRoot "Images\Textures\${oldIconName}.tex"
+    $oldModDds = Join-Path $cookerRoot "Images\${oldIconName}.dds"
+    $oldModTex = Join-Path $cookerRoot "Images\Textures\${oldIconName}.tex"
 
     Assert-FileExists $generatedPng
     Assert-FileExists $generatedDds
@@ -333,7 +335,7 @@ foreach ($iconSize in $civilizationIconSizes) {
     Assert-DdsHeader $generatedDds $iconSize $iconSize 32
     Assert-Contains $modTex "<m_Name text=""${iconName}""/>"
     Assert-Contains $modTex "<m_RelativePath text=""../${iconName}.dds""/>"
-    Assert-Contains $modinfo "Images/Textures/${iconName}.tex"
+    Assert-NotContains $modinfo "Images/Textures/${iconName}.tex"
     Assert-NotContains $modinfo "Images/Textures/${oldIconName}.tex"
     Assert-Contains $uiTextureXlp "<m_EntryID text=""$iconName""/>"
     Assert-Contains $uiTextureXlp "<m_ObjectName text=""$iconName""/>"
@@ -347,8 +349,8 @@ foreach ($iconSize in $resourceIconSizes) {
     $iconName = "${resourceIconPrefix}_${iconSize}"
     $generatedPng = Join-Path $assetRoot "generated\icons\png\${iconName}.png"
     $generatedDds = Join-Path $assetRoot "generated\icons\dds\${iconName}.dds"
-    $modDds = Join-Path $modRoot "Images\${iconName}.dds"
-    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+    $modDds = Join-Path $cookerRoot "Images\${iconName}.dds"
+    $modTex = Join-Path $cookerRoot "Images\Textures\${iconName}.tex"
 
     Assert-FileExists $generatedPng
     Assert-FileExists $generatedDds
@@ -361,7 +363,7 @@ foreach ($iconSize in $resourceIconSizes) {
 
 foreach ($iconSize in $oldInfectedBloodTextureSizes + $obsoleteInfectedBloodTextureSizes) {
     $iconName = "GraceAshcroft_Icon_InfectedBlood_${iconSize}"
-    $modTex = Join-Path $modRoot "Images\Textures\${iconName}.tex"
+    $modTex = Join-Path $cookerRoot "Images\Textures\${iconName}.tex"
 
     Assert-FileMissing $modTex
 }
@@ -372,8 +374,11 @@ Assert-DdsHeader $loadingSceneTexture 2048 1024 32
 Assert-DdsHeader $loadingBlankTexture 8 8 32
 
 Assert-Contains $iconBuildScript "copy_loading_cooker_inputs"
-Assert-Contains $iconBuildScript "cleanup_mod_dds"
-Assert-Contains $iconBuildScript "--cleanup-mod-dds"
+Assert-Contains $iconBuildScript 'COOKER_ROOT = ASSET_ROOT / "cooker"'
+Assert-Contains $iconBuildScript "cleanup_cooker_dds"
+Assert-Contains $iconBuildScript "--cleanup-cooker-dds"
+Assert-NotContains $iconBuildScript "MOD_IMAGES ="
+Assert-NotContains $iconBuildScript "MOD_TEXTURES ="
 Assert-Contains $iconBuildScript "CIVILIZATION_ASSET_VERSION = 2"
 Assert-Contains $iconBuildScript "CIVILIZATION_ICON_SIZES"
 Assert-NotContains $iconBuildScript 'CIVILIZATION_PACKAGE_NAME = f"GraceCivilizationIconsV{CIVILIZATION_ASSET_VERSION}"'
@@ -421,27 +426,27 @@ Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingScene.png"
 Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingScene.dds"
 Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingBlank.png"
 Assert-NotContains $modinfo "Images/GraceAshcroft_LoadingBlank.dds"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Background_UI.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_UI.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Foreground_Fallback.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingScene_UI.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_LoadingBlank_UI.tex"
-Assert-Contains $modinfo "Images/Textures/${civilizationIconPrefix}_256.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Background_UI.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Foreground_UI.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Foreground_Fallback.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_LoadingScene_UI.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_LoadingBlank_UI.tex"
+Assert-NotContains $modinfo "Images/Textures/${civilizationIconPrefix}_256.tex"
 Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_Civilization_256.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Leader_256.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_Leader_256.tex"
 foreach ($size in $resourceIconSizes) {
-    Assert-Contains $modinfo "Images/Textures/${resourceIconPrefix}_$size.tex"
+    Assert-NotContains $modinfo "Images/Textures/${resourceIconPrefix}_$size.tex"
 }
 foreach ($size in $oldInfectedBloodTextureSizes + $obsoleteInfectedBloodTextureSizes) {
     Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_InfectedBlood_$size.tex"
 }
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Stabilizer_256.tex"
-Assert-Contains $modinfo "Images/Textures/GraceAshcroft_Icon_Steroid_256.tex"
-Assert-Contains $modinfo "XLPs/GraceUITexture.xlp"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_Hemolytic_256.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_Stabilizer_256.tex"
+Assert-NotContains $modinfo "Images/Textures/GraceAshcroft_Icon_Steroid_256.tex"
+Assert-NotContains $modinfo "XLPs/GraceUITexture.xlp"
 Assert-NotContains $modinfo "XLPs/$civilizationPackageName.xlp"
-Assert-Contains $modinfo "XLPs/$resourcePackageName.xlp"
-Assert-Contains $modinfo "XLPs/leaderfallbacks.xlp"
+Assert-NotContains $modinfo "XLPs/$resourcePackageName.xlp"
+Assert-NotContains $modinfo "XLPs/leaderfallbacks.xlp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/GraceUITexture.blp"
 Assert-NotContains $modinfo "Platforms/Windows/BLPs/$civilizationPackageName.blp"
 Assert-Contains $modinfo "Platforms/Windows/BLPs/$resourcePackageName.blp"
@@ -938,7 +943,7 @@ foreach ($size in $normalResourceIconSizes) {
 }
 foreach ($size in $resourceIconSizes) {
     $entry = "${resourceIconPrefix}_$size"
-    Assert-Contains $modinfo "Images/Textures/$entry.tex"
+    Assert-NotContains $modinfo "Images/Textures/$entry.tex"
     Assert-Contains $resourceIconsXlp $entry
     Assert-BinaryContains $resourceIconsBlp $entry
 }
@@ -1026,15 +1031,14 @@ Assert-Contains $modBuddyProject "<Guid>8cf6756d-3ec5-43d4-9857-c16f46a9a440</Gu
 Assert-Contains $modBuddyProject "<ProjectGuid>1f77e2a1-c977-4eb4-a3e2-6cb1b9b60b49</ProjectGuid>"
 Assert-Contains $modBuddyProject "<ModVersion>$modVersion</ModVersion>"
 Assert-Contains $modBuddyProject "<None Include=""GraceAshcroft.Art.xml"" />"
-Assert-Contains $modBuddyProject "<Content Include=""ArtDefs\Civilizations.artdef"">"
-Assert-Contains $modBuddyProject "<Content Include=""Data\GraceColors.xml"">"
-Assert-Contains $modBuddyProject "<Content Include=""Icons\GraceIcons.sql"">"
-Assert-Contains $modBuddyProject "<Content Include=""Images\Textures\${civilizationIconPrefix}_256.tex"">"
-Assert-Contains $modBuddyProject "<Content Include=""Images\Textures\${resourceIconPrefix}_256.tex"">"
-Assert-NotContains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$civilizationPackageName.blp"">"
-Assert-Contains $modBuddyProject "<Content Include=""Platforms\Windows\BLPs\$resourcePackageName.blp"">"
-Assert-NotContains $modBuddyProject "<Content Include=""XLPs\$civilizationPackageName.xlp"">"
-Assert-Contains $modBuddyProject "<Content Include=""XLPs\$resourcePackageName.xlp"">"
+Assert-Contains $modBuddyProject "<AssetsPath>..\..\assets\GraceAshcroft\cooker</AssetsPath>"
+Assert-Contains $modBuddyProject "<OutputPath>..\..\mods\GraceAshcroft</OutputPath>"
+Assert-Contains $modBuddyProject "<Content Include=""..\..\mods\GraceAshcroft\ArtDefs\*.artdef"">"
+Assert-Contains $modBuddyProject "<Content Include=""..\..\mods\GraceAshcroft\Data\*.*"">"
+Assert-Contains $modBuddyProject "<Content Include=""..\..\mods\GraceAshcroft\Icons\*.*"">"
+Assert-Contains $modBuddyProject "<Content Include=""..\..\assets\GraceAshcroft\cooker\Images\Textures\*.tex"">"
+Assert-Contains $modBuddyProject "<Content Include=""..\..\assets\GraceAshcroft\cooker\XLPs\*.xlp"">"
+Assert-Contains $modBuddyProject "<Content Include=""..\..\mods\GraceAshcroft\Platforms\Windows\BLPs\*.blp"">"
 Assert-Contains $modBuddyProject '<Import Project="$(MSBuildLocalExtensionPath)Civ6.targets" />'
 Assert-NotContains $modBuddyProject "GraceAshcroft_Icon_Civilization_"
 

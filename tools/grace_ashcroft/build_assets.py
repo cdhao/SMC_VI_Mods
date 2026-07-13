@@ -29,9 +29,12 @@ LEADER_ART_DDS_DIR = ASSET_ROOT / "leader-art" / "dds"
 GENERATED_PNG_DIR = ASSET_ROOT / "generated" / "icons" / "png"
 GENERATED_DDS_DIR = ASSET_ROOT / "generated" / "icons" / "dds"
 MOD_ROOT = ROOT / "mods" / "GraceAshcroft"
-MOD_IMAGES = MOD_ROOT / "Images"
-MOD_TEXTURES = MOD_IMAGES / "Textures"
-GRACE_UI_XLP = MOD_ROOT / "XLPs" / "GraceUITexture.xlp"
+COOKER_ROOT = ASSET_ROOT / "cooker"
+COOKER_IMAGES = COOKER_ROOT / "Images"
+COOKER_TEXTURES = COOKER_IMAGES / "Textures"
+COOKER_XLPS = COOKER_ROOT / "XLPs"
+RUNTIME_BLP_DIR = MOD_ROOT / "Platforms" / "Windows" / "BLPs"
+GRACE_UI_XLP = COOKER_XLPS / "GraceUITexture.xlp"
 
 CIVILIZATION_ASSET_VERSION = 2
 CIVILIZATION_ENTRY_PREFIX = (
@@ -42,10 +45,7 @@ INFECTED_BLOOD_PACKAGE_NAME = f"GraceResourceIconsV{INFECTED_BLOOD_ASSET_VERSION
 INFECTED_BLOOD_ENTRY_PREFIX = (
     f"GraceResource_InfectedBlood_V{INFECTED_BLOOD_ASSET_VERSION}"
 )
-GRACE_RESOURCE_XLP = MOD_ROOT / "XLPs" / f"{INFECTED_BLOOD_PACKAGE_NAME}.xlp"
-GRACE_RESOURCE_BLP = (
-    MOD_ROOT / "Platforms" / "Windows" / "BLPs" / f"{INFECTED_BLOOD_PACKAGE_NAME}.blp"
-)
+GRACE_RESOURCE_XLP = COOKER_XLPS / f"{INFECTED_BLOOD_PACKAGE_NAME}.xlp"
 
 ICON_SIZES = (22, 30, 32, 38, 50, 64, 80, 256)
 LEADER_ICON_SIZES = (22, 30, 32, 38, 45, 48, 50, 55, 64, 80, 256)
@@ -127,11 +127,11 @@ def civilization_entry_names() -> list[str]:
     return [civilization_entry_name(size) for size in CIVILIZATION_ICON_SIZES]
 
 
-def temporary_mod_dds_paths() -> list[Path]:
-    paths = [MOD_IMAGES / dds_name for dds_name in LOADING_DDS_INPUTS]
-    paths.extend(MOD_IMAGES / f"{entry}.dds" for entry in ui_icon_entry_names())
-    paths.extend(MOD_IMAGES / f"{entry}.dds" for entry in civilization_entry_names())
-    paths.extend(MOD_IMAGES / f"{entry}.dds" for entry in infected_blood_entry_names())
+def temporary_cooker_dds_paths() -> list[Path]:
+    paths = [COOKER_IMAGES / dds_name for dds_name in LOADING_DDS_INPUTS]
+    paths.extend(COOKER_IMAGES / f"{entry}.dds" for entry in ui_icon_entry_names())
+    paths.extend(COOKER_IMAGES / f"{entry}.dds" for entry in civilization_entry_names())
+    paths.extend(COOKER_IMAGES / f"{entry}.dds" for entry in infected_blood_entry_names())
     return paths
 
 
@@ -155,8 +155,8 @@ def cleanup_obsolete_civilization_assets() -> int:
     for directory, suffixes in (
         (GENERATED_PNG_DIR, {".png"}),
         (GENERATED_DDS_DIR, {".dds"}),
-        (MOD_TEXTURES, {".tex"}),
-        (MOD_IMAGES, {".dds"}),
+        (COOKER_TEXTURES, {".tex"}),
+        (COOKER_IMAGES, {".dds"}),
     ):
         if not directory.exists():
             continue
@@ -167,14 +167,14 @@ def cleanup_obsolete_civilization_assets() -> int:
                 path.unlink()
                 removed += 1
 
-    xlp_dir = MOD_ROOT / "XLPs"
+    xlp_dir = COOKER_XLPS
     if xlp_dir.exists():
         for path in xlp_dir.glob("GraceCivilizationIconsV*.xlp"):
             if VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem):
                 path.unlink()
                 removed += 1
 
-    blp_dir = MOD_ROOT / "Platforms" / "Windows" / "BLPs"
+    blp_dir = RUNTIME_BLP_DIR
     if blp_dir.exists():
         for path in blp_dir.glob("GraceCivilizationIconsV*.blp"):
             if VERSIONED_CIVILIZATION_PACKAGE_PATTERN.fullmatch(path.stem):
@@ -194,8 +194,8 @@ def cleanup_obsolete_infected_blood_assets() -> int:
     for directory, suffixes in (
         (GENERATED_PNG_DIR, {".png"}),
         (GENERATED_DDS_DIR, {".dds"}),
-        (MOD_TEXTURES, {".tex"}),
-        (MOD_IMAGES, {".dds"}),
+        (COOKER_TEXTURES, {".tex"}),
+        (COOKER_IMAGES, {".dds"}),
     ):
         if not directory.exists():
             continue
@@ -206,7 +206,7 @@ def cleanup_obsolete_infected_blood_assets() -> int:
                 path.unlink()
                 removed += 1
 
-    xlp_dir = MOD_ROOT / "XLPs"
+    xlp_dir = COOKER_XLPS
     if xlp_dir.exists():
         for path in xlp_dir.glob("GraceResourceIconsV*.xlp"):
             if (
@@ -216,7 +216,7 @@ def cleanup_obsolete_infected_blood_assets() -> int:
                 path.unlink()
                 removed += 1
 
-    blp_dir = MOD_ROOT / "Platforms" / "Windows" / "BLPs"
+    blp_dir = RUNTIME_BLP_DIR
     if blp_dir.exists():
         for path in blp_dir.glob("GraceResourceIconsV*.blp"):
             if (
@@ -236,16 +236,16 @@ def copy_loading_cooker_inputs() -> None:
         source = LEADER_ART_DDS_DIR / dds_name
         if not source.exists():
             raise FileNotFoundError(f"Missing loading DDS source: {source}")
-        shutil.copyfile(source, MOD_IMAGES / dds_name)
+        shutil.copyfile(source, COOKER_IMAGES / dds_name)
 
 
-def cleanup_mod_dds() -> None:
+def cleanup_cooker_dds() -> None:
     removed = 0
-    for target in temporary_mod_dds_paths():
+    for target in temporary_cooker_dds_paths():
         if target.exists():
             target.unlink()
             removed += 1
-    print(f"Removed {removed} temporary cooker DDS files from {MOD_IMAGES}.")
+    print(f"Removed {removed} temporary cooker DDS files from {COOKER_IMAGES}.")
 
 
 def xlp_entry(entry_id: str, object_name: str) -> str:
@@ -283,8 +283,8 @@ def xlp_document(package_name: str, entries: list[tuple[str, str]]) -> str:
 def write_texture_files(entry_name: str, size: int, icon: Image.Image) -> None:
     png_target = GENERATED_PNG_DIR / f"{entry_name}.png"
     dds_target = GENERATED_DDS_DIR / f"{entry_name}.dds"
-    cooker_dds_target = MOD_IMAGES / f"{entry_name}.dds"
-    tex_target = MOD_TEXTURES / f"{entry_name}.tex"
+    cooker_dds_target = COOKER_IMAGES / f"{entry_name}.dds"
+    tex_target = COOKER_TEXTURES / f"{entry_name}.tex"
 
     png_target.parent.mkdir(parents=True, exist_ok=True)
     icon.save(png_target)
@@ -298,8 +298,9 @@ def build() -> None:
     cleanup_obsolete_infected_blood_assets()
     GENERATED_PNG_DIR.mkdir(parents=True, exist_ok=True)
     GENERATED_DDS_DIR.mkdir(parents=True, exist_ok=True)
-    MOD_IMAGES.mkdir(parents=True, exist_ok=True)
-    MOD_TEXTURES.mkdir(parents=True, exist_ok=True)
+    COOKER_IMAGES.mkdir(parents=True, exist_ok=True)
+    COOKER_TEXTURES.mkdir(parents=True, exist_ok=True)
+    COOKER_XLPS.mkdir(parents=True, exist_ok=True)
     copy_loading_cooker_inputs()
 
     ui_entries: list[str] = []
@@ -355,9 +356,9 @@ def build() -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--cleanup-mod-dds",
+        "--cleanup-cooker-dds",
         action="store_true",
-        help="Remove temporary DDS cooker inputs from mods/GraceAshcroft/Images.",
+        help="Remove temporary DDS inputs from assets/GraceAshcroft/cooker/Images.",
     )
     parser.add_argument(
         "--cleanup-obsolete",
@@ -366,8 +367,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if args.cleanup_mod_dds:
-        cleanup_mod_dds()
+    if args.cleanup_cooker_dds:
+        cleanup_cooker_dds()
     elif args.cleanup_obsolete:
         cleanup_obsolete_civilization_assets()
         cleanup_obsolete_infected_blood_assets()

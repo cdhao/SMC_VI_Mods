@@ -2,3 +2,6 @@ sample/
 .local-docs/
 *.log
 mods/GraceAshcroft/Logs/
+assets/GraceAshcroft/cooker/Logs/
+assets/GraceAshcroft/cooker/cooker.log
+projects/**/*.civ6suo

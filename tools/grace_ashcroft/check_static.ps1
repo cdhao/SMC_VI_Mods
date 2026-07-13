@@ -12,6 +12,9 @@ $legacyImplementation = Join-Path $repoRoot "tools\_check_grace_mod_static_impl.
 $workflowDoc = Join-Path $repoRoot "docs\civ6-mod-workflow.md"
 $graceDoc = Join-Path $repoRoot "docs\mods\grace-ashcroft-assets.md"
 $farEastPlaceholder = Join-Path $repoRoot "tools\far_east_magic_nap_society\README.md"
+$modRoot = Join-Path $repoRoot "mods\GraceAshcroft"
+$cookerRoot = Join-Path $repoRoot "assets\GraceAshcroft\cooker"
+$projectRoot = Join-Path $repoRoot "projects\GraceAshcroft"
 
 function Assert-FileExists {
     param([string]$Path)
@@ -50,16 +53,47 @@ function Assert-NotContainsText {
     $farEastPlaceholder
 ) | ForEach-Object { Assert-FileExists $_ }
 
+@(
+    (Join-Path $projectRoot "GraceAshcroft.Art.xml"),
+    (Join-Path $projectRoot "GraceAshcroft.civ6proj"),
+    (Join-Path $projectRoot "GraceAshcroft.civ6sln"),
+    (Join-Path $cookerRoot "XLPs\GraceUITexture.xlp"),
+    (Join-Path $cookerRoot "XLPs\GraceResourceIconsV2.xlp"),
+    (Join-Path $cookerRoot "XLPs\leaderfallbacks.xlp")
+) | ForEach-Object { Assert-FileExists $_ }
+
+@(
+    (Join-Path $modRoot "Images"),
+    (Join-Path $modRoot "XLPs"),
+    (Join-Path $modRoot "Logs"),
+    (Join-Path $modRoot "GraceAshcroft.Art.xml"),
+    (Join-Path $modRoot "GraceAshcroft.civ6proj"),
+    (Join-Path $modRoot "GraceAshcroft.civ6sln"),
+    (Join-Path $modRoot "GraceAshcroft.v12.civ6suo")
+) | ForEach-Object {
+    if (Test-Path -LiteralPath $_) {
+        throw "Runtime mod contains build-only path: $_"
+    }
+}
+
 Assert-ContainsText $buildScript "INFECTED_BLOOD_ASSET_VERSION = 2"
 Assert-ContainsText $buildScript 'INFECTED_BLOOD_PACKAGE_NAME = f"GraceResourceIconsV{INFECTED_BLOOD_ASSET_VERSION}"'
 Assert-ContainsText $buildScript 'f"GraceResource_InfectedBlood_V{INFECTED_BLOOD_ASSET_VERSION}"'
 Assert-ContainsText $buildScript "def cleanup_obsolete_infected_blood_assets"
 Assert-ContainsText $buildScript "from tools.common.civ6_texture import"
+Assert-ContainsText $buildScript 'COOKER_ROOT = ASSET_ROOT / "cooker"'
+Assert-ContainsText $buildScript "COOKER_TEXTURES"
+Assert-ContainsText $buildScript "COOKER_XLPS"
+Assert-NotContainsText $buildScript "MOD_IMAGES ="
+Assert-NotContainsText $buildScript "MOD_TEXTURES ="
 Assert-NotContainsText $buildScript "MOD_VERSION ="
 Assert-NotContainsText $buildScript "RESOURCE_ASSET_VERSION ="
 
 Assert-ContainsText $cookScript '$infectedBloodAssetVersion = 2'
 Assert-ContainsText $cookScript '$resourcePackage = "GraceResourceIconsV$infectedBloodAssetVersion"'
+Assert-ContainsText $cookScript '$cookerRoot = Join-Path $repoRoot "assets\GraceAshcroft\cooker"'
+Assert-ContainsText $cookScript '$runtimeBlpDir = Join-Path $modRoot "Platforms\Windows\BLPs"'
+Assert-ContainsText $cookScript 'Copy-Item -LiteralPath $cookedBlp'
 Assert-NotContainsText $cookScript '$resourcePackage = "GraceResourceIconsV2"'
 
 Assert-ContainsText $deployScript "[System.IO.Path]::GetFullPath"
