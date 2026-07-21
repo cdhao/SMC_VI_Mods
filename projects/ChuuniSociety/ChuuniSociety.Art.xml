@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AssetObjects..GameArtSpecification>
+  <id><name text="ChuuniSociety"/><id text="d3bd7d95-8fbc-4b35-a9a7-d37590bd04a2"/></id>
+  <artConsumers>
+    <Element><consumerName text="LeaderFallback"/><relativeArtDefPaths><Element text="FallbackLeaders.artdef"/></relativeArtDefPaths><libraryDependencies><Element text="LeaderFallback"/></libraryDependencies><loadsLibraries>true</loadsLibraries></Element>
+    <Element><consumerName text="UI"/><relativeArtDefPaths/><libraryDependencies><Element text="UITexture"/></libraryDependencies><loadsLibraries>true</loadsLibraries></Element>
+  </artConsumers>
+  <gameLibraries>
+    <Element><libraryName text="LeaderFallback"/><relativePackagePaths><Element text="ChuuniLeaderFallbacks.blp"/></relativePackagePaths></Element>
+    <Element><libraryName text="UITexture"/><relativePackagePaths><Element text="ChuuniUITextureV1.blp"/></relativePackagePaths></Element>
+  </gameLibraries>
+  <requiredGameArtIDs><Element><name text="Civ6"/><id text="cb2f71b7-843e-4af3-9ca7-992acda9c195"/></Element></requiredGameArtIDs>
+</AssetObjects..GameArtSpecification>

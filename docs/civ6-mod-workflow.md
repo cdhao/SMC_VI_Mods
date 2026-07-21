@@ -35,8 +35,14 @@ Only stable, mod-independent operations belong in the common layer, for example:
 - writing RGBA DDS files;
 - alpha-bound cropping and icon resizing;
 - generating a generic TextureInstance XML document.
+- reading the shared `mod-build.toml` manifest;
+- invoking the official Asset Cooker through a deterministic Python wrapper;
+- applying generic text, runtime-layout, BLP-string, and DDS contracts.
 
-Civilization names, leader names, package names, atlas names, icon lists, and cleanup rules stay in the dedicated mod tool directory.
+Civilization names, leader names, atlas names, icon lists, and cleanup rules
+stay in the dedicated mod tool directory. Release version, asset revision,
+paths, and BLP package templates are defined once in
+`assets/<ModName>/mod-build.toml`.
 
 ## Standard asset flow
 
@@ -84,6 +90,11 @@ The following values must be unique between mods:
 - fallback leader entry names.
 
 Use integer resource versions such as `V1`, `V2`, and `V3`. Do not mix decimal-style resource names such as `1.1` with the Civ VI mod version field.
+
+The repository-wide read-first reference is [docs/civ6/README.md](civ6/README.md).
+It records the loading-screen channel contract, exact icon-size validation,
+FrontEnd save metadata limitation, multiplayer scope rule, and release sequence
+derived from Grace Ashcroft.
 
 ## Compatibility entry points
 

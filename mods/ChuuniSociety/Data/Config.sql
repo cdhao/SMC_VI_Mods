@@ -1,0 +1,43 @@
+INSERT INTO Players
+    (
+        CivilizationAbilityDescription,
+        CivilizationAbilityIcon,
+        CivilizationAbilityName,
+        CivilizationIcon,
+        CivilizationName,
+        CivilizationType,
+        LeaderAbilityDescription,
+        LeaderAbilityIcon,
+        LeaderAbilityName,
+        LeaderIcon,
+        LeaderName,
+        LeaderType,
+        Portrait,
+        PortraitBackground,
+        Domain
+    )
+VALUES
+    (
+        'LOC_TRAIT_CIVILIZATION_CHUUNI_SOCIETY_DESCRIPTION',
+        'ICON_CIVILIZATION_CHUUNI_SOCIETY',
+        'LOC_TRAIT_CIVILIZATION_CHUUNI_SOCIETY_NAME',
+        'ICON_CIVILIZATION_CHUUNI_SOCIETY',
+        'LOC_CIVILIZATION_CHUUNI_SOCIETY_NAME',
+        'CIVILIZATION_CHUUNI_SOCIETY',
+        'LOC_TRAIT_LEADER_RIKKA_TAKANASHI_DESCRIPTION',
+        'ICON_LEADER_RIKKA_TAKANASHI',
+        'LOC_TRAIT_LEADER_RIKKA_TAKANASHI_NAME',
+        'ICON_LEADER_RIKKA_TAKANASHI',
+        'LOC_LEADER_RIKKA_TAKANASHI_NAME',
+        'LEADER_RIKKA_TAKANASHI',
+        'IMG_LOADING_FOREGROUND_RIKKA_TAKANASHI',
+        'IMG_LOADING_BACKGROUND_RIKKA_TAKANASHI',
+        'Players:Expansion2_Players'
+    );
+
+INSERT INTO PlayerItems
+    (Domain, CivilizationType, LeaderType, Type, Icon, Name, Description, SortIndex)
+VALUES
+    ('Players:Expansion2_Players', 'CIVILIZATION_CHUUNI_SOCIETY', 'LEADER_RIKKA_TAKANASHI', 'DISTRICT_CHUUNI_SOCIETY', 'ICON_DISTRICT_CHUUNI_SOCIETY', 'LOC_DISTRICT_CHUUNI_SOCIETY_NAME', 'LOC_DISTRICT_CHUUNI_SOCIETY_DESCRIPTION', 10),
+    ('Players:Expansion2_Players', 'CIVILIZATION_CHUUNI_SOCIETY', 'LEADER_RIKKA_TAKANASHI', 'BUILDING_CLUB_MAGIC_CIRCLE', 'ICON_BUILDING_CLUB_MAGIC_CIRCLE', 'LOC_BUILDING_CLUB_MAGIC_CIRCLE_NAME', 'LOC_BUILDING_CLUB_MAGIC_CIRCLE_DESCRIPTION', 20),
+    ('Players:Expansion2_Players', 'CIVILIZATION_CHUUNI_SOCIETY', 'LEADER_RIKKA_TAKANASHI', 'RESOURCE_CHUUNI_VALUE', 'ICON_RESOURCE_CHUUNI_VALUE', 'LOC_RESOURCE_CHUUNI_VALUE_NAME', 'LOC_RESOURCE_CHUUNI_VALUE_DESCRIPTION', 30);

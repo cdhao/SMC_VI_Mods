@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+  <Colors>
+    <Row>
+      <Type>COLOR_PLAYER_CHUUNI_PURPLE</Type>
+      <Color>80,42,118,255</Color>
+    </Row>
+    <Row>
+      <Type>COLOR_PLAYER_CHUUNI_RED</Type>
+      <Color>206,47,58,255</Color>
+    </Row>
+    <Row>
+      <Type>COLOR_PLAYER_CHUUNI_BLACK</Type>
+      <Color>24,22,30,255</Color>
+    </Row>
+    <Row>
+      <Type>COLOR_PLAYER_CHUUNI_WHITE</Type>
+      <Color>235,230,241,255</Color>
+    </Row>
+  </Colors>
+  <PlayerColors>
+    <Row>
+      <Type>LEADER_RIKKA_TAKANASHI</Type>
+      <Usage>Unique</Usage>
+      <PrimaryColor>COLOR_PLAYER_CHUUNI_PURPLE</PrimaryColor>
+      <SecondaryColor>COLOR_PLAYER_CHUUNI_RED</SecondaryColor>
+      <Alt1PrimaryColor>COLOR_PLAYER_CHUUNI_BLACK</Alt1PrimaryColor>
+      <Alt1SecondaryColor>COLOR_PLAYER_CHUUNI_RED</Alt1SecondaryColor>
+      <Alt2PrimaryColor>COLOR_PLAYER_CHUUNI_RED</Alt2PrimaryColor>
+      <Alt2SecondaryColor>COLOR_PLAYER_CHUUNI_WHITE</Alt2SecondaryColor>
+      <Alt3PrimaryColor>COLOR_PLAYER_CHUUNI_WHITE</Alt3PrimaryColor>
+      <Alt3SecondaryColor>COLOR_PLAYER_CHUUNI_PURPLE</Alt3SecondaryColor>
+    </Row>
+  </PlayerColors>
+</GameData>

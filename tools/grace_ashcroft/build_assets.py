@@ -5,11 +5,10 @@ from __future__ import annotations
 
 import argparse
 import re
-import shutil
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -19,29 +18,35 @@ from tools.common.civ6_texture import (  # noqa: E402
     alpha_bbox,
     crop_alpha_square,
     resize_icon,
+    save_png_atomic,
     texture_instance_xml,
+    write_bytes_atomic,
     write_rgba_dds,
 )
+from tools.common.civ6_mod_config import load_mod_config  # noqa: E402
 
-ASSET_ROOT = ROOT / "assets" / "GraceAshcroft"
+CONFIG = load_mod_config(ROOT / "assets" / "GraceAshcroft" / "mod-build.toml", repo_root=ROOT)
+ASSET_ROOT = CONFIG.asset_root
 SOURCE_DIR = ASSET_ROOT / "source" / "icons"
 LEADER_ART_DDS_DIR = ASSET_ROOT / "leader-art" / "dds"
+LEADER_ART_PNG_DIR = ASSET_ROOT / "leader-art" / "png"
 GENERATED_PNG_DIR = ASSET_ROOT / "generated" / "icons" / "png"
 GENERATED_DDS_DIR = ASSET_ROOT / "generated" / "icons" / "dds"
-MOD_ROOT = ROOT / "mods" / "GraceAshcroft"
+MOD_ROOT = CONFIG.runtime_root
 COOKER_ROOT = ASSET_ROOT / "cooker"
 COOKER_IMAGES = COOKER_ROOT / "Images"
 COOKER_TEXTURES = COOKER_IMAGES / "Textures"
 COOKER_XLPS = COOKER_ROOT / "XLPs"
 RUNTIME_BLP_DIR = MOD_ROOT / "Platforms" / "Windows" / "BLPs"
-GRACE_UI_XLP = COOKER_XLPS / "GraceUITexture.xlp"
+GRACE_UI_PACKAGE_NAME = CONFIG.package("ui")
+GRACE_UI_XLP = COOKER_XLPS / f"{GRACE_UI_PACKAGE_NAME}.xlp"
 
-CIVILIZATION_ASSET_VERSION = 2
+CIVILIZATION_ASSET_VERSION = CONFIG.asset_revision
 CIVILIZATION_ENTRY_PREFIX = (
     f"GraceCivilization_ElpisProtocol_V{CIVILIZATION_ASSET_VERSION}"
 )
-INFECTED_BLOOD_ASSET_VERSION = 2
-INFECTED_BLOOD_PACKAGE_NAME = f"GraceResourceIconsV{INFECTED_BLOOD_ASSET_VERSION}"
+INFECTED_BLOOD_ASSET_VERSION = CONFIG.asset_revision
+INFECTED_BLOOD_PACKAGE_NAME = CONFIG.package("resource")
 INFECTED_BLOOD_ENTRY_PREFIX = (
     f"GraceResource_InfectedBlood_V{INFECTED_BLOOD_ASSET_VERSION}"
 )
@@ -77,6 +82,13 @@ BASE_XLP_ENTRIES = (
     ("IMG_LOADING_FOREGROUND_GRACE_ASHCROFT", "GraceAshcroft_Foreground_UI"),
     ("IMG_LOADING_SCENE_GRACE_ASHCROFT", "GraceAshcroft_LoadingScene_UI"),
     ("IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT", "GraceAshcroft_LoadingBlank_UI"),
+)
+
+LOADING_ENTRIES = (
+    ("IMG_LOADING_BACKGROUND_GRACE_ASHCROFT", "GraceAshcroft_Background_UI", "GraceAshcroft_Background.dds", 2048, 1024),
+    ("IMG_LOADING_FOREGROUND_GRACE_ASHCROFT", "GraceAshcroft_Foreground_UI", "GraceAshcroft_Foreground.dds", 1024, 2048),
+    ("IMG_LOADING_SCENE_GRACE_ASHCROFT", "GraceAshcroft_LoadingScene_UI", "GraceAshcroft_LoadingScene.dds", 2048, 1024),
+    ("IMG_LOADING_FOREGROUND_BLANK_GRACE_ASHCROFT", "GraceAshcroft_LoadingBlank_UI", "GraceAshcroft_LoadingBlank.dds", 8, 8),
 )
 
 LEGACY_INFECTED_BLOOD_PREFIX = "GraceAshcroft_Icon_InfectedBlood_"
@@ -236,7 +248,59 @@ def copy_loading_cooker_inputs() -> None:
         source = LEADER_ART_DDS_DIR / dds_name
         if not source.exists():
             raise FileNotFoundError(f"Missing loading DDS source: {source}")
-        shutil.copyfile(source, COOKER_IMAGES / dds_name)
+        write_bytes_atomic(source.read_bytes(), COOKER_IMAGES / dds_name)
+
+
+def texture_xml(entry_name: str, dds_name: str, width: int, height: int) -> str:
+    document = texture_instance_xml(entry_name, max(width, height), dds_name)
+    document = document.replace(f"<m_Height>{max(width, height)}</m_Height>", f"<m_Height>{height}</m_Height>")
+    document = document.replace(f"<m_Width>{max(width, height)}</m_Width>", f"<m_Width>{width}</m_Width>")
+    return document
+
+
+def fallback_texture_xml(entry_name: str, dds_name: str, width: int, height: int) -> str:
+    document = texture_xml(entry_name, dds_name, width, height)
+    document = document.replace('<m_ClassName text="UserInterface"/>', '<m_ClassName text="Leader_Fallback"/>')
+    document = document.replace(
+        '<Element text="UserInterface"/>',
+        '<Element text="Leader_Fallback"/>\n\t\t<Element text="Leader"/>\n\t\t<Element text="Fallback"/>',
+    )
+    return document
+
+
+def generate_loading_art(source_dir: Path, png_dir: Path, dds_dir: Path) -> None:
+    with Image.open(source_dir / "GraceAshcroft_Background.png") as source:
+        background = ImageOps.fit(source.convert("RGBA"), (2048, 1024), method=Image.Resampling.LANCZOS)
+    with Image.open(source_dir / "GraceAshcroft_Foreground.png") as source:
+        foreground = ImageOps.fit(source.convert("RGBA"), (1024, 2048), method=Image.Resampling.LANCZOS)
+
+    loading_scene = background.copy()
+    loading_scene.alpha_composite(foreground, (1024, 0))
+
+    images = {
+        "GraceAshcroft_Background": background,
+        "GraceAshcroft_Foreground": foreground,
+        "GraceAshcroft_LoadingScene": loading_scene,
+        "GraceAshcroft_LoadingBlank": Image.new("RGBA", (8, 8), (0, 0, 0, 0)),
+    }
+    for stem, image in images.items():
+        save_png_atomic(image, png_dir / f"{stem}.png")
+        write_rgba_dds(image, dds_dir / f"{stem}.dds")
+
+
+def write_loading_texture_inputs() -> None:
+    for _, object_name, dds_name, width, height in LOADING_ENTRIES:
+        (COOKER_TEXTURES / f"{object_name}.tex").write_text(
+            texture_xml(object_name, dds_name, width, height),
+            encoding="utf-8",
+            newline="\n",
+        )
+    fallback_object = "GraceAshcroft_Foreground_Fallback"
+    (COOKER_TEXTURES / f"{fallback_object}.tex").write_text(
+        fallback_texture_xml(fallback_object, "GraceAshcroft_Foreground.dds", 1024, 2048),
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def cleanup_cooker_dds() -> None:
@@ -255,7 +319,12 @@ def xlp_entry(entry_id: str, object_name: str) -> str:
 \t\t</Element>'''
 
 
-def xlp_document(package_name: str, entries: list[tuple[str, str]]) -> str:
+def xlp_document(
+    package_name: str,
+    entries: list[tuple[str, str]],
+    *,
+    class_name: str = "UITexture",
+) -> str:
     entry_block = "\n".join(xlp_entry(entry_id, object_name) for entry_id, object_name in entries)
     return f'''<?xml version="1.0" encoding="UTF-8" ?>
 <AssetObjects..XLP>
@@ -265,7 +334,7 @@ def xlp_document(package_name: str, entries: list[tuple[str, str]]) -> str:
 \t\t<build>410</build>
 \t\t<revision>536</revision>
 \t</m_Version>
-\t<m_ClassName text="UITexture"/>
+\t<m_ClassName text="{class_name}"/>
 \t<m_PackageName text="{package_name}"/>
 \t<m_Entries>
 {entry_block}
@@ -287,7 +356,7 @@ def write_texture_files(entry_name: str, size: int, icon: Image.Image) -> None:
     tex_target = COOKER_TEXTURES / f"{entry_name}.tex"
 
     png_target.parent.mkdir(parents=True, exist_ok=True)
-    icon.save(png_target)
+    save_png_atomic(icon, png_target)
     write_rgba_dds(icon, dds_target)
     write_rgba_dds(icon, cooker_dds_target)
     tex_target.write_text(texture_instance_xml(entry_name, size), encoding="utf-8", newline="\n")
@@ -301,7 +370,9 @@ def build() -> None:
     COOKER_IMAGES.mkdir(parents=True, exist_ok=True)
     COOKER_TEXTURES.mkdir(parents=True, exist_ok=True)
     COOKER_XLPS.mkdir(parents=True, exist_ok=True)
+    generate_loading_art(SOURCE_DIR, LEADER_ART_PNG_DIR, LEADER_ART_DDS_DIR)
     copy_loading_cooker_inputs()
+    write_loading_texture_inputs()
 
     ui_entries: list[str] = []
     for entry_base, source_name in ICONS.items():
@@ -338,17 +409,26 @@ def build() -> None:
     ui_xlp_entries.extend((entry, entry) for entry in ui_entries)
     ui_xlp_entries.extend((entry, entry) for entry in civilization_entries)
     GRACE_UI_XLP.write_text(
-        xlp_document("GraceUITexture", ui_xlp_entries), encoding="utf-8", newline="\n"
+        xlp_document(GRACE_UI_PACKAGE_NAME, ui_xlp_entries), encoding="utf-8", newline="\n"
     )
     GRACE_RESOURCE_XLP.write_text(
         xlp_document(INFECTED_BLOOD_PACKAGE_NAME, [(entry, entry) for entry in resource_entries]),
         encoding="utf-8",
         newline="\n",
     )
+    (COOKER_XLPS / "leaderfallbacks.xlp").write_text(
+        xlp_document(
+            CONFIG.package("leader_fallback"),
+            [("FALLBACK_NEUTRAL_GRACE_ASHCROFT", "GraceAshcroft_Foreground_Fallback")],
+            class_name="LeaderFallback",
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
 
     print(
         f"Generated {len(ui_entries)} UI icon entries and "
-        f"{len(civilization_entries)} civilization emblem entries in GraceUITexture, and "
+        f"{len(civilization_entries)} civilization emblem entries in {GRACE_UI_PACKAGE_NAME}, and "
         f"{len(resource_entries)} infected-blood entries in {INFECTED_BLOOD_PACKAGE_NAME}."
     )
 

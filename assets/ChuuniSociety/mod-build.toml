@@ -1,0 +1,15 @@
+[mod]
+slug = "ChuuniSociety"
+release_version = 1
+
+[paths]
+asset_root = "assets/ChuuniSociety"
+runtime_root = "mods/ChuuniSociety"
+project_root = "projects/ChuuniSociety"
+
+[assets]
+revision = 1
+
+[packages]
+ui = "ChuuniUITextureV{asset_version}"
+leader_fallback = "ChuuniLeaderFallbacks"

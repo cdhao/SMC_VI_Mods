@@ -1,0 +1,16 @@
+[mod]
+slug = "GraceAshcroft"
+release_version = 2
+
+[paths]
+asset_root = "assets/GraceAshcroft"
+runtime_root = "mods/GraceAshcroft"
+project_root = "projects/GraceAshcroft"
+
+[assets]
+revision = 2
+
+[packages]
+ui = "GraceUITexture"
+resource = "GraceResourceIconsV{asset_version}"
+leader_fallback = "LeaderFallbacks"

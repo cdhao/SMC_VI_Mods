@@ -80,13 +80,20 @@ ICON_ATLAS_GRACE_INFECTED_BLOOD_FONT_V2
 22px, Baseline 6
 ```
 
-The resource package version is controlled only by:
+The resource package version is controlled by:
 
-```python
-INFECTED_BLOOD_ASSET_VERSION = 2
+```toml
+# assets/GraceAshcroft/mod-build.toml
+[assets]
+revision = 2
+
+[packages]
+resource = "GraceResourceIconsV{asset_version}"
 ```
 
-The package name and texture entry prefix are derived from this value.
+`build_assets.py`, `cook_assets.py`, and `check_static.py` load this manifest.
+The package name and texture entry prefix are derived from the same value; do
+not manually edit a second version constant in PowerShell or Python.
 
 ## Obsolete asset cleanup
 

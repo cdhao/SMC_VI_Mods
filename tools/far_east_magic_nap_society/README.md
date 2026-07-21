@@ -1,15 +1,21 @@
 # Far East Magic Nap Society Tooling
 
-Placeholder for the dedicated tools of the upcoming **极东魔术昼寝结社之夏** civilization mod.
+Dedicated tools for the **极东魔术昼寝结社之夏** civilization mod.
 
-Planned structure:
+Current validation entry point:
+
+```powershell
+python tools/far_east_magic_nap_society/check_static.py
+```
+
+Owned structure:
 
 ```text
 tools/far_east_magic_nap_society/
-  build_assets.py
   check_static.ps1
-  cook_assets.ps1
+  check_static.py
+  tests/test_check_static.py
   deploy.ps1
 ```
 
-This mod will keep its five-leader asset manifest, package names, atlas names, and cleanup rules in this directory. Only stable texture primitives should be imported from `tools/common`.
+This mod keeps its static contracts, deployment rules and future asset rules in this directory. Only stable validation and texture primitives are imported from `tools/common`.

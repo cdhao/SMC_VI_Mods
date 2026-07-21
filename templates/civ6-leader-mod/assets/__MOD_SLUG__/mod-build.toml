@@ -1,0 +1,16 @@
+[mod]
+slug = "__MOD_SLUG__"
+release_version = 1
+
+[paths]
+asset_root = "assets/__MOD_SLUG__"
+runtime_root = "mods/__MOD_SLUG__"
+project_root = "projects/__MOD_SLUG__"
+
+[assets]
+revision = 1
+
+[packages]
+ui = "__MOD_SLUG__UIV{asset_version}"
+resource = "__MOD_SLUG__ResourceIconsV{asset_version}"
+leader_fallback = "__MOD_SLUG__LeaderFallbacksV{asset_version}"

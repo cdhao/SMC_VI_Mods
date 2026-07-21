@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup><Configuration Condition=" '$(Configuration)' == '' ">Default</Configuration><Name>ChuuniSociety</Name><Guid>d3bd7d95-8fbc-4b35-a9a7-d37590bd04a2</Guid><ProjectGuid>2fce8034-a94b-47bc-8571-339619301501</ProjectGuid><ModVersion>1</ModVersion><AffectsSavedGames>true</AffectsSavedGames><SupportsSinglePlayer>true</SupportsSinglePlayer><SupportsMultiplayer>true</SupportsMultiplayer><SupportsHotSeat>true</SupportsHotSeat><CompatibleVersions>2.0</CompatibleVersions><AssemblyName>ChuuniSociety</AssemblyName><RootNamespace>ChuuniSociety</RootNamespace><AssetsPath>..\..\assets\ChuuniSociety\cooker</AssetsPath></PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Default' "><OutputPath>..\..\mods\ChuuniSociety</OutputPath></PropertyGroup>
+  <ItemGroup><None Include="ChuuniSociety.Art.xml"/></ItemGroup>
+  <ItemGroup><Content Include="..\..\mods\ChuuniSociety\ArtDefs\*.artdef"><Link>ArtDefs\%(Filename)%(Extension)</Link></Content><Content Include="..\..\mods\ChuuniSociety\ChuuniSociety.dep"><Link>ChuuniSociety.dep</Link></Content><Content Include="..\..\assets\ChuuniSociety\cooker\Images\Textures\*.tex"><Link>Images\Textures\%(Filename)%(Extension)</Link></Content><Content Include="..\..\assets\ChuuniSociety\cooker\XLPs\*.xlp"><Link>XLPs\%(Filename)%(Extension)</Link></Content></ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)Civ6.targets" />
+</Project>

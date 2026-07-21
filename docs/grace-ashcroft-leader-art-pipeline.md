@@ -4,7 +4,8 @@
 
 源图和中间图放在 `assets/GraceAshcroft`，不要留在 `mods/GraceAshcroft`。
 `mods/GraceAshcroft` 只保留运行和注册需要的 `.sql/.artdef/.dep/.blp` 等文件；
-`.tex` 与 `.xlp` 是 Cooker 输入，位于 `assets/GraceAshcroft/cooker`。
+`.tex` 与 `.xlp` 是可重建的 Cooker 输入，位于 `assets/GraceAshcroft/cooker`。
+`leader-art`、`generated` 与 `cooker` 均为 Git 忽略的过程目录，不应直接编辑。
 
 另一个独立问题是 DDS 像素通道顺序。`Images/Textures/*.tex` 当前统一声明：
 
@@ -34,7 +35,12 @@ A = 0xFF000000
 
 ## 资源分工
 
-当前领袖大图使用五类图片资源，源文件位于 `assets/GraceAshcroft/leader-art`：
+当前领袖大图只有以下两张受 Git 管理的源文件：
+
+- `source/icons/GraceAshcroft_Background.png`，背景源图。
+- `source/icons/GraceAshcroft_Foreground.png`，透明人物源图。
+
+`tools/grace_ashcroft/build_assets.py` 会从它们重建以下过程资源：
 
 - `leader-art/png/GraceAshcroft_Background.png` 与 `leader-art/dds/GraceAshcroft_Background.dds`
   - 干净背景图，尺寸 `2048x1024`。
@@ -46,7 +52,7 @@ A = 0xFF000000
 
 - `leader-art/png/GraceAshcroft_LoadingScene.png` 与 `leader-art/dds/GraceAshcroft_LoadingScene.dds`
   - 开始加载界面专用合成图，尺寸 `2048x1024`。
-  - 内容是背景加人物合成后的整张图。
+  - 内容是背景加人物合成后的整张图；`1024x2048` 人物原尺寸放在 `(1024, 0)`，超出画布的下半部按既有构图裁切。
 
 - `leader-art/png/GraceAshcroft_LoadingBlank.png` 与 `leader-art/dds/GraceAshcroft_LoadingBlank.dds`
   - 开始加载界面专用透明占位图，尺寸 `8x8`。
@@ -55,8 +61,8 @@ A = 0xFF000000
 - `assets/GraceAshcroft/cooker/Images/Textures/*.tex`
   - Asset Cooker 使用的纹理实例描述文件。
 
-图标源文件位于 `assets/GraceAshcroft/source/icons`，生成文件位于 `assets/GraceAshcroft/generated/icons`。
-`tools/grace_ashcroft/build_assets.py` 会生成图标 PNG/DDS、写入 Cooker 对应 `.tex`，并把图标 texture entries 加入 `assets/GraceAshcroft/cooker/XLPs/GraceUITexture.xlp`。
+所有图片源文件位于 `assets/GraceAshcroft/source/icons`，生成文件位于 `leader-art`、`generated` 和 `cooker`。
+`tools/grace_ashcroft/build_assets.py` 会生成领袖图与图标 PNG/DDS、写入 Cooker 对应 `.tex`，并把 texture entries 加入相应 `.xlp`。
 
 ## 开始加载界面
 
@@ -135,22 +141,13 @@ FALLBACK_NEUTRAL_GRACE_ASHCROFT -> GraceAshcroft_Foreground_Fallback
 
 ## DDS 生成
 
-优先使用 Microsoft DirectXTex `texconv.exe`：
+统一运行构建脚本生成 PNG、legacy RGBA DDS、TEX 与 XLP：
 
 ```powershell
-texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_Background.png
-texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_Foreground.png
-texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_LoadingScene.png
-texconv.exe -y -m 1 -f R8G8B8A8_UNORM -o Images Images\GraceAshcroft_LoadingBlank.png
+python -B tools\grace_ashcroft\build_assets.py
 ```
 
-如果本机没有 `texconv.exe`，使用项目脚本写出 legacy RGBA DDS：
-
-```powershell
-python tools\write_rgba_dds.py --out-dir assets\GraceAshcroft\leader-art\dds assets\GraceAshcroft\leader-art\png\GraceAshcroft_Background.png assets\GraceAshcroft\leader-art\png\GraceAshcroft_Foreground.png assets\GraceAshcroft\leader-art\png\GraceAshcroft_LoadingScene.png assets\GraceAshcroft\leader-art\png\GraceAshcroft_LoadingBlank.png
-```
-
-该脚本只读取正常 PNG 的 RGBA 像素，直接写出匹配 `PF_R8G8B8A8_UNORM` 的 DDS header 和像素数据。
+该脚本直接写出匹配 `PF_R8G8B8A8_UNORM` 的 DDS header 和像素数据，不需要手动调用 `texconv.exe`。
 
 ## 图标生成
 
@@ -187,14 +184,12 @@ assets/GraceAshcroft/cooker/XLPs/GraceUITexture.xlp
 
 如果只换人物立绘：
 
-1. 替换 `assets/GraceAshcroft/leader-art/png/GraceAshcroft_Foreground.png`。
-2. 使用 `texconv.exe` 或 `tools/write_rgba_dds.py` 重新生成 `GraceAshcroft_Foreground.dds`。
-3. 重新生成 `GraceAshcroft_LoadingScene.png/dds`。
-4. 重新 cook `GraceUITexture.blp` 和 `LeaderFallbacks.blp`。
+1. 替换 `assets/GraceAshcroft/source/icons/GraceAshcroft_Foreground.png`。
+2. 运行 `python -B tools\grace_ashcroft\build_assets.py`；脚本会自动重建人物图与 LoadingScene 合成图。
+3. 重新 cook `GraceUITexture.blp` 和 `LeaderFallbacks.blp`。
 
 如果只换背景：
 
-1. 替换 `assets/GraceAshcroft/leader-art/png/GraceAshcroft_Background.png`。
-2. 使用 `texconv.exe` 或 `tools/write_rgba_dds.py` 重新生成 `GraceAshcroft_Background.dds`。
-3. 重新生成 `GraceAshcroft_LoadingScene.png/dds`。
-4. 重新 cook `GraceUITexture.blp`。
+1. 替换 `assets/GraceAshcroft/source/icons/GraceAshcroft_Background.png`。
+2. 运行 `python -B tools\grace_ashcroft\build_assets.py`；脚本会自动重建背景与 LoadingScene 合成图。
+3. 重新 cook `GraceUITexture.blp`。

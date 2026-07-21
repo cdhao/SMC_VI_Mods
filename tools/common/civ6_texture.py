@@ -6,7 +6,11 @@ mod build scripts decide which assets exist and how packages are organized.
 
 from __future__ import annotations
 
+import errno
+import os
 import struct
+import time
+import uuid
 from pathlib import Path
 from typing import Union
 
@@ -28,6 +32,48 @@ def _as_rgba_image(source: ImageSource) -> Image.Image:
     if isinstance(source, Image.Image):
         return source.convert("RGBA")
     return Image.open(source).convert("RGBA")
+
+
+def _temporary_sibling(target: Path) -> Path:
+    return target.with_name(f".{target.name}.{uuid.uuid4().hex}.tmp")
+
+
+def _replace_with_retry(source: Path, target: Path, attempts: int = 8) -> None:
+    """Replace a generated binary despite short-lived Windows sharing locks."""
+
+    retryable_errors = {errno.EACCES, errno.EINVAL, errno.EPERM}
+    for attempt in range(attempts):
+        try:
+            os.replace(source, target)
+            return
+        except OSError as error:
+            if error.errno not in retryable_errors or attempt == attempts - 1:
+                raise
+            time.sleep(0.05 * (attempt + 1))
+
+
+def write_bytes_atomic(payload: bytes, target: Path) -> None:
+    """Write binary data through a same-directory temporary file, then replace it."""
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = _temporary_sibling(target)
+    try:
+        temporary.write_bytes(payload)
+        _replace_with_retry(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def save_png_atomic(image: Image.Image, target: Path) -> None:
+    """Save a PNG through a same-directory temporary file, then replace it."""
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = _temporary_sibling(target)
+    try:
+        image.save(temporary, format="PNG")
+        _replace_with_retry(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def write_rgba_dds(source: ImageSource, target: Path) -> None:
@@ -66,7 +112,8 @@ def write_rgba_dds(source: ImageSource, target: Path) -> None:
         raise RuntimeError(f"Unexpected DDS header size: {len(header)}")
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(bytes(header) + image.tobytes("raw", "RGBA"))
+    payload = bytes(header) + image.tobytes("raw", "RGBA")
+    write_bytes_atomic(payload, target)
 
 
 def alpha_bbox(image: Image.Image) -> tuple[int, int, int, int]:
