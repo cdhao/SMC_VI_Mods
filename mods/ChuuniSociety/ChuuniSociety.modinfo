@@ -60,6 +60,13 @@
       </Properties>
       <File>Scripts/ChuuniGameplay.lua</File>
     </AddGameplayScripts>
+    <AddUserInterfaces id="ChuuniStatusHUD" criteria="ChuuniExpansion2">
+      <Properties>
+        <Context>InGame</Context>
+        <LoadOrder>210</LoadOrder>
+      </Properties>
+      <File>UI/ChuuniStatusHUD.xml</File>
+    </AddUserInterfaces>
     <UpdateText id="ChuuniTextInGame" criteria="ChuuniExpansion2">
       <File>Text/Chuuni_zh_Hans_CN.sql</File>
     </UpdateText>
@@ -80,6 +87,8 @@
     <File>Data/StageCombat.sql</File>
     <File>Data/DistrictBuilding.sql</File>
     <File>Scripts/ChuuniGameplay.lua</File>
+    <File>UI/ChuuniStatusHUD.xml</File>
+    <File>UI/ChuuniStatusHUD.lua</File>
     <File>Text/Chuuni_zh_Hans_CN.sql</File>
     <File>Icons/ChuuniIcons.sql</File>
     <File>ChuuniSociety.dep</File>

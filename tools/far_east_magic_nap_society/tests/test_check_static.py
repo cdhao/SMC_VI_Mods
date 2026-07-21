@@ -19,6 +19,8 @@ GAMEPLAY_LUA = (
     REPO_ROOT / "mods" / "ChuuniSociety" / "Scripts" / "ChuuniGameplay.lua"
 )
 TEXT_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Text" / "Chuuni_zh_Hans_CN.sql"
+STATUS_HUD_XML = REPO_ROOT / "mods" / "ChuuniSociety" / "UI" / "ChuuniStatusHUD.xml"
+STATUS_HUD_LUA = REPO_ROOT / "mods" / "ChuuniSociety" / "UI" / "ChuuniStatusHUD.lua"
 DEPLOY_SCRIPT = REPO_ROOT / "tools" / "far_east_magic_nap_society" / "deploy.ps1"
 CHECK_WRAPPER = REPO_ROOT / "tools" / "far_east_magic_nap_society" / "check_static.ps1"
 GAME_ROOT = Path(
@@ -113,6 +115,52 @@ class ChuuniStaticTests(unittest.TestCase):
         self.assertIn("<AddGameplayScripts", text)
         self.assertIn("Scripts/ChuuniGameplay.lua", text)
 
+    def test_modinfo_registers_chuuni_status_hud(self) -> None:
+        text = MODINFO.read_text(encoding="utf-8")
+
+        self.assertIn("<AddUserInterfaces", text)
+        self.assertIn("<Context>InGame</Context>", text)
+        self.assertIn("UI/ChuuniStatusHUD.xml", text)
+        self.assertIn("UI/ChuuniStatusHUD.lua", text)
+
+    def test_chuuni_status_hud_contract(self) -> None:
+        self.assertTrue(STATUS_HUD_XML.is_file(), STATUS_HUD_XML)
+        self.assertTrue(STATUS_HUD_LUA.is_file(), STATUS_HUD_LUA)
+        xml_text = STATUS_HUD_XML.read_text(encoding="utf-8")
+        lua_text = STATUS_HUD_LUA.read_text(encoding="utf-8")
+
+        for control_id in (
+            'ID="ChuuniStatusContainer"',
+            'ID="ChuuniValueLabel"',
+            'ID="ChuuniStageLabel"',
+            'ID="ChuuniNextThresholdLabel"',
+        ):
+            self.assertIn(control_id, xml_text)
+
+        for contract in (
+            "CIVILIZATION_CHUUNI_SOCIETY",
+            "RESOURCE_CHUUNI_VALUE",
+            "CHUUNI_STAGE",
+            "Game.GetLocalPlayer()",
+            "GetCivilizationTypeName",
+            "GetResourceAmount",
+            "LuaEvents.ChuuniStatusChanged.Add",
+            "Events.GameCoreEventPublishComplete.Add",
+            "Events.LocalPlayerChanged.Add",
+            "Events.PlayerTurnActivated.Add",
+            "Controls.ChuuniStatusContainer:SetHide",
+            "Controls.ChuuniStatusContainer:SetToolTipString",
+            "LOC_CHUUNI_STATUS_UNMET_RELIGION",
+        ):
+            self.assertIn(contract, lua_text)
+
+    def test_chuuni_resource_tooltip_lists_all_stages(self) -> None:
+        text = TEXT_SQL.read_text(encoding="utf-8")
+
+        self.assertIn("LOC_RESOURCE_CHUUNI_VALUE_DESCRIPTION", text)
+        for stage in ("第一阶段", "第二阶段", "第三阶段", "第四阶段"):
+            self.assertIn(stage, text)
+
     def test_chuuni_progression_lua_contract(self) -> None:
         text = GAMEPLAY_LUA.read_text(encoding="utf-8")
 
@@ -129,6 +177,7 @@ class ChuuniStaticTests(unittest.TestCase):
             "ChangeChuuniValue(playerID, 5)",
             "math.min(CHUUNI_VALUE_CAP",
             "AttachModifierByID(CHUUNI_COASTAL_AMENITY_MODIFIER)",
+            "LuaEvents.ChuuniStatusChanged",
         ):
             self.assertIn(contract, text)
 

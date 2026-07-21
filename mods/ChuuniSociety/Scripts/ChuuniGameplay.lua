@@ -67,6 +67,19 @@ local function HasFoundedReligion(player)
     return (tonumber(religion:GetReligionTypeCreated()) or -1) >= 0
 end
 
+local function PublishChuuniStatus(playerID)
+    if LuaEvents == nil or LuaEvents.ChuuniStatusChanged == nil then
+        return
+    end
+    local player = GetPlayer(playerID)
+    local storedStage = player ~= nil and player:GetProperty(CHUUNI_STAGE) or nil
+    LuaEvents.ChuuniStatusChanged(
+        playerID,
+        GetChuuniValue(playerID),
+        tonumber(storedStage) or 0
+    )
+end
+
 local function SendStatus(playerID, localizationKey)
     local text = localizationKey
     if Locale ~= nil and Locale.Lookup ~= nil then
@@ -107,6 +120,7 @@ function ChangeChuuniValue(playerID, amount)
     local actualGain = nextValue - currentValue
     if actualGain > 0 then
         player:GetResources():ChangeResourceAmount(CHUUNI_RESOURCE_INDEX, actualGain)
+        PublishChuuniStatus(playerID)
     end
     return nextValue
 end
@@ -116,6 +130,7 @@ local function UnlockStage(player, playerID, stage, propertyName, localizationKe
         player:SetProperty(propertyName, 1)
         player:SetProperty(CHUUNI_STAGE, stage)
         SendStatus(playerID, localizationKey)
+        PublishChuuniStatus(playerID)
     end
     return stage
 end
@@ -147,6 +162,7 @@ function UpdateChuuniStage(playerID)
     end
 
     player:SetProperty(CHUUNI_STAGE, stage)
+    PublishChuuniStatus(playerID)
     return stage
 end
 
