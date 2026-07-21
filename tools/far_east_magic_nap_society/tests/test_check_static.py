@@ -161,27 +161,41 @@ class ChuuniStaticTests(unittest.TestCase):
             text,
         )
 
-    def test_stage_one_combat_contract(self) -> None:
+    def test_resource_gated_staged_combat_contract(self) -> None:
         self.assertTrue(STAGE_COMBAT_SQL.is_file(), STAGE_COMBAT_SQL)
         modinfo_text = MODINFO.read_text(encoding="utf-8")
         stage_text = STAGE_COMBAT_SQL.read_text(encoding="utf-8")
         lua_text = GAMEPLAY_LUA.read_text(encoding="utf-8")
 
         self.assertIn("Data/StageCombat.sql", modinfo_text)
-        self.assertIn("CHUUNI_STAGE_1_COMBAT", stage_text)
-        self.assertIn("MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", stage_text)
-        self.assertIn("('CHUUNI_STAGE_1_COMBAT', 'Amount', 3)", stage_text)
-        self.assertIn(
-            "('CHUUNI_STAGE_1_COMBAT', 'Preview', "
-            "'LOC_CHUUNI_STAGE_1_COMBAT_PREVIEW')",
-            stage_text,
+        for modifier_id, requirement_set, amount in (
+            ("CHUUNI_FANTASY_COMBAT_STAGE_1", "CHUUNI_FANTASY_STAGE_1_REQUIREMENTS", 3),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_2", "CHUUNI_FANTASY_STAGE_2_REQUIREMENTS", 2),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_3", "CHUUNI_FANTASY_STAGE_3_REQUIREMENTS", 3),
+        ):
+            self.assertIn(modifier_id, stage_text)
+            self.assertIn(requirement_set, stage_text)
+            self.assertIn(
+                f"('{modifier_id}', 'Amount', {amount})",
+                stage_text,
+            )
+
+        self.assertEqual(
+            stage_text.count("MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH"),
+            3,
         )
-        self.assertIn("LOC_CHUUNI_STAGE_1_COMBAT_PREVIEW", TEXT_SQL.read_text(encoding="utf-8"))
-        self.assertIn("CHUUNI_STAGE_1_COMBAT_ATTACHED", lua_text)
-        self.assertIn(
-            "player:AttachModifierByID(CHUUNI_STAGE_1_COMBAT_MODIFIER)",
-            lua_text,
-        )
+        self.assertIn("REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", stage_text)
+        self.assertIn("REQUIREMENT_PLAYER_IS_RELIGION_FOUNDER", stage_text)
+        for threshold in (1, 20, 50):
+            self.assertIn(
+                f"('CHUUNI_REQUIRES_VALUE_{threshold}', 'Amount', {threshold})",
+                stage_text,
+            )
+        self.assertEqual(stage_text.count("'RESOURCE_CHUUNI_VALUE'"), 3)
+        self.assertNotIn("CHUUNI_STAGE_1_COMBAT_ATTACHED", lua_text)
+        self.assertNotIn("CHUUNI_STAGE_1_COMBAT_MODIFIER", lua_text)
+        self.assertNotIn("EnsureStageModifiers", lua_text)
+        self.assertNotIn("AttachModifierByID(CHUUNI_STAGE", lua_text)
 
     def test_coastal_amenity_modifier_contract(self) -> None:
         text = CORE_SQL.read_text(encoding="utf-8")
@@ -293,14 +307,39 @@ class ChuuniStaticTests(unittest.TestCase):
             self.assertEqual(
                 connection.execute(
                     """
-                    SELECT m.ModifierType, a.Value
+                    SELECT m.ModifierId, m.ModifierType, a.Value
                     FROM Modifiers AS m
                     JOIN ModifierArguments AS a ON a.ModifierId = m.ModifierId
-                    WHERE m.ModifierId = 'CHUUNI_STAGE_1_COMBAT'
+                    WHERE m.ModifierId LIKE 'CHUUNI_FANTASY_COMBAT_STAGE_%'
                       AND a.Name = 'Amount'
+                    ORDER BY m.ModifierId
                     """
-                ).fetchone(),
-                ("MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "3"),
+                ).fetchall(),
+                [
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_1", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "3"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_2", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "2"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_3", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "3"),
+                ],
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT r.RequirementId, r.RequirementType, a.Name, a.Value
+                    FROM Requirements AS r
+                    JOIN RequirementArguments AS a
+                      ON a.RequirementId = r.RequirementId
+                    WHERE r.RequirementId LIKE 'CHUUNI_REQUIRES_VALUE_%'
+                    ORDER BY r.RequirementId, a.Name
+                    """
+                ).fetchall(),
+                [
+                    ("CHUUNI_REQUIRES_VALUE_1", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "Amount", "1"),
+                    ("CHUUNI_REQUIRES_VALUE_1", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "ResourceType", "RESOURCE_CHUUNI_VALUE"),
+                    ("CHUUNI_REQUIRES_VALUE_20", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "Amount", "20"),
+                    ("CHUUNI_REQUIRES_VALUE_20", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "ResourceType", "RESOURCE_CHUUNI_VALUE"),
+                    ("CHUUNI_REQUIRES_VALUE_50", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "Amount", "50"),
+                    ("CHUUNI_REQUIRES_VALUE_50", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "ResourceType", "RESOURCE_CHUUNI_VALUE"),
+                ],
             )
             self.assertEqual(
                 connection.execute(

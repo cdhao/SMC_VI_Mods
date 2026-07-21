@@ -13,8 +13,6 @@ local CHUUNI_STAGE_1_UNLOCKED = "CHUUNI_STAGE_1_UNLOCKED"
 local CHUUNI_STAGE_2_UNLOCKED = "CHUUNI_STAGE_2_UNLOCKED"
 local CHUUNI_STAGE_3_UNLOCKED = "CHUUNI_STAGE_3_UNLOCKED"
 local CHUUNI_STAGE_4_UNLOCKED = "CHUUNI_STAGE_4_UNLOCKED"
-local CHUUNI_STAGE_1_COMBAT_ATTACHED = "CHUUNI_STAGE_1_COMBAT_ATTACHED"
-local CHUUNI_STAGE_1_COMBAT_MODIFIER = "CHUUNI_STAGE_1_COMBAT"
 local CHUUNI_FIRST_COASTAL_CITY_FOUNDED = "CHUUNI_FIRST_COASTAL_CITY_FOUNDED"
 local CHUUNI_COASTAL_AMENITY_ATTACHED = "CHUUNI_COASTAL_AMENITY_ATTACHED"
 local CHUUNI_COASTAL_AMENITY_MODIFIER = "CHUUNI_RIKKA_COASTAL_CITY_AMENITIES"
@@ -122,13 +120,6 @@ local function UnlockStage(player, playerID, stage, propertyName, localizationKe
     return stage
 end
 
-local function EnsureStageModifiers(player, stage)
-    if stage >= 1 and player:GetProperty(CHUUNI_STAGE_1_COMBAT_ATTACHED) ~= 1 then
-        player:AttachModifierByID(CHUUNI_STAGE_1_COMBAT_MODIFIER)
-        player:SetProperty(CHUUNI_STAGE_1_COMBAT_ATTACHED, 1)
-    end
-end
-
 function UpdateChuuniStage(playerID)
     if not IsChuuniPlayer(playerID) then
         return 0
@@ -156,7 +147,6 @@ function UpdateChuuniStage(playerID)
     end
 
     player:SetProperty(CHUUNI_STAGE, stage)
-    EnsureStageModifiers(player, stage)
     return stage
 end
 

@@ -4,7 +4,7 @@
 
 **Goal:** Build a Gathering Storm-only Civilization VI mod for the Far East Magic Nap Society with Rikka, the Society district, Magic Circle building, Chuuni Value progression, Chimera governor, staged combat and upgrade effects, Invisible Boundary improvement, and land-unit teleportation.
 
-**Architecture:** Keep static game definitions in focused SQL files and use Gameplay Lua only for state that cannot be expressed reliably by database modifiers. Player and city Properties are the stable boundary between Lua state transitions and SQL modifiers. Every risky subsystem begins with a static or runtime spike and is promoted into the main implementation only after its acceptance checks pass.
+**Architecture:** Keep static game definitions in focused SQL files and use Gameplay Lua only for state that cannot be expressed reliably by database modifiers. Player and city Properties remain the stable state boundary for Lua transitions; staged combat uses SQL resource/religion requirements because Gathering Storm exposes no player-Property RequirementType. Every risky subsystem begins with a static or runtime spike and is promoted into the main implementation only after its acceptance checks pass.
 
 **Tech Stack:** Civilization VI Gathering Storm SQL/XML/Lua, Python 3.11 `unittest`, PowerShell launchers, shared helpers under `tools/common`.
 
@@ -19,7 +19,26 @@
 - Teleport supports map-present land combat units, land civilians including religious units, and Great People. It rejects naval, air, trader, spy, and off-map special units.
 - Chimera's dynamic faith, culture, and science must appear in the governed city's yield panel.
 - Implement and validate mechanics before changing balance values.
-- Do not add `.dep`, ArtDef, cooked BLP, or Asset Cooker dependencies for the placeholder-art release.
+- Rikka's first self-founded coastal city grants exactly 5 Chuuni Value, never 10.
+- The first release carries the existing `.dep`, fallback-leader ArtDef and cooked BLP files. Their loading and in-game composition were visually verified on 2026-07-20; source changes still require rebuilding the affected art package.
+
+## Completion Status
+
+Only these states are used: `未开始`, `技术Spike`, `已实现未实机验证`, `已实机验证`.
+
+| Deliverable | Status | Evidence or next gate |
+| --- | --- | --- |
+| Phase 1 civilization and leader skeleton | 已实机验证 | Civilization selection, loading scene and in-game leader presentation were visually confirmed. |
+| Fallback art loading chain | 已实机验证 | `.dep`, fallback ArtDef and both BLP packages loaded in the supplied game screenshots. |
+| Phase 2 Society district and Magic Circle | 已实现未实机验证 | Static/schema checks pass; recheck construction, Prophet points and adjacency in a fresh game. |
+| Phase 3 Chuuni Value and sequential stages | 已实现未实机验证 | Runtime nil conversion was fixed; recheck save/load, coastal +5 and religion gates. |
+| Phase 4 resource-threshold staged combat | 已实现未实机验证 | SQL spike is implemented; verify resource quantity arguments, religion gate, live refresh and 3/5/8 totals in game. |
+| Rikka Schwarz Sechs | 未开始 | Starts only after staged combat is confirmed. |
+| Chimera | 未开始 | Minimal Governor spike required first. |
+| Fantasy Armament discounts | 未开始 | Native upgrade-cost modifier spike required first. |
+| Invisible Boundary | 未开始 | Ocean placement spike required first. |
+| Magic Circle teleport | 未开始 | Gameplay movement spike required first. |
+| Faith purchasing and final content pass | 未开始 | Begins after preceding mechanics are stable. |
 
 ---
 
@@ -31,7 +50,8 @@ mods/ChuuniSociety/
   Data/Config.sql                 FrontEnd player and PlayerItems rows
   Data/Core.sql                   civilization, leader, traits, resource and parameters
   Data/DistrictBuilding.sql       Society district, Magic Circle and adjacencies
-  Data/Combat.sql                 staged combat and Rikka combat modifiers
+  Data/StageCombat.sql            resource-gated staged combat modifiers
+  Data/RikkaCombat.sql            Rikka defensive and stage-4 offensive modifiers
   Data/Chimera.sql                governor, governed-city yields, healing and production
   Data/Upgrade.sql                city-conditioned upgrade discounts
   Data/Improvement.sql            Invisible Boundary definition and yields
@@ -41,7 +61,7 @@ mods/ChuuniSociety/
   Scripts/ChuuniTeleport.lua      gameplay-side teleport validation and execution
   UI/ChuuniTeleportUI.lua         city-list teleport action and selection bridge
   Text/Chuuni_zh_Hans_CN.sql      Simplified Chinese localization
-  Icons/ChuuniIcons.sql           base-game placeholder icon mappings
+  Icons/ChuuniIcons.sql           custom cooked icon mappings with safe base-game fallbacks
 tools/far_east_magic_nap_society/
   check_static.py                 mod-specific contract validator
   check_static.ps1               PowerShell compatibility launcher
@@ -109,7 +129,7 @@ Use a new UUID and include this exact dependency and criterion:
 
 Register only the files created by this task: `Config.sql`, localization, icons and colors in FrontEndActions. Each later task adds its new runtime file to `Files` and the appropriate InGameAction in the same commit; the manifest must never reference a file that does not yet exist.
 
-- [ ] **Step 4: Create the FrontEnd player contract and placeholders**
+- [ ] **Step 4: Create the FrontEnd player contract and icon fallbacks**
 
 `Config.sql` must insert one `Players` row and PlayerItems rows using:
 
@@ -119,7 +139,7 @@ Register only the files created by this task: `Config.sql`, localization, icons 
 'Players:Expansion2_Players'
 ```
 
-Map civilization, leader, district, building, resource, governor and improvement icons to safe base-game atlases in `ChuuniIcons.sql`. Do not reference nonexistent texture files.
+Map civilization, leader, district, building and resource icons to the verified Chuuni packages while retaining safe base-game fallbacks for types whose custom art is not ready. Do not reference nonexistent texture files.
 
 - [ ] **Step 5: Implement the checker**
 
@@ -273,24 +293,46 @@ git commit -m "feat(chuuni): add chuuni value progression"
 
 ---
 
-### Task 4: Add Staged Combat and Rikka Combat Ability
+### Task 4A: Add Resource-Gated Staged Combat
 
 **Files:**
-- Create: `mods/ChuuniSociety/Data/Combat.sql`
+- Modify: `mods/ChuuniSociety/Data/StageCombat.sql`
+- Modify: `mods/ChuuniSociety/ChuuniSociety.modinfo`
+- Modify: `mods/ChuuniSociety/Scripts/ChuuniGameplay.lua`
+- Modify: `mods/ChuuniSociety/Text/Chuuni_zh_Hans_CN.sql`
+- Modify: `tools/far_east_magic_nap_society/check_static.py`
+- Modify: `tools/far_east_magic_nap_society/tests/test_check_static.py`
+- Modify: `docs/superpowers/plans/2026-07-19-chuuni-society-v0.1.md`
+
+**Interfaces:**
+- Consumes: `RESOURCE_CHUUNI_VALUE` stockpile and the founded-religion state from Task 3.
+- Produces: military combat totals 3/5/8/8 and religious combat totals 3/5/8/8 without Lua modifier attachment.
+
+- [ ] **Step 1: Add failing assertions for three static trait modifiers with `3,2,3` amounts, resource thresholds `1,20,50`, founded-religion requirements on the latter two, and no stage-combat `AttachModifierByID` in Lua.**
+- [ ] **Step 2: Run the focused test and confirm that the current single Lua-attached `+3` implementation fails the new contract.**
+- [ ] **Step 3: Implement the three modifiers with `MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH`. Gate them through `OwnerRequirementSetId` sets built from `REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED`; pass `ResourceType=RESOURCE_CHUUNI_VALUE` and `Amount=1/20/50`, and add `REQUIREMENT_PLAYER_IS_RELIGION_FOUNDER` to the 20 and 50 sets.**
+- [ ] **Step 4: Remove `CHUUNI_STAGE_1_COMBAT_ATTACHED`, `CHUUNI_STAGE_1_COMBAT_MODIFIER` and `EnsureStageModifiers` from Lua. Keep `CHUUNI_STAGE` and all four `_UNLOCKED` Properties.**
+- [ ] **Step 5: Run the focused unit tests, Expansion2 schema execution and Chuuni static checker. Deploy only ChuuniSociety.**
+- [ ] **Step 6: In Gathering Storm, inspect military and theological combat previews at values `1,20,50,100`, test live threshold refresh and the religion gate. Expected totals are `3,5,8,8`, never `16`. Until this passes, keep the status as `已实现未实机验证`.**
+- [ ] **Step 7: Commit with `git commit -m "feat(chuuni): add resource-gated staged combat"`.**
+
+### Task 4B: Add Rikka Schwarz Sechs
+
+**Files:**
+- Create: `mods/ChuuniSociety/Data/RikkaCombat.sql`
 - Modify: `mods/ChuuniSociety/ChuuniSociety.modinfo`
 - Modify: `mods/ChuuniSociety/Text/Chuuni_zh_Hans_CN.sql`
 - Modify: `tools/far_east_magic_nap_society/check_static.py`
+- Modify: `tools/far_east_magic_nap_society/tests/test_check_static.py`
 
 **Interfaces:**
-- Consumes: stage unlocked Properties from Task 3.
-- Produces: military combat totals 3/5/8/8, religious combat totals 3/5/8/8, Rikka defense +5 and stage-4 offense +5.
+- Consumes: the verified stage-4 resource/religion gate from Task 4A.
+- Produces: military-only defense +5 and stage-4 military-only attack +5; religious units receive neither modifier.
 
-- [ ] **Step 1: Add failing static assertions for `3,2,3` differential modifiers and offensive/defensive requirements.**
-- [ ] **Step 2: Run the checker and confirm failure on missing `Combat.sql`.**
-- [ ] **Step 3: Query the installed Expansion2 database XML for exact combat and religious-strength ModifierTypes; record those exact names in the SQL rather than guessing.**
-- [ ] **Step 4: Attach three differential modifiers to the civilization trait and two Rikka-specific modifiers to the leader trait.**
-- [ ] **Step 5: Run the checker and inspect combat preview in a Gathering Storm game at all four debug thresholds.**
-- [ ] **Step 6: Commit with `git commit -m "feat(chuuni): add staged combat modifiers"`.**
+- [ ] **Step 1: Add failing contracts for distinct defense and attack modifiers, military-unit and combat-role requirements, and the stage-4 gate.**
+- [ ] **Step 2: Implement the leader-trait modifiers and their combat preview strings without changing staged fantasy combat.**
+- [ ] **Step 3: Run focused checks, deploy ChuuniSociety and verify military defense, stage-4 military attack and religious exclusion in game.**
+- [ ] **Step 4: Commit with `git commit -m "feat(chuuni): add Schwarz Sechs combat ability"`.**
 
 ---
 
