@@ -23,6 +23,14 @@ local STAGE_ABILITY_KEYS = {
 
 local resourceRow = GameInfo.Resources[RESOURCE_CHUUNI_VALUE]
 local CHUUNI_RESOURCE_INDEX = resourceRow ~= nil and resourceRow.Index or -1
+local lastDiagnostic = nil
+
+local function TraceOnce(message)
+    if message ~= lastDiagnostic then
+        print("[ChuuniStatusHUD] " .. message)
+        lastDiagnostic = message
+    end
+end
 
 local function Lookup(key, ...)
     if Locale ~= nil and Locale.Lookup ~= nil then
@@ -100,9 +108,18 @@ local function BuildTooltip(player, value, stage)
 end
 
 local function Refresh()
-    local player = GetLocalChuuniPlayer()
+    local player, playerID = GetLocalChuuniPlayer()
     if player == nil or CHUUNI_RESOURCE_INDEX < 0 then
         Controls.ChuuniStatusContainer:SetHide(true)
+        local config = playerID >= 0 and PlayerConfigurations ~= nil
+            and PlayerConfigurations[playerID] or nil
+        local civilizationType = config ~= nil
+            and config:GetCivilizationTypeName() or "<none>"
+        TraceOnce(
+            "hidden player=" .. tostring(playerID)
+            .. " civilization=" .. tostring(civilizationType)
+            .. " resourceIndex=" .. tostring(CHUUNI_RESOURCE_INDEX)
+        )
         return
     end
 
@@ -120,6 +137,11 @@ local function Refresh()
     end
     Controls.ChuuniStatusContainer:SetToolTipString(BuildTooltip(player, value, stage))
     Controls.ChuuniStatusContainer:SetHide(false)
+    TraceOnce(
+        "visible player=" .. tostring(playerID)
+        .. " value=" .. tostring(value)
+        .. " stage=" .. tostring(stage)
+    )
 end
 
 local function OnChuuniStatusChanged(playerID)

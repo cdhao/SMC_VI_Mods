@@ -188,6 +188,9 @@ def check_frontend_contract(root: Path) -> None:
                     "Controls.ChuuniStatusContainer:SetHide",
                     "Controls.ChuuniStatusContainer:SetToolTipString",
                     "LOC_CHUUNI_STATUS_UNMET_RELIGION",
+                    "[ChuuniStatusHUD]",
+                    '"hidden player="',
+                    '"visible player="',
                 ),
             ),
             TextContract(

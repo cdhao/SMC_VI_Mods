@@ -34,6 +34,9 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 | Phase 3 Chuuni Value and sequential stages | 已实现未实机验证 | Runtime nil conversion was fixed; recheck save/load, coastal +5 and religion gates. |
 | Phase 4 resource-threshold staged combat | 已实现未实机验证 | SQL spike is implemented; verify resource quantity arguments, religion gate, live refresh and 3/5/8 totals in game. |
 | Chuuni Value stage status HUD | 已实现未实机验证 | Static four-stage tooltip and independent local-player HUD are implemented; verify visibility, live refresh, stage text and dynamic unmet conditions in game. |
+| Leader and civilization UI presentation | 未开始 | Correct the square leader portrait/logo presentation and audit required icon sizes and masks. |
+| Save/load icon asset audit | 未开始 | Reproduce missing save icon, inspect `ForgeUI_BLPTextureLoader.log`, cooked BLP inventory and cooker source mapping before changing the cooker. |
+| Blue-purple player colors | 未开始 | Replace the invalid color XML rows that currently load as duplicate `COLOR_UNKNOWN`; prepare a blue-purple primary/secondary palette and verify jersey colors in game. |
 | Rikka Schwarz Sechs | 未开始 | Starts only after staged combat is confirmed. |
 | Chimera | 未开始 | Minimal Governor spike required first. |
 | Fantasy Armament discounts | 未开始 | Native upgrade-cost modifier spike required first. |

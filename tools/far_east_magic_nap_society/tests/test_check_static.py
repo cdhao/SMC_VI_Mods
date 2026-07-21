@@ -151,6 +151,9 @@ class ChuuniStaticTests(unittest.TestCase):
             "Controls.ChuuniStatusContainer:SetHide",
             "Controls.ChuuniStatusContainer:SetToolTipString",
             "LOC_CHUUNI_STATUS_UNMET_RELIGION",
+            "[ChuuniStatusHUD]",
+            '"hidden player="',
+            '"visible player="',
         ):
             self.assertIn(contract, lua_text)
 
