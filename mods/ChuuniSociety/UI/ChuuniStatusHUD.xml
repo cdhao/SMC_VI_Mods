@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Context Name="ChuuniStatusHUD">
-  <Grid ID="ChuuniStatusContainer" Anchor="R,T" Offset="16,42" Size="270,82"
-        Texture="Controls_ContainerBlue" SliceCorner="3,3" SliceSize="9,9"
-        SliceTextureSize="16,16" ConsumeMouse="1" Hidden="1">
-    <Grid Anchor="C,T" Size="parent,26" Texture="Controls_SubHeader2"
-          SliceCorner="20,2" SliceTextureSize="40,40">
-      <Label Anchor="C,C" Style="FontFlair16" String="LOC_CHUUNI_STATUS_TITLE"/>
-    </Grid>
-    <Label ID="ChuuniValueLabel" Anchor="L,T" Offset="12,31" Style="FontNormal16"/>
-    <Label ID="ChuuniStageLabel" Anchor="R,T" Offset="12,31" Style="FontNormal16"/>
-    <Label ID="ChuuniNextThresholdLabel" Anchor="C,B" Offset="0,8" Style="FontNormal14"
-           ColorSet="TopBarValueCS"/>
-  </Grid>
+  <!-- Independent context: visually follows the base LaunchBar without replacing it. -->
+  <Container ID="ChuuniStatusRoot" Anchor="L,T" Offset="340,190" Size="55,55"
+             ConsumeMouse="1" Hidden="1">
+    <Button ID="ChuuniStatusButton" Anchor="C,C" Size="49,49"
+            Texture="LaunchBar_Hook_GovernmentButton" TextureOffset="0,2"
+            StateOffsetIncrement="0,49">
+      <Image ID="ChuuniStatusIcon" Anchor="C,T" Offset="0,5" Size="35,35"
+             Icon="ICON_CHUUNI_VALUE" IconSize="38"/>
+      <Image ID="ChuuniValueBadge" Anchor="R,B" Offset="-1,-1" Size="28,24"
+             Texture="Controls_MeterTinyBacking">
+        <Label ID="ChuuniValueText" Anchor="C,C" Style="FontNormal14" String="0"/>
+      </Image>
+    </Button>
+  </Container>
 </Context>

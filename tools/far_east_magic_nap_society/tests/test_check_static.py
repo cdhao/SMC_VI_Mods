@@ -19,6 +19,7 @@ GAMEPLAY_LUA = (
     REPO_ROOT / "mods" / "ChuuniSociety" / "Scripts" / "ChuuniGameplay.lua"
 )
 TEXT_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Text" / "Chuuni_zh_Hans_CN.sql"
+ICON_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Icons" / "ChuuniIcons.sql"
 STATUS_HUD_XML = REPO_ROOT / "mods" / "ChuuniSociety" / "UI" / "ChuuniStatusHUD.xml"
 STATUS_HUD_LUA = REPO_ROOT / "mods" / "ChuuniSociety" / "UI" / "ChuuniStatusHUD.lua"
 DEPLOY_SCRIPT = REPO_ROOT / "tools" / "far_east_magic_nap_society" / "deploy.ps1"
@@ -67,10 +68,13 @@ class ChuuniStaticTests(unittest.TestCase):
         self.assertIn('criteria="ChuuniExpansion2"', text)
         self.assertNotIn("1B28771A-C749-434B-9053-D1380C553DE9", text)
 
-    def test_core_resource_and_threshold_contracts(self) -> None:
+    def test_core_property_and_threshold_contracts(self) -> None:
         text = CORE_SQL.read_text(encoding="utf-8")
 
-        self.assertIn("'RESOURCE_CHUUNI_VALUE', 1, 0, 0, 0, 100", text)
+        self.assertNotIn("RESOURCE_CHUUNI_VALUE", text)
+        self.assertNotIn("RESOURCECLASS_STRATEGIC", text)
+        self.assertIn("'CHUUNI_VALUE_PER_DISTRICT', 1", text)
+        self.assertIn("'CHUUNI_VALUE_PER_BUILDING', 1", text)
         self.assertIn("'CHUUNI_STAGE_1_THRESHOLD', 1", text)
         self.assertIn("'CHUUNI_STAGE_2_THRESHOLD', 20", text)
         self.assertIn("'CHUUNI_STAGE_3_THRESHOLD', 50", text)
@@ -130,39 +134,81 @@ class ChuuniStaticTests(unittest.TestCase):
         lua_text = STATUS_HUD_LUA.read_text(encoding="utf-8")
 
         for control_id in (
-            'ID="ChuuniStatusContainer"',
-            'ID="ChuuniValueLabel"',
-            'ID="ChuuniStageLabel"',
-            'ID="ChuuniNextThresholdLabel"',
+            'ID="ChuuniStatusRoot"',
+            'ID="ChuuniStatusButton"',
+            'ID="ChuuniStatusIcon"',
+            'ID="ChuuniValueBadge"',
+            'ID="ChuuniValueText"',
         ):
             self.assertIn(control_id, xml_text)
+        for obsolete_control in (
+            "ChuuniStatusContainer",
+            "ChuuniValueLabel",
+            "ChuuniStageLabel",
+            "ChuuniNextThresholdLabel",
+        ):
+            self.assertNotIn(obsolete_control, xml_text)
 
         for contract in (
             "CIVILIZATION_CHUUNI_SOCIETY",
-            "RESOURCE_CHUUNI_VALUE",
+            'CHUUNI_VALUE = "CHUUNI_VALUE"',
             "CHUUNI_STAGE",
             "Game.GetLocalPlayer()",
             "GetCivilizationTypeName",
-            "GetResourceAmount",
+            "GetPropertyNumber",
+            "GetStatusModel",
+            "include(\"PopupDialog\")",
+            "PopupDialogInGame:new",
+            "AddTitle",
+            "AddText",
+            "AddConfirmButton",
+            "BuildPopupText",
+            "OpenChuuniPopup",
+            "Mouse.eLClick",
+            "Mouse.eMouseEnter",
             "LuaEvents.ChuuniStatusChanged.Add",
             "Events.GameCoreEventPublishComplete.Add",
             "Events.LocalPlayerChanged.Add",
             "Events.PlayerTurnActivated.Add",
-            "Controls.ChuuniStatusContainer:SetHide",
-            "Controls.ChuuniStatusContainer:SetToolTipString",
+            "Controls.ChuuniStatusRoot:SetHide",
+            "Controls.ChuuniStatusButton:SetToolTipString",
+            "Controls.ChuuniValueText:SetText",
             "LOC_CHUUNI_STATUS_UNMET_RELIGION",
             "[ChuuniStatusHUD]",
             '"hidden player="',
             '"visible player="',
         ):
             self.assertIn(contract, lua_text)
+        for obsolete_contract in (
+            "RESOURCE_CHUUNI_VALUE",
+            "GetResources",
+            "GetResourceAmount",
+            "ChuuniStatusContainer",
+        ):
+            self.assertNotIn(obsolete_contract, lua_text)
 
-    def test_chuuni_resource_tooltip_lists_all_stages(self) -> None:
+        popup_function_offset = lua_text.index("local function OpenChuuniPopup")
+        popup_constructor_offset = lua_text.index("PopupDialogInGame:new")
+        self.assertGreater(popup_constructor_offset, popup_function_offset)
+        self.assertNotIn("local m_popupDialog", lua_text)
+
+    def test_chuuni_popup_localization_lists_all_stages(self) -> None:
         text = TEXT_SQL.read_text(encoding="utf-8")
 
-        self.assertIn("LOC_RESOURCE_CHUUNI_VALUE_DESCRIPTION", text)
+        self.assertNotIn("LOC_RESOURCE_CHUUNI_VALUE", text)
+        self.assertIn("LOC_CHUUNI_STATUS_POPUP_TITLE", text)
+        self.assertIn("LOC_CHUUNI_STATUS_BUTTON_TOOLTIP", text)
+        self.assertIn("LOC_CHUUNI_STATUS_CLOSE", text)
         for stage in ("第一阶段", "第二阶段", "第三阶段", "第四阶段"):
             self.assertIn(stage, text)
+
+    def test_chuuni_value_icon_is_ui_only(self) -> None:
+        text = ICON_SQL.read_text(encoding="utf-8")
+
+        self.assertIn("ICON_CHUUNI_VALUE", text)
+        self.assertIn("ICON_ATLAS_CHUUNI_VALUE", text)
+        self.assertNotIn("RESOURCE_CHUUNI_VALUE", text)
+        self.assertNotIn("ICON_RESOURCE_CHUUNI_VALUE", text)
 
     def test_chuuni_progression_lua_contract(self) -> None:
         text = GAMEPLAY_LUA.read_text(encoding="utf-8")
@@ -171,8 +217,15 @@ class ChuuniStaticTests(unittest.TestCase):
             "function GetChuuniValue",
             "function ChangeChuuniValue",
             "function UpdateChuuniStage",
-            "CHUUNI_LAST_RESOURCE_TICK_TURN",
             "CHUUNI_FIRST_COASTAL_CITY_FOUNDED",
+            'CHUUNI_VALUE = "CHUUNI_VALUE"',
+            "CHUUNI_LAST_VALUE_TICK_TURN",
+            "CHUUNI_STAGE_1_COMBAT_ATTACHED",
+            "CHUUNI_STAGE_2_COMBAT_ATTACHED",
+            "CHUUNI_STAGE_3_COMBAT_ATTACHED",
+            "EnsureStageCombatModifier",
+            "player:SetProperty(CHUUNI_VALUE",
+            "player:AttachModifierByID(modifierID)",
             "GetReligionTypeCreated",
             "Events.PlayerTurnActivated.Add",
             "Events.ReligionFounded.Add",
@@ -183,6 +236,16 @@ class ChuuniStaticTests(unittest.TestCase):
             "LuaEvents.ChuuniStatusChanged",
         ):
             self.assertIn(contract, text)
+
+        for obsolete_contract in (
+            "RESOURCE_CHUUNI_VALUE",
+            "CHUUNI_RESOURCE_INDEX",
+            "CHUUNI_LAST_RESOURCE_TICK_TURN",
+            "GetResources()",
+            "GetResourceAmount",
+            "ChangeResourceAmount",
+        ):
+            self.assertNotIn(obsolete_contract, text)
 
         stage_properties = [
             f"CHUUNI_STAGE_{stage}_UNLOCKED" for stage in range(1, 5)
@@ -204,29 +267,29 @@ class ChuuniStaticTests(unittest.TestCase):
         )
         self.assertIn("local stage = tonumber(storedStage) or 0", text)
         self.assertIn(
-            "local lastResourceTickTurn = "
-            "player:GetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN)",
+            "local lastValueTickTurn = "
+            "player:GetProperty(CHUUNI_LAST_VALUE_TICK_TURN)",
             text,
         )
         self.assertIn(
-            "if tonumber(lastResourceTickTurn) == currentTurn then",
+            "if tonumber(lastValueTickTurn) == currentTurn then",
             text,
         )
 
-    def test_resource_gated_staged_combat_contract(self) -> None:
+    def test_property_gated_staged_combat_contract(self) -> None:
         self.assertTrue(STAGE_COMBAT_SQL.is_file(), STAGE_COMBAT_SQL)
         modinfo_text = MODINFO.read_text(encoding="utf-8")
         stage_text = STAGE_COMBAT_SQL.read_text(encoding="utf-8")
         lua_text = GAMEPLAY_LUA.read_text(encoding="utf-8")
 
         self.assertIn("Data/StageCombat.sql", modinfo_text)
-        for modifier_id, requirement_set, amount in (
-            ("CHUUNI_FANTASY_COMBAT_STAGE_1", "CHUUNI_FANTASY_STAGE_1_REQUIREMENTS", 3),
-            ("CHUUNI_FANTASY_COMBAT_STAGE_2", "CHUUNI_FANTASY_STAGE_2_REQUIREMENTS", 2),
-            ("CHUUNI_FANTASY_COMBAT_STAGE_3", "CHUUNI_FANTASY_STAGE_3_REQUIREMENTS", 3),
+        for modifier_id, attached_property, amount in (
+            ("CHUUNI_FANTASY_COMBAT_STAGE_1", "CHUUNI_STAGE_1_COMBAT_ATTACHED", 3),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_2", "CHUUNI_STAGE_2_COMBAT_ATTACHED", 2),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_3", "CHUUNI_STAGE_3_COMBAT_ATTACHED", 3),
         ):
             self.assertIn(modifier_id, stage_text)
-            self.assertIn(requirement_set, stage_text)
+            self.assertIn(attached_property, lua_text)
             self.assertIn(
                 f"('{modifier_id}', 'Amount', {amount})",
                 stage_text,
@@ -236,18 +299,19 @@ class ChuuniStaticTests(unittest.TestCase):
             stage_text.count("MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH"),
             3,
         )
-        self.assertIn("REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", stage_text)
-        self.assertIn("REQUIREMENT_PLAYER_IS_RELIGION_FOUNDER", stage_text)
-        for threshold in (1, 20, 50):
-            self.assertIn(
-                f"('CHUUNI_REQUIRES_VALUE_{threshold}', 'Amount', {threshold})",
-                stage_text,
-            )
-        self.assertEqual(stage_text.count("'RESOURCE_CHUUNI_VALUE'"), 3)
-        self.assertNotIn("CHUUNI_STAGE_1_COMBAT_ATTACHED", lua_text)
-        self.assertNotIn("CHUUNI_STAGE_1_COMBAT_MODIFIER", lua_text)
-        self.assertNotIn("EnsureStageModifiers", lua_text)
-        self.assertNotIn("AttachModifierByID(CHUUNI_STAGE", lua_text)
+        self.assertEqual(stage_text.count("'Preview'"), 3)
+        self.assertIn("Permanent", stage_text)
+        for forbidden in (
+            "RequirementSets",
+            "Requirements",
+            "RequirementArguments",
+            "RequirementSetRequirements",
+            "TraitModifiers",
+            "RESOURCE_CHUUNI_VALUE",
+            "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED",
+        ):
+            self.assertNotIn(forbidden, stage_text)
+        self.assertIn("player:AttachModifierByID(modifierID)", lua_text)
 
     def test_coastal_amenity_modifier_contract(self) -> None:
         text = CORE_SQL.read_text(encoding="utf-8")
@@ -376,31 +440,26 @@ class ChuuniStaticTests(unittest.TestCase):
             self.assertEqual(
                 connection.execute(
                     """
-                    SELECT r.RequirementId, r.RequirementType, a.Name, a.Value
-                    FROM Requirements AS r
-                    JOIN RequirementArguments AS a
-                      ON a.RequirementId = r.RequirementId
-                    WHERE r.RequirementId LIKE 'CHUUNI_REQUIRES_VALUE_%'
-                    ORDER BY r.RequirementId, a.Name
+                    SELECT ModifierId, Permanent, OwnerRequirementSetId
+                    FROM Modifiers
+                    WHERE ModifierId LIKE 'CHUUNI_FANTASY_COMBAT_STAGE_%'
+                    ORDER BY ModifierId
                     """
                 ).fetchall(),
                 [
-                    ("CHUUNI_REQUIRES_VALUE_1", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "Amount", "1"),
-                    ("CHUUNI_REQUIRES_VALUE_1", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "ResourceType", "RESOURCE_CHUUNI_VALUE"),
-                    ("CHUUNI_REQUIRES_VALUE_20", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "Amount", "20"),
-                    ("CHUUNI_REQUIRES_VALUE_20", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "ResourceType", "RESOURCE_CHUUNI_VALUE"),
-                    ("CHUUNI_REQUIRES_VALUE_50", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "Amount", "50"),
-                    ("CHUUNI_REQUIRES_VALUE_50", "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", "ResourceType", "RESOURCE_CHUUNI_VALUE"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_1", 1, None),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_2", 1, None),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_3", 1, None),
                 ],
             )
             self.assertEqual(
                 connection.execute(
                     """
-                    SELECT StockpileCap FROM Resource_Consumption
-                    WHERE ResourceType = 'RESOURCE_CHUUNI_VALUE'
+                    SELECT COUNT(*) FROM TraitModifiers
+                    WHERE ModifierId LIKE 'CHUUNI_FANTASY_COMBAT_STAGE_%'
                     """
                 ).fetchone(),
-                (100,),
+                (0,),
             )
         finally:
             connection.close()

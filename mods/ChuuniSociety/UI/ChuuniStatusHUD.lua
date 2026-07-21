@@ -1,7 +1,9 @@
--- Compact status panel for Chuuni Value progression.
+-- Compact Chuuni Value button and native in-game status popup.
+
+include("PopupDialog")
 
 local CIVILIZATION_CHUUNI_SOCIETY = "CIVILIZATION_CHUUNI_SOCIETY"
-local RESOURCE_CHUUNI_VALUE = "RESOURCE_CHUUNI_VALUE"
+local CHUUNI_VALUE = "CHUUNI_VALUE"
 local CHUUNI_STAGE = "CHUUNI_STAGE"
 local CHUUNI_VALUE_CAP = 100
 
@@ -21,8 +23,6 @@ local STAGE_ABILITY_KEYS = {
     "LOC_CHUUNI_STATUS_STAGE_4_ABILITY",
 }
 
-local resourceRow = GameInfo.Resources[RESOURCE_CHUUNI_VALUE]
-local CHUUNI_RESOURCE_INDEX = resourceRow ~= nil and resourceRow.Index or -1
 local lastDiagnostic = nil
 
 local function TraceOnce(message)
@@ -37,6 +37,15 @@ local function Lookup(key, ...)
         return Locale.Lookup(key, ...)
     end
     return key
+end
+
+local function GetPropertyNumber(player, propertyName, defaultValue)
+    local storedValue = player:GetProperty(propertyName)
+    local numericValue = tonumber(storedValue)
+    if numericValue == nil then
+        return defaultValue
+    end
+    return numericValue
 end
 
 local function HasFoundedReligion(player)
@@ -56,6 +65,7 @@ local function GetLocalChuuniPlayer()
     if playerID == nil or playerID < 0 or Players == nil then
         return nil, -1
     end
+
     local player = Players[playerID]
     local config = PlayerConfigurations ~= nil and PlayerConfigurations[playerID] or nil
     if player == nil or not player:IsAlive() or config == nil
@@ -65,52 +75,108 @@ local function GetLocalChuuniPlayer()
     return player, playerID
 end
 
-local function GetStatus(player)
-    local value = 0
-    local resources = player:GetResources()
-    if resources ~= nil and CHUUNI_RESOURCE_INDEX >= 0 then
-        local storedValue = resources:GetResourceAmount(CHUUNI_RESOURCE_INDEX)
-        value = math.max(0, math.min(CHUUNI_VALUE_CAP, tonumber(storedValue) or 0))
-    end
-    local storedStage = player:GetProperty(CHUUNI_STAGE)
-    local stage = math.max(0, math.min(4, tonumber(storedStage) or 0))
-    return value, stage
+local function GetStatusModel(player)
+    local value = math.max(0, math.min(
+        CHUUNI_VALUE_CAP,
+        GetPropertyNumber(player, CHUUNI_VALUE, 0)
+    ))
+    local stage = math.max(0, math.min(4, GetPropertyNumber(player, CHUUNI_STAGE, 0)))
+    local foundedReligion = HasFoundedReligion(player)
+    local nextThreshold = stage < 4 and STAGE_THRESHOLDS[stage + 1] or nil
+
+    return {
+        value = value,
+        stage = stage,
+        foundedReligion = foundedReligion,
+        nextThreshold = nextThreshold,
+        missingValue = nextThreshold ~= nil and math.max(0, nextThreshold - value) or 0,
+        nextNeedsReligion = stage >= 1 and stage < 4,
+    }
 end
 
-local function BuildTooltip(player, value, stage)
-    local lines = {
-        Lookup("LOC_CHUUNI_STATUS_VALUE_FORMAT", value),
-        Lookup("LOC_CHUUNI_STATUS_STAGE_FORMAT", Lookup(STAGE_NAME_KEYS[stage + 1])),
+local function BuildStageOverview(status)
+    local lines = {}
+    for stage = 1, 4 do
+        local markerKey = "LOC_CHUUNI_STATUS_STAGE_LOCKED"
+        if stage < status.stage then
+            markerKey = "LOC_CHUUNI_STATUS_STAGE_UNLOCKED"
+        elseif stage == status.stage then
+            markerKey = "LOC_CHUUNI_STATUS_STAGE_CURRENT"
+        end
+        table.insert(lines, Lookup(
+            "LOC_CHUUNI_STATUS_STAGE_OVERVIEW_LINE",
+            Lookup(markerKey),
+            Lookup(STAGE_NAME_KEYS[stage + 1]),
+            STAGE_THRESHOLDS[stage],
+            Lookup(STAGE_ABILITY_KEYS[stage + 1])
+        ))
+    end
+    return table.concat(lines, "[NEWLINE]")
+end
+
+local function BuildButtonTooltip(status)
+    return table.concat({
+        Lookup("LOC_CHUUNI_STATUS_BUTTON_TOOLTIP", status.value),
+        Lookup("LOC_CHUUNI_STATUS_STAGE_FORMAT", Lookup(STAGE_NAME_KEYS[status.stage + 1])),
         "",
-        Lookup("LOC_CHUUNI_STATUS_ABILITY_TITLE"),
-        Lookup(STAGE_ABILITY_KEYS[stage + 1]),
+        Lookup("LOC_CHUUNI_STATUS_STAGE_OVERVIEW"),
+        BuildStageOverview(status),
+    }, "[NEWLINE]")
+end
+
+local function BuildPopupText(status)
+    local lines = {
+        Lookup("LOC_CHUUNI_STATUS_CURRENT_VALUE", status.value),
+        Lookup("LOC_CHUUNI_STATUS_CURRENT_STAGE", Lookup(STAGE_NAME_KEYS[status.stage + 1])),
+        Lookup("LOC_CHUUNI_STATUS_CURRENT_ABILITY"),
+        Lookup(STAGE_ABILITY_KEYS[status.stage + 1]),
     }
 
-    if stage < 4 then
-        local nextThreshold = STAGE_THRESHOLDS[stage + 1]
+    if status.stage < 4 then
         table.insert(lines, "")
-        table.insert(lines, Lookup("LOC_CHUUNI_STATUS_UNMET_TITLE"))
-        local unmet = false
-        if value < nextThreshold then
-            table.insert(lines, Lookup("LOC_CHUUNI_STATUS_UNMET_VALUE", nextThreshold - value))
-            unmet = true
+        table.insert(lines, Lookup(
+            "LOC_CHUUNI_STATUS_NEXT_STAGE",
+            Lookup(STAGE_NAME_KEYS[status.stage + 2])
+        ))
+        table.insert(lines, Lookup("LOC_CHUUNI_STATUS_REQUIRED_VALUE", status.nextThreshold))
+        if status.missingValue > 0 then
+            table.insert(lines, Lookup("LOC_CHUUNI_STATUS_UNMET_VALUE", status.missingValue))
         end
-        if stage >= 1 and not HasFoundedReligion(player) then
-            table.insert(lines, Lookup("LOC_CHUUNI_STATUS_UNMET_RELIGION"))
-            unmet = true
+        if status.nextNeedsReligion then
+            local religionKey = status.foundedReligion
+                and "LOC_CHUUNI_STATUS_RELIGION_MET"
+                or "LOC_CHUUNI_STATUS_UNMET_RELIGION"
+            table.insert(lines, Lookup(religionKey))
         end
-        if not unmet then
-            table.insert(lines, Lookup("LOC_CHUUNI_STATUS_ALL_MET"))
-        end
+    else
+        table.insert(lines, "")
+        table.insert(lines, Lookup("LOC_CHUUNI_STATUS_MAX_STAGE"))
     end
 
+    table.insert(lines, "")
+    table.insert(lines, Lookup("LOC_CHUUNI_STATUS_STAGE_OVERVIEW"))
+    table.insert(lines, BuildStageOverview(status))
     return table.concat(lines, "[NEWLINE]")
+end
+
+local function OpenChuuniPopup()
+    local player = GetLocalChuuniPlayer()
+    if player == nil then
+        return
+    end
+
+    local status = GetStatusModel(player)
+    local popupDialog = PopupDialogInGame:new("ChuuniStatusPopup")
+    popupDialog:AddTitle(Lookup("LOC_CHUUNI_STATUS_POPUP_TITLE"))
+    popupDialog:AddText(BuildPopupText(status))
+    popupDialog:AddConfirmButton(Lookup("LOC_CHUUNI_STATUS_CLOSE"), function() end)
+    popupDialog:Open()
 end
 
 local function Refresh()
     local player, playerID = GetLocalChuuniPlayer()
-    if player == nil or CHUUNI_RESOURCE_INDEX < 0 then
-        Controls.ChuuniStatusContainer:SetHide(true)
+    if player == nil then
+        Controls.ChuuniStatusRoot:SetHide(true)
         local config = playerID >= 0 and PlayerConfigurations ~= nil
             and PlayerConfigurations[playerID] or nil
         local civilizationType = config ~= nil
@@ -118,29 +184,18 @@ local function Refresh()
         TraceOnce(
             "hidden player=" .. tostring(playerID)
             .. " civilization=" .. tostring(civilizationType)
-            .. " resourceIndex=" .. tostring(CHUUNI_RESOURCE_INDEX)
         )
         return
     end
 
-    local value, stage = GetStatus(player)
-    Controls.ChuuniValueLabel:SetText(Lookup("LOC_CHUUNI_STATUS_VALUE_FORMAT", value))
-    Controls.ChuuniStageLabel:SetText(
-        Lookup("LOC_CHUUNI_STATUS_STAGE_FORMAT", Lookup(STAGE_NAME_KEYS[stage + 1]))
-    )
-    if stage < 4 then
-        Controls.ChuuniNextThresholdLabel:SetText(
-            Lookup("LOC_CHUUNI_STATUS_NEXT_FORMAT", STAGE_THRESHOLDS[stage + 1])
-        )
-    else
-        Controls.ChuuniNextThresholdLabel:SetText(Lookup("LOC_CHUUNI_STATUS_MAX_STAGE"))
-    end
-    Controls.ChuuniStatusContainer:SetToolTipString(BuildTooltip(player, value, stage))
-    Controls.ChuuniStatusContainer:SetHide(false)
+    local status = GetStatusModel(player)
+    Controls.ChuuniValueText:SetText(tostring(status.value))
+    Controls.ChuuniStatusButton:SetToolTipString(BuildButtonTooltip(status))
+    Controls.ChuuniStatusRoot:SetHide(false)
     TraceOnce(
         "visible player=" .. tostring(playerID)
-        .. " value=" .. tostring(value)
-        .. " stage=" .. tostring(stage)
+        .. " value=" .. tostring(status.value)
+        .. " stage=" .. tostring(status.stage)
     )
 end
 
@@ -156,6 +211,8 @@ local function OnPlayerTurnActivated(playerID)
     end
 end
 
+Controls.ChuuniStatusButton:RegisterCallback(Mouse.eLClick, OpenChuuniPopup)
+Controls.ChuuniStatusButton:RegisterCallback(Mouse.eMouseEnter, Refresh)
 LuaEvents.ChuuniStatusChanged.Add(OnChuuniStatusChanged)
 Events.GameCoreEventPublishComplete.Add(Refresh)
 Events.LocalPlayerChanged.Add(Refresh)

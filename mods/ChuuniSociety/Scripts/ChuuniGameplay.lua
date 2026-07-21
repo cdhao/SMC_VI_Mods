@@ -1,21 +1,36 @@
 -- Core progression state for the Far East Magic Nap Society.
 
 local CIVILIZATION_CHUUNI_SOCIETY = "CIVILIZATION_CHUUNI_SOCIETY"
-local RESOURCE_CHUUNI_VALUE = "RESOURCE_CHUUNI_VALUE"
 local DISTRICT_CHUUNI_SOCIETY = "DISTRICT_CHUUNI_SOCIETY"
 local BUILDING_CLUB_MAGIC_CIRCLE = "BUILDING_CLUB_MAGIC_CIRCLE"
 local TERRAIN_COAST = "TERRAIN_COAST"
 
 local CHUUNI_VALUE_CAP = 100
-local CHUUNI_LAST_RESOURCE_TICK_TURN = "CHUUNI_LAST_RESOURCE_TICK_TURN"
+local CHUUNI_VALUE = "CHUUNI_VALUE"
+local CHUUNI_LAST_VALUE_TICK_TURN = "CHUUNI_LAST_VALUE_TICK_TURN"
 local CHUUNI_STAGE = "CHUUNI_STAGE"
 local CHUUNI_STAGE_1_UNLOCKED = "CHUUNI_STAGE_1_UNLOCKED"
 local CHUUNI_STAGE_2_UNLOCKED = "CHUUNI_STAGE_2_UNLOCKED"
 local CHUUNI_STAGE_3_UNLOCKED = "CHUUNI_STAGE_3_UNLOCKED"
 local CHUUNI_STAGE_4_UNLOCKED = "CHUUNI_STAGE_4_UNLOCKED"
+local CHUUNI_STAGE_1_COMBAT_ATTACHED = "CHUUNI_STAGE_1_COMBAT_ATTACHED"
+local CHUUNI_STAGE_2_COMBAT_ATTACHED = "CHUUNI_STAGE_2_COMBAT_ATTACHED"
+local CHUUNI_STAGE_3_COMBAT_ATTACHED = "CHUUNI_STAGE_3_COMBAT_ATTACHED"
 local CHUUNI_FIRST_COASTAL_CITY_FOUNDED = "CHUUNI_FIRST_COASTAL_CITY_FOUNDED"
 local CHUUNI_COASTAL_AMENITY_ATTACHED = "CHUUNI_COASTAL_AMENITY_ATTACHED"
 local CHUUNI_COASTAL_AMENITY_MODIFIER = "CHUUNI_RIKKA_COASTAL_CITY_AMENITIES"
+
+local STAGE_MODIFIERS = {
+    [1] = "CHUUNI_FANTASY_COMBAT_STAGE_1",
+    [2] = "CHUUNI_FANTASY_COMBAT_STAGE_2",
+    [3] = "CHUUNI_FANTASY_COMBAT_STAGE_3",
+}
+
+local STAGE_ATTACHED_PROPERTIES = {
+    [1] = CHUUNI_STAGE_1_COMBAT_ATTACHED,
+    [2] = CHUUNI_STAGE_2_COMBAT_ATTACHED,
+    [3] = CHUUNI_STAGE_3_COMBAT_ATTACHED,
+}
 
 local STAGE_THRESHOLDS = {
     tonumber(GameInfo.GlobalParameters["CHUUNI_STAGE_1_THRESHOLD"].Value) or 1,
@@ -24,14 +39,13 @@ local STAGE_THRESHOLDS = {
     tonumber(GameInfo.GlobalParameters["CHUUNI_STAGE_4_THRESHOLD"].Value) or 100,
 }
 
-local RESOURCE_PER_DISTRICT = tonumber(
-    GameInfo.GlobalParameters["CHUUNI_DEBUG_RESOURCE_PER_DISTRICT"].Value
+local VALUE_PER_DISTRICT = tonumber(
+    GameInfo.GlobalParameters["CHUUNI_VALUE_PER_DISTRICT"].Value
 ) or 1
-local RESOURCE_PER_BUILDING = tonumber(
-    GameInfo.GlobalParameters["CHUUNI_DEBUG_RESOURCE_PER_BUILDING"].Value
+local VALUE_PER_BUILDING = tonumber(
+    GameInfo.GlobalParameters["CHUUNI_VALUE_PER_BUILDING"].Value
 ) or 1
 
-local CHUUNI_RESOURCE_INDEX = GameInfo.Resources[RESOURCE_CHUUNI_VALUE].Index
 local CHUUNI_DISTRICT_INDEX = GameInfo.Districts[DISTRICT_CHUUNI_SOCIETY].Index
 local MAGIC_CIRCLE_INDEX = GameInfo.Buildings[BUILDING_CLUB_MAGIC_CIRCLE].Index
 local COAST_TERRAIN_INDEX = GameInfo.Terrains[TERRAIN_COAST].Index
@@ -99,34 +113,46 @@ end
 
 function GetChuuniValue(playerID)
     local player = GetPlayer(playerID)
-    if player == nil or player.GetResources == nil then
+    if player == nil then
         return 0
     end
-    local resources = player:GetResources()
-    if resources == nil then
-        return 0
-    end
-    return math.max(0, tonumber(resources:GetResourceAmount(CHUUNI_RESOURCE_INDEX)) or 0)
+    local storedValue = player:GetProperty(CHUUNI_VALUE)
+    local value = tonumber(storedValue) or 0
+    return math.max(0, math.min(CHUUNI_VALUE_CAP, value))
 end
 
 function ChangeChuuniValue(playerID, amount)
     local player = GetPlayer(playerID)
-    if not IsChuuniPlayer(playerID) or player == nil or amount == nil or amount <= 0 then
+    local gain = tonumber(amount) or 0
+    if not IsChuuniPlayer(playerID) or player == nil or gain <= 0 then
         return GetChuuniValue(playerID)
     end
 
     local currentValue = GetChuuniValue(playerID)
-    local nextValue = math.min(CHUUNI_VALUE_CAP, currentValue + math.floor(amount))
-    local actualGain = nextValue - currentValue
-    if actualGain > 0 then
-        player:GetResources():ChangeResourceAmount(CHUUNI_RESOURCE_INDEX, actualGain)
+    local nextValue = math.min(CHUUNI_VALUE_CAP, currentValue + math.floor(gain))
+    if nextValue ~= currentValue then
+        player:SetProperty(CHUUNI_VALUE, nextValue)
         PublishChuuniStatus(playerID)
     end
     return nextValue
 end
 
+local function EnsureStageCombatModifier(player, stage)
+    local modifierID = STAGE_MODIFIERS[stage]
+    local attachedProperty = STAGE_ATTACHED_PROPERTIES[stage]
+    if modifierID == nil or attachedProperty == nil then
+        return
+    end
+    if player:GetProperty(attachedProperty) == 1 then
+        return
+    end
+    player:AttachModifierByID(modifierID)
+    player:SetProperty(attachedProperty, 1)
+end
+
 local function UnlockStage(player, playerID, stage, propertyName, localizationKey)
     if player:GetProperty(propertyName) ~= 1 then
+        EnsureStageCombatModifier(player, stage)
         player:SetProperty(propertyName, 1)
         player:SetProperty(CHUUNI_STAGE, stage)
         SendStatus(playerID, localizationKey)
@@ -200,16 +226,16 @@ local function OnPlayerTurnActivated(playerID, isFirstTime)
 
     local player = GetPlayer(playerID)
     local currentTurn = Game.GetCurrentGameTurn()
-    local lastResourceTickTurn = player:GetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN)
-    if tonumber(lastResourceTickTurn) == currentTurn then
+    local lastValueTickTurn = player:GetProperty(CHUUNI_LAST_VALUE_TICK_TURN)
+    if tonumber(lastValueTickTurn) == currentTurn then
         return
     end
-    player:SetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN, currentTurn)
+    player:SetProperty(CHUUNI_LAST_VALUE_TICK_TURN, currentTurn)
 
     local districtCount, buildingCount = CountProgressionSources(player)
     ChangeChuuniValue(
         playerID,
-        districtCount * RESOURCE_PER_DISTRICT + buildingCount * RESOURCE_PER_BUILDING
+        districtCount * VALUE_PER_DISTRICT + buildingCount * VALUE_PER_BUILDING
     )
     UpdateChuuniStage(playerID)
 end

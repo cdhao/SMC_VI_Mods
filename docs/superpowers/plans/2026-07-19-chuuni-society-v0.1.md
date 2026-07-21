@@ -4,7 +4,7 @@
 
 **Goal:** Build a Gathering Storm-only Civilization VI mod for the Far East Magic Nap Society with Rikka, the Society district, Magic Circle building, Chuuni Value progression, Chimera governor, staged combat and upgrade effects, Invisible Boundary improvement, and land-unit teleportation.
 
-**Architecture:** Keep static game definitions in focused SQL files and use Gameplay Lua only for state that cannot be expressed reliably by database modifiers. Player and city Properties remain the stable state boundary for Lua transitions; staged combat uses SQL resource/religion requirements because Gathering Storm exposes no player-Property RequirementType. Every risky subsystem begins with a static or runtime spike and is promoted into the main implementation only after its acceptance checks pass.
+**Architecture:** Keep static game definitions in focused SQL files and use Gameplay Lua only for state that cannot be expressed reliably by database modifiers. `CHUUNI_VALUE` and stage flags are Player Properties. When a stage permanently unlocks, Lua attaches that stage's permanent SQL combat Modifier exactly once and records a matching `_COMBAT_ATTACHED` Property. Every risky subsystem begins with a static or runtime spike and is promoted into the main implementation only after its acceptance checks pass.
 
 **Tech Stack:** Civilization VI Gathering Storm SQL/XML/Lua, Python 3.11 `unittest`, PowerShell launchers, shared helpers under `tools/common`.
 
@@ -13,7 +13,7 @@
 - Runtime mod root is `mods/ChuuniSociety/`; do not modify `mods/GraceAshcroft/`.
 - Only Gathering Storm is supported: dependency id `4873eb62-8ccc-4574-b784-dda455e74e68`, game core `Expansion2`, FrontEnd domain `Players:Expansion2_Players`.
 - All new gameplay identifiers use the `CHUUNI_` namespace or the exact types in the approved spec.
-- Chuuni Value is a non-map strategic resource with stockpile cap 100 and never decreases.
+- Chuuni Value is the `CHUUNI_VALUE` Player Property, clamped to 0–100, and never decreases. Old development saves using the removed resource representation are not migrated.
 - Stage 1 requires value 1 only. Stages 2, 3, and 4 require a founded religion and unlock sequentially at 20, 50, and 100.
 - The Society district has a final Great Prophet output of 2 per turn; the Magic Circle retains the Shrine's 1 point.
 - Teleport supports map-present land combat units, land civilians including religious units, and Great People. It rejects naval, air, trader, spy, and off-map special units.
@@ -32,8 +32,8 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 | Fallback art loading chain | 已实机验证 | `.dep`, fallback ArtDef and both BLP packages loaded in the supplied game screenshots. |
 | Phase 2 Society district and Magic Circle | 已实现未实机验证 | Static/schema checks pass; recheck construction, Prophet points and adjacency in a fresh game. |
 | Phase 3 Chuuni Value and sequential stages | 已实现未实机验证 | Runtime nil conversion was fixed; recheck save/load, coastal +5 and religion gates. |
-| Phase 4 resource-threshold staged combat | 已实现未实机验证 | SQL spike is implemented; verify resource quantity arguments, religion gate, live refresh and 3/5/8 totals in game. |
-| Chuuni Value stage status HUD | 已实现未实机验证 | Static four-stage tooltip and independent local-player HUD are implemented; verify visibility, live refresh, stage text and dynamic unmet conditions in game. |
+| Phase 4 permanently attached staged combat | 已实现未实机验证 | Three permanent SQL Modifiers are attached once at sequential Property unlocks; verify save/load, no duplicate attachment and 3/5/8 totals in game. |
+| Chuuni Value stage status UI | 已实现未实机验证 | Independent LaunchBar-style button and native `PopupDialogInGame` use Player Properties; verify placement, repeated opening and live refresh in game. |
 | Leader and civilization UI presentation | 未开始 | Correct the square leader portrait/logo presentation and audit required icon sizes and masks. |
 | Save/load icon asset audit | 未开始 | Reproduce missing save icon, inspect `ForgeUI_BLPTextureLoader.log`, cooked BLP inventory and cooker source mapping before changing the cooker. |
 | Blue-purple player colors | 未开始 | Replace the invalid color XML rows that currently load as duplicate `COLOR_UNKNOWN`; prepare a blue-purple primary/secondary palette and verify jersey colors in game. |
@@ -52,9 +52,9 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 mods/ChuuniSociety/
   ChuuniSociety.modinfo           Gathering Storm actions and file inventory
   Data/Config.sql                 FrontEnd player and PlayerItems rows
-  Data/Core.sql                   civilization, leader, traits, resource and parameters
+  Data/Core.sql                   civilization, leader, traits and parameters
   Data/DistrictBuilding.sql       Society district, Magic Circle and adjacencies
-  Data/StageCombat.sql            resource-gated staged combat modifiers
+  Data/StageCombat.sql            permanent staged combat modifiers attached by Lua
   Data/RikkaCombat.sql            Rikka defensive and stage-4 offensive modifiers
   Data/Chimera.sql                governor, governed-city yields, healing and production
   Data/Upgrade.sql                city-conditioned upgrade discounts
@@ -143,7 +143,7 @@ Register only the files created by this task: `Config.sql`, localization, icons 
 'Players:Expansion2_Players'
 ```
 
-Map civilization, leader, district, building and resource icons to the verified Chuuni packages while retaining safe base-game fallbacks for types whose custom art is not ready. Do not reference nonexistent texture files.
+Map civilization, leader, district, building and the standalone `ICON_CHUUNI_VALUE` UI icon to the verified Chuuni packages while retaining safe base-game fallbacks for types whose custom art is not ready. Do not reference nonexistent texture files.
 
 - [ ] **Step 5: Implement the checker**
 
@@ -168,7 +168,7 @@ git commit -m "feat(chuuni): add civilization and leader skeleton"
 
 ---
 
-### Task 2: Define the Civilization, Society District, Magic Circle and Chuuni Resource
+### Task 2: Define the Civilization, Society District, Magic Circle and Chuuni Parameters
 
 **Files:**
 - Create: `mods/ChuuniSociety/Data/Core.sql`
@@ -179,12 +179,13 @@ git commit -m "feat(chuuni): add civilization and leader skeleton"
 - Modify: `tools/far_east_magic_nap_society/tests/test_check_static.py`
 
 **Interfaces:**
-- Produces: `RESOURCE_CHUUNI_VALUE`, `DISTRICT_CHUUNI_SOCIETY`, `BUILDING_CLUB_MAGIC_CIRCLE`.
+- Produces: `DISTRICT_CHUUNI_SOCIETY`, `BUILDING_CLUB_MAGIC_CIRCLE`.
+- Produces: `CHUUNI_VALUE_PER_DISTRICT=1` and `CHUUNI_VALUE_PER_BUILDING=1` through `GlobalParameters`.
 - Produces: `CHUUNI_STAGE_1_THRESHOLD=1`, `CHUUNI_STAGE_2_THRESHOLD=20`, `CHUUNI_STAGE_3_THRESHOLD=50`, `CHUUNI_STAGE_4_THRESHOLD=100` through `GlobalParameters`.
 
 - [ ] **Step 1: Add failing SQL contract tests**
 
-Assert exact strings for resource cap 100, `DistrictReplaces`, `BuildingReplaces`, final district Great Prophet points 2, Shrine Great Prophet points 1, and stage thresholds `1,20,50,100`.
+Assert exact strings for Chuuni Value gain parameters, `DistrictReplaces`, `BuildingReplaces`, final district Great Prophet points 2, Shrine Great Prophet points 1, and stage thresholds `1,20,50,100`.
 
 - [ ] **Step 2: Run the focused test and confirm failure**
 
@@ -194,19 +195,7 @@ Expected: FAIL with missing gameplay contracts.
 
 - [ ] **Step 3: Implement `Core.sql`**
 
-Insert exact Types, civilization/leader traits, trait attachments and resource rows. The resource contract is:
-
-```sql
-INSERT INTO Resources
-  (ResourceType, Name, ResourceClassType, Frequency, RevealedEra)
-VALUES
-  ('RESOURCE_CHUUNI_VALUE', 'LOC_RESOURCE_CHUUNI_VALUE_NAME', 'RESOURCECLASS_STRATEGIC', 0, 0);
-
-INSERT OR REPLACE INTO Resource_Consumption
-  (ResourceType, Accumulate, PowerProvided, BaseExtractionRate, ImprovedExtractionRate, StockpileCap)
-VALUES
-  ('RESOURCE_CHUUNI_VALUE', 1, 0, 0, 0, 100);
-```
+Insert exact civilization/leader traits, trait attachments and `CHUUNI_VALUE_PER_DISTRICT`, `CHUUNI_VALUE_PER_BUILDING`, plus four stage threshold parameters. Do not define `RESOURCE_CHUUNI_VALUE` or any resource consumption row.
 
 - [ ] **Step 4: Implement district and building copies**
 
@@ -250,7 +239,7 @@ git commit -m "feat(chuuni): add society district and magic circle"
 
 **Interfaces:**
 - Produces: `GetChuuniValue(playerID) -> integer`, `ChangeChuuniValue(playerID, amount) -> integer`, `UpdateChuuniStage(playerID) -> integer`.
-- Produces Properties: `CHUUNI_LAST_RESOURCE_TICK_TURN`, `CHUUNI_STAGE`, `CHUUNI_STAGE_1_UNLOCKED` through `_4_UNLOCKED`, `CHUUNI_FIRST_COASTAL_CITY_FOUNDED`.
+- Produces Properties: `CHUUNI_VALUE`, `CHUUNI_LAST_VALUE_TICK_TURN`, `CHUUNI_STAGE`, `CHUUNI_STAGE_1_UNLOCKED` through `_4_UNLOCKED`, `CHUUNI_STAGE_1_COMBAT_ATTACHED` through `_3_COMBAT_ATTACHED`, `CHUUNI_FIRST_COASTAL_CITY_FOUNDED`.
 
 - [ ] **Step 1: Add failing Lua contract tests**
 
@@ -262,9 +251,9 @@ Run: `python -m unittest tools.far_east_magic_nap_society.tests.test_check_stati
 
 Expected: FAIL because `ChuuniGameplay.lua` is absent.
 
-- [ ] **Step 3: Implement resource helpers and per-turn production**
+- [ ] **Step 3: Implement Property helpers and per-turn production**
 
-Use the Grace defensive API pattern. Count one value per Society district and one per Magic Circle. Clamp gains to `100 - currentValue`. Record the current game turn before applying the tick.
+Read `CHUUNI_VALUE` through a local variable before `tonumber`, then write it with `SetProperty`. Count one value per Society district and one per Magic Circle. Clamp gains to `100 - currentValue`. Record the current game turn before applying the tick.
 
 - [ ] **Step 4: Implement sequential stage transitions**
 
@@ -297,7 +286,7 @@ git commit -m "feat(chuuni): add chuuni value progression"
 
 ---
 
-### Task 4A: Add Resource-Gated Staged Combat
+### Task 4A: Add Permanently Attached Staged Combat
 
 **Files:**
 - Modify: `mods/ChuuniSociety/Data/StageCombat.sql`
@@ -309,16 +298,16 @@ git commit -m "feat(chuuni): add chuuni value progression"
 - Modify: `docs/superpowers/plans/2026-07-19-chuuni-society-v0.1.md`
 
 **Interfaces:**
-- Consumes: `RESOURCE_CHUUNI_VALUE` stockpile and the founded-religion state from Task 3.
-- Produces: military combat totals 3/5/8/8 and religious combat totals 3/5/8/8 without Lua modifier attachment.
+- Consumes: sequential `CHUUNI_STAGE_*_UNLOCKED` transitions and the founded-religion state from Task 3.
+- Produces: military combat totals 3/5/8/8 and religious combat totals 3/5/8/8 through three one-time permanent Modifier attachments.
 
-- [ ] **Step 1: Add failing assertions for three static trait modifiers with `3,2,3` amounts, resource thresholds `1,20,50`, founded-religion requirements on the latter two, and no stage-combat `AttachModifierByID` in Lua.**
-- [ ] **Step 2: Run the focused test and confirm that the current single Lua-attached `+3` implementation fails the new contract.**
-- [ ] **Step 3: Implement the three modifiers with `MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH`. Gate them through `OwnerRequirementSetId` sets built from `REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED`; pass `ResourceType=RESOURCE_CHUUNI_VALUE` and `Amount=1/20/50`, and add `REQUIREMENT_PLAYER_IS_RELIGION_FOUNDER` to the 20 and 50 sets.**
-- [ ] **Step 4: Remove `CHUUNI_STAGE_1_COMBAT_ATTACHED`, `CHUUNI_STAGE_1_COMBAT_MODIFIER` and `EnsureStageModifiers` from Lua. Keep `CHUUNI_STAGE` and all four `_UNLOCKED` Properties.**
+- [ ] **Step 1: Add failing assertions for three permanent unattached SQL modifiers with `3,2,3` amounts, Preview strings, no Requirements and no `TraitModifiers`.**
+- [ ] **Step 2: Run the focused test and confirm that the resource-gated SQL implementation fails the new contract.**
+- [ ] **Step 3: Keep the Modifier IDs `CHUUNI_FANTASY_COMBAT_STAGE_1/2/3`, use `MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH`, and set `Permanent=1`.**
+- [ ] **Step 4: At each sequential stage unlock, call `player:AttachModifierByID(modifierID)` once and then record the matching `_COMBAT_ATTACHED` Property. Stage 4 attaches no additional combat Modifier.**
 - [ ] **Step 5: Run the focused unit tests, Expansion2 schema execution and Chuuni static checker. Deploy only ChuuniSociety.**
-- [ ] **Step 6: In Gathering Storm, inspect military and theological combat previews at values `1,20,50,100`, test live threshold refresh and the religion gate. Expected totals are `3,5,8,8`, never `16`. Until this passes, keep the status as `已实现未实机验证`.**
-- [ ] **Step 7: Commit with `git commit -m "feat(chuuni): add resource-gated staged combat"`.**
+- [ ] **Step 6: In Gathering Storm, inspect military and theological combat previews at values `1,20,50,100`, then save/reload and restart the game. Expected totals are `3,5,8,8`, never duplicate or reach `16`. Until this passes, keep the status as `已实现未实机验证`.**
+- [ ] **Step 7: Commit with `git commit -m "feat(chuuni): attach staged combat at permanent unlocks"`.**
 
 ### Task 4B: Add Rikka Schwarz Sechs
 
@@ -330,7 +319,7 @@ git commit -m "feat(chuuni): add chuuni value progression"
 - Modify: `tools/far_east_magic_nap_society/tests/test_check_static.py`
 
 **Interfaces:**
-- Consumes: the verified stage-4 resource/religion gate from Task 4A.
+- Consumes: the verified stage-4 Property/religion gate from Task 4A.
 - Produces: military-only defense +5 and stage-4 military-only attack +5; religious units receive neither modifier.
 
 - [ ] **Step 1: Add failing contracts for distinct defense and attack modifiers, military-unit and combat-role requirements, and the stage-4 gate.**
