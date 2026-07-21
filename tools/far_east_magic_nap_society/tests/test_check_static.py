@@ -142,6 +142,25 @@ class ChuuniStaticTests(unittest.TestCase):
         self.assertIn("stage >= 2", text)
         self.assertIn("stage >= 3", text)
 
+    def test_unset_player_properties_are_materialized_before_number_conversion(self) -> None:
+        text = GAMEPLAY_LUA.read_text(encoding="utf-8")
+
+        self.assertNotIn("tonumber(player:GetProperty(", text)
+        self.assertIn(
+            "local storedStage = player:GetProperty(CHUUNI_STAGE)",
+            text,
+        )
+        self.assertIn("local stage = tonumber(storedStage) or 0", text)
+        self.assertIn(
+            "local lastResourceTickTurn = "
+            "player:GetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN)",
+            text,
+        )
+        self.assertIn(
+            "if tonumber(lastResourceTickTurn) == currentTurn then",
+            text,
+        )
+
     def test_stage_one_combat_contract(self) -> None:
         self.assertTrue(STAGE_COMBAT_SQL.is_file(), STAGE_COMBAT_SQL)
         modinfo_text = MODINFO.read_text(encoding="utf-8")

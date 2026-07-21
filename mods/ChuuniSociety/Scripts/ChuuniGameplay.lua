@@ -136,7 +136,8 @@ function UpdateChuuniStage(playerID)
 
     local player = GetPlayer(playerID)
     local value = GetChuuniValue(playerID)
-    local stage = tonumber(player:GetProperty(CHUUNI_STAGE)) or 0
+    local storedStage = player:GetProperty(CHUUNI_STAGE)
+    local stage = tonumber(storedStage) or 0
 
     if stage < 1 and value >= STAGE_THRESHOLDS[1] then
         stage = UnlockStage(player, playerID, 1, CHUUNI_STAGE_1_UNLOCKED, "LOC_CHUUNI_STAGE_1_UNLOCKED")
@@ -193,7 +194,8 @@ local function OnPlayerTurnActivated(playerID, isFirstTime)
 
     local player = GetPlayer(playerID)
     local currentTurn = Game.GetCurrentGameTurn()
-    if tonumber(player:GetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN)) == currentTurn then
+    local lastResourceTickTurn = player:GetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN)
+    if tonumber(lastResourceTickTurn) == currentTurn then
         return
     end
     player:SetProperty(CHUUNI_LAST_RESOURCE_TICK_TURN, currentTurn)
