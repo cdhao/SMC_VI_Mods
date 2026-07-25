@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Context Name="ChuuniStatusHUD">
-  <!-- Independent context: visually follows the base LaunchBar without replacing it. -->
-  <Container ID="ChuuniStatusRoot" Anchor="L,T" Offset="340,190" Size="55,55"
-             ConsumeMouse="1" Hidden="1">
-    <Button ID="ChuuniStatusButton" Anchor="C,C" Size="49,49"
-            Texture="LaunchBar_Hook_GovernmentButton" TextureOffset="0,2"
-            StateOffsetIncrement="0,49">
-      <Image ID="ChuuniStatusIcon" Anchor="C,T" Offset="0,5" Size="35,35"
-             Icon="ICON_CHUUNI_VALUE" IconSize="38"/>
-      <Image ID="ChuuniValueBadge" Anchor="R,B" Offset="-1,-1" Size="28,24"
-             Texture="Controls_MeterTinyBacking">
-        <Label ID="ChuuniValueText" Anchor="C,C" Style="FontNormal14" String="0"/>
-      </Image>
-    </Button>
-  </Container>
+<Context Name="ChuuniStatusHUD" FontStyle="Stroke">
+  <!-- Built into /InGame/TopLevelHUD by Lua so the button joins the visible HUD tree. -->
+  <Instance Name="ChuuniStatusButtonInstance">
+    <Container ID="ChuuniStatusRoot" Anchor="L,T" Offset="340,145" Size="55,55"
+               ConsumeMouse="1" Hidden="1">
+      <Button ID="ChuuniStatusButton" Anchor="C,C" Size="49,49"
+              Texture="LaunchBar_Hook_GovernmentButton" TextureOffset="0,2"
+              StateOffsetIncrement="0,49">
+        <Image ID="ChuuniStatusIcon" Anchor="C,T" Offset="0,5" Size="35,35"
+               Icon="ICON_CHUUNI_VALUE" IconSize="38"/>
+        <Image ID="ChuuniValueBadge" Anchor="R,B" Offset="-1,-1" Size="28,24"
+               Texture="Controls_MeterTinyBacking">
+          <Label ID="ChuuniValueText" Anchor="C,C" Style="FontNormal14" String="0"/>
+        </Image>
+      </Button>
+    </Container>
+  </Instance>
 </Context>

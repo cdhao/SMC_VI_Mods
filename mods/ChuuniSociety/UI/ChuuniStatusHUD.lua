@@ -23,6 +23,7 @@ local STAGE_ABILITY_KEYS = {
     "LOC_CHUUNI_STATUS_STAGE_4_ABILITY",
 }
 
+local m_buttonInstance = {}
 local lastDiagnostic = nil
 
 local function TraceOnce(message)
@@ -174,9 +175,13 @@ local function OpenChuuniPopup()
 end
 
 local function Refresh()
+    if m_buttonInstance.ChuuniStatusRoot == nil then
+        return
+    end
+
     local player, playerID = GetLocalChuuniPlayer()
     if player == nil then
-        Controls.ChuuniStatusRoot:SetHide(true)
+        m_buttonInstance.ChuuniStatusRoot:SetHide(true)
         local config = playerID >= 0 and PlayerConfigurations ~= nil
             and PlayerConfigurations[playerID] or nil
         local civilizationType = config ~= nil
@@ -189,9 +194,9 @@ local function Refresh()
     end
 
     local status = GetStatusModel(player)
-    Controls.ChuuniValueText:SetText(tostring(status.value))
-    Controls.ChuuniStatusButton:SetToolTipString(BuildButtonTooltip(status))
-    Controls.ChuuniStatusRoot:SetHide(false)
+    m_buttonInstance.ChuuniValueText:SetText(tostring(status.value))
+    m_buttonInstance.ChuuniStatusButton:SetToolTipString(BuildButtonTooltip(status))
+    m_buttonInstance.ChuuniStatusRoot:SetHide(false)
     TraceOnce(
         "visible player=" .. tostring(playerID)
         .. " value=" .. tostring(status.value)
@@ -211,12 +216,36 @@ local function OnPlayerTurnActivated(playerID)
     end
 end
 
-Controls.ChuuniStatusButton:RegisterCallback(Mouse.eLClick, OpenChuuniPopup)
-Controls.ChuuniStatusButton:RegisterCallback(Mouse.eMouseEnter, Refresh)
+local function AttachStatusButton()
+    if m_buttonInstance.ChuuniStatusButton ~= nil then
+        return true
+    end
+
+    local topLevelHUD = ContextPtr:LookUpControl("/InGame/TopLevelHUD")
+    if topLevelHUD == nil then
+        TraceOnce("button mount failed: /InGame/TopLevelHUD unavailable")
+        return false
+    end
+
+    ContextPtr:BuildInstanceForControl(
+        "ChuuniStatusButtonInstance",
+        m_buttonInstance,
+        topLevelHUD
+    )
+    TraceOnce("button mounted target=/InGame/TopLevelHUD")
+    m_buttonInstance.ChuuniStatusButton:RegisterCallback(Mouse.eLClick, OpenChuuniPopup)
+    m_buttonInstance.ChuuniStatusButton:RegisterCallback(Mouse.eMouseEnter, Refresh)
+    return true
+end
+
+local function OnLoadGameViewStateDone()
+    if AttachStatusButton() then
+        Refresh()
+    end
+end
+
 LuaEvents.ChuuniStatusChanged.Add(OnChuuniStatusChanged)
 Events.GameCoreEventPublishComplete.Add(Refresh)
 Events.LocalPlayerChanged.Add(Refresh)
 Events.PlayerTurnActivated.Add(OnPlayerTurnActivated)
-Events.LoadGameViewStateDone.Add(Refresh)
-
-Refresh()
+Events.LoadGameViewStateDone.Add(OnLoadGameViewStateDone)

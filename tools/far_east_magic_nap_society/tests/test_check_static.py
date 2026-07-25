@@ -133,6 +133,7 @@ class ChuuniStaticTests(unittest.TestCase):
         xml_text = STATUS_HUD_XML.read_text(encoding="utf-8")
         lua_text = STATUS_HUD_LUA.read_text(encoding="utf-8")
 
+        self.assertIn('<Instance Name="ChuuniStatusButtonInstance">', xml_text)
         for control_id in (
             'ID="ChuuniStatusRoot"',
             'ID="ChuuniStatusButton"',
@@ -157,6 +158,11 @@ class ChuuniStaticTests(unittest.TestCase):
             "GetCivilizationTypeName",
             "GetPropertyNumber",
             "GetStatusModel",
+            "AttachStatusButton",
+            'ContextPtr:LookUpControl("/InGame/TopLevelHUD")',
+            "ContextPtr:BuildInstanceForControl(",
+            '"ChuuniStatusButtonInstance"',
+            '"button mounted target=/InGame/TopLevelHUD"',
             "include(\"PopupDialog\")",
             "PopupDialogInGame:new",
             "AddTitle",
@@ -170,9 +176,10 @@ class ChuuniStaticTests(unittest.TestCase):
             "Events.GameCoreEventPublishComplete.Add",
             "Events.LocalPlayerChanged.Add",
             "Events.PlayerTurnActivated.Add",
-            "Controls.ChuuniStatusRoot:SetHide",
-            "Controls.ChuuniStatusButton:SetToolTipString",
-            "Controls.ChuuniValueText:SetText",
+            "Events.LoadGameViewStateDone.Add(OnLoadGameViewStateDone)",
+            "m_buttonInstance.ChuuniStatusRoot:SetHide",
+            "m_buttonInstance.ChuuniStatusButton:SetToolTipString",
+            "m_buttonInstance.ChuuniValueText:SetText",
             "LOC_CHUUNI_STATUS_UNMET_RELIGION",
             "[ChuuniStatusHUD]",
             '"hidden player="',
@@ -191,6 +198,14 @@ class ChuuniStaticTests(unittest.TestCase):
         popup_constructor_offset = lua_text.index("PopupDialogInGame:new")
         self.assertGreater(popup_constructor_offset, popup_function_offset)
         self.assertNotIn("local m_popupDialog", lua_text)
+        self.assertIn(
+            "local function OnLoadGameViewStateDone()\n"
+            "    if AttachStatusButton() then\n"
+            "        Refresh()\n"
+            "    end\n"
+            "end",
+            lua_text,
+        )
 
     def test_chuuni_popup_localization_lists_all_stages(self) -> None:
         text = TEXT_SQL.read_text(encoding="utf-8")
