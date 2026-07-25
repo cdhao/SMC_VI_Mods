@@ -180,6 +180,7 @@ def check_frontend_contract(root: Path) -> None:
                 mod_root / "UI/ChuuniStatusHUD.xml",
                 required=(
                     'Instance Name="ChuuniStatusButtonInstance"',
+                    'Offset="292,72"',
                     "ChuuniStatusRoot",
                     "ChuuniStatusButton",
                     "ChuuniStatusIcon",

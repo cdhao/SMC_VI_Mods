@@ -134,6 +134,7 @@ class ChuuniStaticTests(unittest.TestCase):
         lua_text = STATUS_HUD_LUA.read_text(encoding="utf-8")
 
         self.assertIn('<Instance Name="ChuuniStatusButtonInstance">', xml_text)
+        self.assertIn('Offset="292,72"', xml_text)
         for control_id in (
             'ID="ChuuniStatusRoot"',
             'ID="ChuuniStatusButton"',

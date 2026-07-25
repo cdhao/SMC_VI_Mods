@@ -2,7 +2,7 @@
 <Context Name="ChuuniStatusHUD" FontStyle="Stroke">
   <!-- Built into /InGame/TopLevelHUD by Lua so the button joins the visible HUD tree. -->
   <Instance Name="ChuuniStatusButtonInstance">
-    <Container ID="ChuuniStatusRoot" Anchor="L,T" Offset="340,145" Size="55,55"
+    <Container ID="ChuuniStatusRoot" Anchor="L,T" Offset="292,72" Size="55,55"
                ConsumeMouse="1" Hidden="1">
       <Button ID="ChuuniStatusButton" Anchor="C,C" Size="49,49"
               Texture="LaunchBar_Hook_GovernmentButton" TextureOffset="0,2"
