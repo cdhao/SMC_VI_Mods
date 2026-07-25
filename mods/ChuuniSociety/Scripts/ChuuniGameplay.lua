@@ -13,12 +13,15 @@ local CHUUNI_STAGE_1_UNLOCKED = "CHUUNI_STAGE_1_UNLOCKED"
 local CHUUNI_STAGE_2_UNLOCKED = "CHUUNI_STAGE_2_UNLOCKED"
 local CHUUNI_STAGE_3_UNLOCKED = "CHUUNI_STAGE_3_UNLOCKED"
 local CHUUNI_STAGE_4_UNLOCKED = "CHUUNI_STAGE_4_UNLOCKED"
+local CHUUNI_CHIMERA_UNLOCKED = "CHUUNI_CHIMERA_UNLOCKED"
+local CHUUNI_CHIMERA_TITLE_ATTACHED = "CHUUNI_CHIMERA_TITLE_ATTACHED"
 local CHUUNI_STAGE_1_COMBAT_ATTACHED = "CHUUNI_STAGE_1_COMBAT_ATTACHED"
 local CHUUNI_STAGE_2_COMBAT_ATTACHED = "CHUUNI_STAGE_2_COMBAT_ATTACHED"
 local CHUUNI_STAGE_3_COMBAT_ATTACHED = "CHUUNI_STAGE_3_COMBAT_ATTACHED"
 local CHUUNI_FIRST_COASTAL_CITY_FOUNDED = "CHUUNI_FIRST_COASTAL_CITY_FOUNDED"
 local CHUUNI_COASTAL_AMENITY_ATTACHED = "CHUUNI_COASTAL_AMENITY_ATTACHED"
 local CHUUNI_COASTAL_AMENITY_MODIFIER = "CHUUNI_RIKKA_COASTAL_CITY_AMENITIES"
+local CHUUNI_CHIMERA_GOVERNOR_POINT = "CHUUNI_CHIMERA_GOVERNOR_POINT"
 
 local STAGE_MODIFIERS = {
     [1] = "CHUUNI_FANTASY_COMBAT_STAGE_1",
@@ -150,9 +153,22 @@ local function EnsureStageCombatModifier(player, stage)
     player:SetProperty(attachedProperty, 1)
 end
 
+local function EnsureChimeraUnlocked(player)
+    player:SetProperty(CHUUNI_CHIMERA_UNLOCKED, 1)
+    if player:GetProperty(CHUUNI_CHIMERA_TITLE_ATTACHED) == 1 then
+        return
+    end
+    player:AttachModifierByID(CHUUNI_CHIMERA_GOVERNOR_POINT)
+    player:SetProperty(CHUUNI_CHIMERA_TITLE_ATTACHED, 1)
+    Log("奇美拉已解锁：已补发专用总督点，等待自动任命。")
+end
+
 local function UnlockStage(player, playerID, stage, propertyName, localizationKey)
     if player:GetProperty(propertyName) ~= 1 then
         EnsureStageCombatModifier(player, stage)
+        if stage == 1 then
+            EnsureChimeraUnlocked(player)
+        end
         player:SetProperty(propertyName, 1)
         player:SetProperty(CHUUNI_STAGE, stage)
         SendStatus(playerID, localizationKey)
@@ -185,6 +201,10 @@ function UpdateChuuniStage(playerID)
     if stage >= 3 and stage < 4 and HasFoundedReligion(player)
         and value >= STAGE_THRESHOLDS[4] then
         stage = UnlockStage(player, playerID, 4, CHUUNI_STAGE_4_UNLOCKED, "LOC_CHUUNI_STAGE_4_UNLOCKED")
+    end
+
+    if stage >= 1 then
+        EnsureChimeraUnlocked(player)
     end
 
     player:SetProperty(CHUUNI_STAGE, stage)

@@ -69,3 +69,11 @@ INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
     ('zh_Hans_CN', 'LOC_CHUUNI_STATUS_STAGE_CURRENT', '[当前]'),
     ('zh_Hans_CN', 'LOC_CHUUNI_STATUS_CLOSE', '关闭'),
     ('zh_Hans_CN', 'LOC_CHUUNI_FIRST_COASTAL_CITY', '首次亲自建立沿海城市：获得5点中二值，所有城市永久获得+2宜居度。');
+
+INSERT OR REPLACE INTO LocalizedText (Language, Tag, Text) VALUES
+    ('zh_Hans_CN', 'LOC_GOVERNOR_CHIMERA_NAME', '奇美拉'),
+    ('zh_Hans_CN', 'LOC_GOVERNOR_CHIMERA_TITLE', '幻想结社管理者'),
+    ('zh_Hans_CN', 'LOC_GOVERNOR_CHIMERA_SHORT_TITLE', '奇美拉'),
+    ('zh_Hans_CN', 'LOC_GOVERNOR_CHIMERA_DESCRIPTION', '中二值达到第一阶段后免费任命。建立与调任仅需1回合；能力随幻想阶段自动解锁。当前为技术原型，阶段效果将在实机验证通过后接入。'),
+    ('zh_Hans_CN', 'LOC_GOVERNOR_PROMOTION_CHIMERA_BASE_NAME', '幻想结社'),
+    ('zh_Hans_CN', 'LOC_GOVERNOR_PROMOTION_CHIMERA_BASE_DESCRIPTION', '奇美拉的基础能力。完整阶段效果将在总督注册、免费任命、调任与存档验证通过后启用。');

@@ -48,6 +48,12 @@
       </Properties>
       <File>Data/StageCombat.sql</File>
     </UpdateDatabase>
+    <UpdateDatabase id="ChuuniChimera" criteria="ChuuniExpansion2">
+      <Properties>
+        <LoadOrder>107</LoadOrder>
+      </Properties>
+      <File>Data/Chimera.sql</File>
+    </UpdateDatabase>
     <UpdateDatabase id="ChuuniDistrictBuilding" criteria="ChuuniExpansion2">
       <Properties>
         <LoadOrder>110</LoadOrder>
@@ -85,6 +91,7 @@
     <File>Data/Colors.xml</File>
     <File>Data/Core.sql</File>
     <File>Data/StageCombat.sql</File>
+    <File>Data/Chimera.sql</File>
     <File>Data/DistrictBuilding.sql</File>
     <File>Scripts/ChuuniGameplay.lua</File>
     <File>UI/ChuuniStatusHUD.xml</File>

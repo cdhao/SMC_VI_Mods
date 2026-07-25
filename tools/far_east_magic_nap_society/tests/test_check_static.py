@@ -15,6 +15,7 @@ DISTRICT_BUILDING_SQL = (
     REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "DistrictBuilding.sql"
 )
 STAGE_COMBAT_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "StageCombat.sql"
+CHIMERA_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "Chimera.sql"
 GAMEPLAY_LUA = (
     REPO_ROOT / "mods" / "ChuuniSociety" / "Scripts" / "ChuuniGameplay.lua"
 )
@@ -51,7 +52,7 @@ class ChuuniStaticTests(unittest.TestCase):
 
     def test_checker_runs_as_direct_script(self) -> None:
         result = subprocess.run(
-            ["python", "tools/far_east_magic_nap_society/check_static.py"],
+            ["python", "-B", "tools/far_east_magic_nap_society/check_static.py"],
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,
@@ -112,6 +113,62 @@ class ChuuniStaticTests(unittest.TestCase):
 
         self.assertIn("Data/Core.sql", text)
         self.assertIn("Data/DistrictBuilding.sql", text)
+        self.assertIn("Data/Chimera.sql", text)
+
+    def test_chimera_governor_prototype_contract(self) -> None:
+        self.assertTrue(CHIMERA_SQL.is_file(), CHIMERA_SQL)
+        sql_text = CHIMERA_SQL.read_text(encoding="utf-8")
+        lua_text = GAMEPLAY_LUA.read_text(encoding="utf-8")
+        hud_text = STATUS_HUD_LUA.read_text(encoding="utf-8")
+        text = TEXT_SQL.read_text(encoding="utf-8")
+
+        for contract in (
+            "'GOVERNOR_CHIMERA', 'KIND_GOVERNOR'",
+            "'GOVERNOR_PROMOTION_CHIMERA_BASE', 'KIND_GOVERNOR_PROMOTION'",
+            "INSERT INTO Governors",
+            "'GOVERNOR_CHIMERA'",
+            "TransitionStrength",
+            "500",
+            "GovernorNormal_Builder",
+            "GovernorSelected_Builder",
+            "INSERT INTO Governors_XP2",
+            "AssignToMajor",
+            "INSERT INTO GovernorPromotions",
+            "BaseAbility",
+            "INSERT INTO GovernorPromotionSets",
+            "CHUUNI_CHIMERA_GOVERNOR_POINT",
+            "MODIFIER_PLAYER_ADJUST_GOVERNOR_POINTS",
+            "'Delta', 1",
+        ):
+            self.assertIn(contract, sql_text)
+
+        for contract in (
+            'CHUUNI_CHIMERA_UNLOCKED = "CHUUNI_CHIMERA_UNLOCKED"',
+            'CHUUNI_CHIMERA_TITLE_ATTACHED = "CHUUNI_CHIMERA_TITLE_ATTACHED"',
+            "CHUUNI_CHIMERA_GOVERNOR_POINT",
+            "AttachModifierByID(CHUUNI_CHIMERA_GOVERNOR_POINT)",
+        ):
+            self.assertIn(contract, lua_text)
+
+        for contract in (
+            "GOVERNOR_CHIMERA",
+            "PlayerOperations.APPOINT_GOVERNOR",
+            "PlayerOperations.PARAM_GOVERNOR_TYPE",
+            "UI.RequestPlayerOperation",
+            "HasGovernor",
+            "GetGovernorPointsSpent",
+        ):
+            self.assertIn(contract, hud_text)
+
+        for contract in (
+            "LOC_GOVERNOR_CHIMERA_NAME",
+            "LOC_GOVERNOR_CHIMERA_TITLE",
+            "LOC_GOVERNOR_CHIMERA_SHORT_TITLE",
+            "LOC_GOVERNOR_CHIMERA_DESCRIPTION",
+            "LOC_GOVERNOR_PROMOTION_CHIMERA_BASE_NAME",
+            "LOC_GOVERNOR_PROMOTION_CHIMERA_BASE_DESCRIPTION",
+        ):
+            self.assertIn(contract, text)
 
     def test_modinfo_registers_gameplay_script(self) -> None:
         text = MODINFO.read_text(encoding="utf-8")
@@ -407,6 +464,7 @@ class ChuuniStaticTests(unittest.TestCase):
                 DISTRICT_BUILDING_SQL.read_text(encoding="utf-8")
             )
             connection.executescript(STAGE_COMBAT_SQL.read_text(encoding="utf-8"))
+            connection.executescript(CHIMERA_SQL.read_text(encoding="utf-8"))
             self.assertEqual(
                 connection.execute(
                     """
@@ -476,6 +534,33 @@ class ChuuniStaticTests(unittest.TestCase):
                     """
                 ).fetchone(),
                 (0,),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT TransitionStrength, TraitType, PortraitImage,
+                           PortraitImageSelected
+                    FROM Governors
+                    WHERE GovernorType = 'GOVERNOR_CHIMERA'
+                    """
+                ).fetchone(),
+                (
+                    500,
+                    "TRAIT_CIVILIZATION_CHUUNI_SOCIETY",
+                    "GovernorNormal_Builder",
+                    "GovernorSelected_Builder",
+                ),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT BaseAbility
+                    FROM GovernorPromotions
+                    WHERE GovernorPromotionType =
+                          'GOVERNOR_PROMOTION_CHIMERA_BASE'
+                    """
+                ).fetchone(),
+                (1,),
             )
         finally:
             connection.close()

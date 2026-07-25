@@ -38,7 +38,7 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 | Save/load icon asset audit | 未开始 | Reproduce missing save icon, inspect `ForgeUI_BLPTextureLoader.log`, cooked BLP inventory and cooker source mapping before changing the cooker. |
 | Blue-purple player colors | 未开始 | Replace the invalid color XML rows that currently load as duplicate `COLOR_UNKNOWN`; prepare a blue-purple primary/secondary palette and verify jersey colors in game. |
 | Rikka Schwarz Sechs | 未开始 | Starts only after staged combat is confirmed. |
-| Chimera | 未开始 | Minimal Governor spike required first. |
+| Chimera | 技术Spike | Minimal real Governor, one-turn transition and net-zero-title auto-appointment are implemented and awaiting in-game appearance/assignment/save-load verification. Four-stage effects remain unimplemented. |
 | Fantasy Armament discounts | 未开始 | Native upgrade-cost modifier spike required first. |
 | Invisible Boundary | 未开始 | Ocean placement spike required first. |
 | Magic Circle teleport | 未开始 | Gameplay movement spike required first. |
@@ -351,6 +351,14 @@ git commit -m "feat(chuuni): add chuuni value progression"
 - [ ] **Step 6: Implement ten incremental city-yield modifiers. Stage 1 exposes faith, stage 2 culture and stage 3 science; each active threshold 10–100 contributes +1 to the governed city panel.**
 - [ ] **Step 7: Implement stage-4 +5 faith/culture/science for every Magic Circle city while keeping previous governed-city effects local to Chimera.**
 - [ ] **Step 8: Validate assignment changes, city-panel values and save/load, then commit with `git commit -m "feat(chuuni): add Chimera governor"`.**
+
+**2026-07-25 Spike status:** The minimal `GOVERNOR_CHIMERA` row, one-turn
+`TransitionStrength=500`, dedicated +1 Governor-point modifier and local
+auto-appointment request are implemented. Builder portrait assets are used as
+verified fallback art. This remains `技术Spike` until an in-game run confirms
+that Chimera appears, the ordinary available-title count is unchanged, she can
+be assigned in one turn, and appointment survives save/load. Steps 3–8 have
+not started.
 
 ---
 

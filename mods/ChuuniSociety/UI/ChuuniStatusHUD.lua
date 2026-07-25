@@ -5,6 +5,7 @@ include("PopupDialog")
 local CIVILIZATION_CHUUNI_SOCIETY = "CIVILIZATION_CHUUNI_SOCIETY"
 local CHUUNI_VALUE = "CHUUNI_VALUE"
 local CHUUNI_STAGE = "CHUUNI_STAGE"
+local GOVERNOR_CHIMERA = "GOVERNOR_CHIMERA"
 local CHUUNI_VALUE_CAP = 100
 
 local STAGE_THRESHOLDS = { 1, 20, 50, 100 }
@@ -24,6 +25,7 @@ local STAGE_ABILITY_KEYS = {
 }
 
 local m_buttonInstance = {}
+local m_chimeraAppointmentPending = false
 local lastDiagnostic = nil
 
 local function TraceOnce(message)
@@ -93,6 +95,39 @@ local function GetStatusModel(player)
         missingValue = nextThreshold ~= nil and math.max(0, nextThreshold - value) or 0,
         nextNeedsReligion = stage >= 1 and stage < 4,
     }
+end
+
+local function EnsureChimeraAppointed(player, playerID, stage)
+    if stage < 1 or m_chimeraAppointmentPending then
+        return
+    end
+
+    local governorDefinition = GameInfo.Governors[GOVERNOR_CHIMERA]
+    local playerGovernors = player:GetGovernors()
+    if governorDefinition == nil or playerGovernors == nil then
+        return
+    end
+    if playerGovernors:HasGovernor(governorDefinition.Hash) then
+        m_chimeraAppointmentPending = false
+        return
+    end
+
+    local points = playerGovernors:GetGovernorPoints()
+    local pointsSpent = playerGovernors:GetGovernorPointsSpent()
+    if points - pointsSpent < 1 then
+        TraceOnce("Chimera waiting for dedicated Governor point")
+        return
+    end
+
+    local parameters = {}
+    parameters[PlayerOperations.PARAM_GOVERNOR_TYPE] = governorDefinition.Index
+    m_chimeraAppointmentPending = true
+    UI.RequestPlayerOperation(
+        playerID,
+        PlayerOperations.APPOINT_GOVERNOR,
+        parameters
+    )
+    print("[ChuuniStatusHUD] requested free Chimera appointment")
 end
 
 local function BuildStageOverview(status)
@@ -194,6 +229,7 @@ local function Refresh()
     end
 
     local status = GetStatusModel(player)
+    EnsureChimeraAppointed(player, playerID, status.stage)
     m_buttonInstance.ChuuniValueText:SetText(tostring(status.value))
     m_buttonInstance.ChuuniStatusButton:SetToolTipString(BuildButtonTooltip(status))
     m_buttonInstance.ChuuniStatusRoot:SetHide(false)
@@ -212,6 +248,14 @@ end
 
 local function OnPlayerTurnActivated(playerID)
     if playerID == Game.GetLocalPlayer() then
+        m_chimeraAppointmentPending = false
+        Refresh()
+    end
+end
+
+local function OnGovernorAppointed(playerID)
+    if playerID == Game.GetLocalPlayer() then
+        m_chimeraAppointmentPending = false
         Refresh()
     end
 end
@@ -248,4 +292,5 @@ LuaEvents.ChuuniStatusChanged.Add(OnChuuniStatusChanged)
 Events.GameCoreEventPublishComplete.Add(Refresh)
 Events.LocalPlayerChanged.Add(Refresh)
 Events.PlayerTurnActivated.Add(OnPlayerTurnActivated)
+Events.GovernorAppointed.Add(OnGovernorAppointed)
 Events.LoadGameViewStateDone.Add(OnLoadGameViewStateDone)
