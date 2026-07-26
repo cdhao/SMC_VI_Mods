@@ -2,8 +2,11 @@
 <AssetObjects..GameArtSpecification>
   <id><name text="ChuuniSociety"/><id text="d3bd7d95-8fbc-4b35-a9a7-d37590bd04a2"/></id>
   <artConsumers>
+    <Element><consumerName text="Audio"/><relativeArtDefPaths><Element text="Districts.artdef"/></relativeArtDefPaths><libraryDependencies/><loadsLibraries>false</loadsLibraries></Element>
     <Element><consumerName text="LeaderFallback"/><relativeArtDefPaths><Element text="FallbackLeaders.artdef"/></relativeArtDefPaths><libraryDependencies><Element text="LeaderFallback"/></libraryDependencies><loadsLibraries>true</loadsLibraries></Element>
+    <Element><consumerName text="StrategicView_Translate"/><relativeArtDefPaths><Element text="Districts.artdef"/></relativeArtDefPaths><libraryDependencies/><loadsLibraries>false</loadsLibraries></Element>
     <Element><consumerName text="UI"/><relativeArtDefPaths/><libraryDependencies><Element text="UITexture"/></libraryDependencies><loadsLibraries>true</loadsLibraries></Element>
+    <Element><consumerName text="WorldView_Translate"/><relativeArtDefPaths><Element text="Districts.artdef"/></relativeArtDefPaths><libraryDependencies/><loadsLibraries>false</loadsLibraries></Element>
   </artConsumers>
   <gameLibraries>
     <Element><libraryName text="LeaderFallback"/><relativePackagePaths><Element text="ChuuniLeaderFallbacks.blp"/></relativePackagePaths></Element>

@@ -49,11 +49,36 @@ class CookAssetsTests(unittest.TestCase):
         for contract in (
             "ChuuniSociety.dep",
             "ArtDefs/FallbackLeaders.artdef",
+            "ArtDefs/Districts.artdef",
             "Platforms/Windows/BLPs/ChuuniUITextureV1.blp",
             "Platforms/Windows/BLPs/ChuuniLeaderFallbacks.blp",
             "<UpdateArt",
         ):
             self.assertIn(contract, modinfo)
+
+    def test_society_district_inherits_holy_site_art(self) -> None:
+        districts = (MOD_ROOT / "ArtDefs/Districts.artdef").read_text(encoding="utf-8")
+        art_project = (
+            REPO_ROOT / "projects/ChuuniSociety/ChuuniSociety.Art.xml"
+        ).read_text(encoding="utf-8")
+        dependency = (MOD_ROOT / "ChuuniSociety.dep").read_text(encoding="utf-8")
+
+        for contract in (
+            "DISTRICT_CHUUNI_SOCIETY",
+            "DISTRICT_HOLY_SITE",
+            "HolySite",
+            "HolySite_Pillaged",
+            "HolySite_UnderConstruction",
+            "Build_District_HolySite",
+            "PLAY_AMBIENCE_DISTRICT_HOLYSITE",
+            "STOP_AMBIENCE_DISTRICT_HOLYSITE",
+        ):
+            self.assertIn(contract, districts)
+        for consumer in ("Audio", "StrategicView_Translate", "WorldView_Translate"):
+            self.assertIn(consumer, art_project)
+            self.assertIn(consumer, dependency)
+        self.assertIn("Districts.artdef", art_project)
+        self.assertIn("Districts.artdef", dependency)
 
     def test_cooker_cleans_temporary_dds_and_validates_output(self) -> None:
         source = COOK_SCRIPT.read_text(encoding="utf-8")

@@ -99,6 +99,7 @@
     <File>Text/Chuuni_zh_Hans_CN.sql</File>
     <File>Icons/ChuuniIcons.sql</File>
     <File>ChuuniSociety.dep</File>
+    <File>ArtDefs/Districts.artdef</File>
     <File>ArtDefs/FallbackLeaders.artdef</File>
     <File>Platforms/Windows/BLPs/ChuuniUITextureV1.blp</File>
     <File>Platforms/Windows/BLPs/ChuuniLeaderFallbacks.blp</File>

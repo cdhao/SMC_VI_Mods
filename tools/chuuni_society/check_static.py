@@ -162,10 +162,36 @@ def run(root: Path) -> None:
     validate_runtime_files(mod_root)
 
     apply_text_contracts((
-        TextContract(mod_root / "ChuuniSociety.dep", required=("ChuuniUITextureV1.blp", "ChuuniLeaderFallbacks.blp", "FallbackLeaders.artdef"), forbidden=("Grace",)),
+        TextContract(
+            mod_root / "ChuuniSociety.dep",
+            required=(
+                "ChuuniUITextureV1.blp",
+                "ChuuniLeaderFallbacks.blp",
+                "FallbackLeaders.artdef",
+                "Districts.artdef",
+                "StrategicView_Translate",
+                "WorldView_Translate",
+                "Audio",
+            ),
+            forbidden=("Grace",),
+        ),
+        TextContract(
+            root / "projects/ChuuniSociety/ChuuniSociety.Art.xml",
+            required=("Districts.artdef", "StrategicView_Translate", "WorldView_Translate", "Audio"),
+        ),
+        TextContract(
+            mod_root / "ArtDefs/Districts.artdef",
+            required=(
+                "DISTRICT_CHUUNI_SOCIETY",
+                "DISTRICT_HOLY_SITE",
+                "HolySite",
+                "HolySite_Pillaged",
+                "HolySite_UnderConstruction",
+            ),
+        ),
         TextContract(mod_root / "ArtDefs/FallbackLeaders.artdef", required=("LEADER_RIKKA_TAKANASHI", "FALLBACK_NEUTRAL_RIKKA_TAKANASHI", "ChuuniLeaderFallbacks")),
         TextContract(mod_root / "Icons/ChuuniIcons.sql", required=("ICON_ATLAS_CHUUNI_CIVILIZATION_V1", "ICON_ATLAS_CHUUNI_LEADER", "ICON_ATLAS_CHUUNI_GAMEPLAY", "ICON_ATLAS_CHUUNI_VALUE")),
-        TextContract(mod_root / "ChuuniSociety.modinfo", required=("ChuuniSociety.dep", "ChuuniUITextureV1.blp", "ChuuniLeaderFallbacks.blp", "UpdateArt")),
+        TextContract(mod_root / "ChuuniSociety.modinfo", required=("ChuuniSociety.dep", "ArtDefs/Districts.artdef", "ChuuniUITextureV1.blp", "ChuuniLeaderFallbacks.blp", "UpdateArt")),
     ))
 
 

@@ -3,10 +3,16 @@
   <ID><name text="ChuuniSociety"/><id text="2bba8a5b-11c1-461b-a451-4cc1d105b2dc"/></ID>
   <RequiredGameArtIDs><Element><name text="Civ6"/><id text="cb2f71b7-843e-4af3-9ca7-992acda9c195"/></Element></RequiredGameArtIDs>
   <SystemDependencies>
+    <Element><ConsumerName text="Audio"/><ArtDefDependencyPaths><Element text="Districts.artdef"/></ArtDefDependencyPaths><LibraryDependencies/><LoadsLibraries>false</LoadsLibraries></Element>
     <Element><ConsumerName text="LeaderFallback"/><ArtDefDependencyPaths><Element text="FallbackLeaders.artdef"/></ArtDefDependencyPaths><LibraryDependencies><Element text="LeaderFallback"/></LibraryDependencies><LoadsLibraries>true</LoadsLibraries></Element>
+    <Element><ConsumerName text="StrategicView_Translate"/><ArtDefDependencyPaths><Element text="Districts.artdef"/></ArtDefDependencyPaths><LibraryDependencies/><LoadsLibraries>false</LoadsLibraries></Element>
     <Element><ConsumerName text="UI"/><ArtDefDependencyPaths/><LibraryDependencies><Element text="UITexture"/></LibraryDependencies><LoadsLibraries>true</LoadsLibraries></Element>
+    <Element><ConsumerName text="WorldView_Translate"/><ArtDefDependencyPaths><Element text="Districts.artdef"/></ArtDefDependencyPaths><LibraryDependencies/><LoadsLibraries>false</LoadsLibraries></Element>
   </SystemDependencies>
-  <ArtDefDependencies><Element><ArtDefPath text="FallbackLeaders.artdef"/><ArtDefDependencyPaths/></Element></ArtDefDependencies>
+  <ArtDefDependencies>
+    <Element><ArtDefPath text="Districts.artdef"/><ArtDefDependencyPaths/></Element>
+    <Element><ArtDefPath text="FallbackLeaders.artdef"/><ArtDefDependencyPaths/></Element>
+  </ArtDefDependencies>
   <LibraryDependencies>
     <Element><LibraryName text="LeaderFallback"/><PackageDependencies><Element text="ChuuniLeaderFallbacks.blp"/></PackageDependencies></Element>
     <Element><LibraryName text="UITexture"/><PackageDependencies><Element text="ChuuniUITextureV1.blp"/></PackageDependencies></Element>
