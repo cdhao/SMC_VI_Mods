@@ -4,9 +4,11 @@ This is the current, reusable process for a custom civilization plus leader.
 Read it before copying Grace Ashcroft or starting a new Mod.
 
 1. [Asset pipeline](asset-pipeline.md): source artwork through Cooked BLP files.
-2. [Runtime patterns](runtime-patterns.md): SQL/Lua ownership and multiplayer scope.
-3. [Troubleshooting](troubleshooting.md): known Civ6 failure modes and probes.
-4. [Release checklist](release-checklist.md): repeatable pre-test and release checks.
+2. [Historic Moment illustrations](historic-moment-illustrations.md): connect
+   unique gameplay objects to the large Rise and Fall timeline artwork.
+3. [Runtime patterns](runtime-patterns.md): SQL/Lua ownership and multiplayer scope.
+4. [Troubleshooting](troubleshooting.md): known Civ6 failure modes and probes.
+5. [Release checklist](release-checklist.md): repeatable pre-test and release checks.
 
 The Grace documents under `docs/mods/` are the detailed incident record. The
 older RE9 design and historical plans under `docs/superpowers/` preserve design

@@ -40,6 +40,11 @@ Grace uses a normal UI atlas including 38/50/64/256 and a separate 22px font
 atlas with the correct baseline. The diplomacy trade UI specifically exposed a
 missing exact 50px mapping.
 
+Historic Moment artwork is not an icon atlas entry. It is a 456x332 UI texture
+looked up through the gameplay `MomentIllustrations` table. See
+[Historic Moment illustrations](historic-moment-illustrations.md) for the
+database mapping, XLP entry, and runtime verification contract.
+
 ## Cook and runtime verification
 
 The pipeline is:
