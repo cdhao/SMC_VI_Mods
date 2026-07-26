@@ -80,6 +80,21 @@ class BuildAssetsTests(unittest.TestCase):
                 self.assertLessEqual(right, 244, stem)
                 self.assertLessEqual(bottom, 244, stem)
 
+    def test_leader_icon_has_antialiased_circular_alpha(self) -> None:
+        result = self.run_builder()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        with Image.open(
+            ASSET_ROOT / "generated/icons/png/Chuuni_Icon_Rikka_256.png"
+        ) as image:
+            alpha = image.convert("RGBA").getchannel("A")
+            self.assertEqual(alpha.getpixel((0, 0)), 0)
+            self.assertEqual(alpha.getpixel((255, 0)), 0)
+            self.assertEqual(alpha.getpixel((0, 255)), 0)
+            self.assertEqual(alpha.getpixel((255, 255)), 0)
+            self.assertGreater(alpha.getpixel((128, 128)), 0)
+            self.assertGreater(sum(alpha.histogram()[1:255]), 0)
+
     def test_loading_art_has_exact_dimensions(self) -> None:
         result = self.run_builder()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

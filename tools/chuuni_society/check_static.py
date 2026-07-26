@@ -8,6 +8,8 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from PIL import Image
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -108,6 +110,23 @@ def validate_runtime_files(mod_root: Path) -> None:
         raise ValidationError(f"Runtime BLP inventory mismatch: expected {sorted(expected_blps)}, found {sorted(actual_blps)}")
 
 
+def validate_leader_icon_alpha(asset_root: Path) -> None:
+    icon_path = asset_root / "generated/icons/png/Chuuni_Icon_Rikka_256.png"
+    require_file(icon_path)
+    with Image.open(icon_path) as image:
+        alpha = image.convert("RGBA").getchannel("A")
+        corners = (
+            alpha.getpixel((0, 0)),
+            alpha.getpixel((alpha.width - 1, 0)),
+            alpha.getpixel((0, alpha.height - 1)),
+            alpha.getpixel((alpha.width - 1, alpha.height - 1)),
+        )
+        if corners != (0, 0, 0, 0):
+            raise ValidationError(f"Leader icon must have transparent circular corners: {icon_path}")
+        if sum(alpha.histogram()[1:255]) == 0:
+            raise ValidationError(f"Leader icon must have an antialiased alpha edge: {icon_path}")
+
+
 def run(root: Path) -> None:
     config = load_mod_config(root / "assets/ChuuniSociety/mod-build.toml", repo_root=root)
     asset_root = config.asset_root
@@ -159,6 +178,7 @@ def run(root: Path) -> None:
     actual_dds = {path.name for dds_root in dds_roots for path in dds_root.glob("*.dds")}
     if actual_dds != expected_dds:
         raise ValidationError(f"DDS inventory mismatch: expected {len(expected_dds)}, found {len(actual_dds)}")
+    validate_leader_icon_alpha(asset_root)
     validate_runtime_files(mod_root)
 
     apply_text_contracts((

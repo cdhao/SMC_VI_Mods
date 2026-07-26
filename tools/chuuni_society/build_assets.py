@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -48,7 +48,7 @@ RESOURCE_ICON_SIZES = (22, 38, 50, 64, 256)
 
 ICON_SPECS = {
     CIVILIZATION_PREFIX: ("processed/ChuuniSociety_Civilization_WhiteAlpha.png", CIVILIZATION_ICON_SIZES, "transparent"),
-    "Chuuni_Icon_Rikka": ("六花领袖头像.png", LEADER_ICON_SIZES, "square"),
+    "Chuuni_Icon_Rikka": ("六花领袖头像.png", LEADER_ICON_SIZES, "leader_circle"),
     "Chuuni_Icon_SocietyDistrict": ("极东魔术昼寝结社区域图标.png", STANDARD_ICON_SIZES, "transparent"),
     "Chuuni_Icon_MagicCircle": ("部室魔法阵建筑图标.png", STANDARD_ICON_SIZES, "square"),
     "Chuuni_Icon_ChuuniValue": ("中二值资源图标.png", RESOURCE_ICON_SIZES, "transparent"),
@@ -108,10 +108,26 @@ def fallback_texture_xml(entry_name: str, dds_name: str, width: int, height: int
     return document
 
 
-def prepare_icon(source: Image.Image, *, preserve_square: bool) -> Image.Image:
+def apply_circular_alpha(image: Image.Image) -> Image.Image:
+    """Mask a square icon to a smooth circle while preserving source alpha."""
+
+    size = image.width
+    scale = 4
+    mask = Image.new("L", (size * scale, size * scale), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, size * scale - 1, size * scale - 1), fill=255)
+    mask = mask.resize((size, size), Image.Resampling.LANCZOS)
+    result = image.copy()
+    result.putalpha(ImageChops.multiply(result.getchannel("A"), mask))
+    return result
+
+
+def prepare_icon(source: Image.Image, *, mode: str) -> Image.Image:
     image = source.convert("RGBA")
-    if preserve_square:
-        return ImageOps.fit(image, (max(image.size), max(image.size)), method=Image.Resampling.LANCZOS)
+    if mode in {"square", "leader_circle"}:
+        prepared = ImageOps.fit(image, (max(image.size), max(image.size)), method=Image.Resampling.LANCZOS)
+        if mode == "leader_circle":
+            return apply_circular_alpha(prepared)
+        return prepared
     return fit_square(image, size=max(image.size), padding_ratio=0.10, alpha_cutoff=4)
 
 
@@ -185,7 +201,7 @@ def build() -> None:
     generated_count = 0
     for entry_base, (source_name, sizes, mode) in ICON_SPECS.items():
         with Image.open(ASSET_ROOT / source_name) as source:
-            prepared = prepare_icon(source, preserve_square=mode == "square")
+            prepared = prepare_icon(source, mode=mode)
         for size in sizes:
             entry_name = f"{entry_base}_{size}"
             write_texture(entry_name, resize_icon(prepared, size, content_ratio=1.0))

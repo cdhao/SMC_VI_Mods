@@ -27,6 +27,27 @@ class CookAssetsTests(unittest.TestCase):
         self.assertIn("ChuuniLeaderFallbacks.blp", result.stdout)
         self.assertNotIn("Grace", result.stdout)
 
+    def test_ui_only_dry_run_excludes_leader_fallback_package(self) -> None:
+        result = subprocess.run(
+            [
+                str(Path(subprocess.sys.executable)),
+                "-B",
+                str(COOK_SCRIPT),
+                "--package",
+                "ui",
+                "--dry-run",
+            ],
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("ChuuniUITextureV1.xlp", result.stdout)
+        self.assertNotIn("ChuuniLeaderFallbacks.blp", result.stdout)
+        self.assertNotIn("leaderfallbacks.xlp", result.stdout)
+
     def test_runtime_registrations_use_custom_loading_and_icons(self) -> None:
         icons = (MOD_ROOT / "Icons/ChuuniIcons.sql").read_text(encoding="utf-8")
         config = (MOD_ROOT / "Data/Config.sql").read_text(encoding="utf-8")

@@ -21,6 +21,7 @@ from tools.common.civ6_mod_config import ModBuildConfig, load_mod_config  # noqa
 
 @dataclass(frozen=True)
 class CookPackage:
+    key: str
     name: str
     xlp_name: str
     runtime_blp: Path
@@ -29,9 +30,16 @@ class CookPackage:
 def build_cook_plan(config: ModBuildConfig) -> tuple[CookPackage, ...]:
     blp_root = config.runtime_root / "Platforms" / "Windows" / "BLPs"
     return (
-        CookPackage(config.package("ui"), f"{config.package('ui')}.xlp", blp_root / f"{config.package('ui')}.blp"),
-        CookPackage(config.package("leader_fallback"), "leaderfallbacks.xlp", blp_root / f"{config.package('leader_fallback')}.blp"),
+        CookPackage("ui", config.package("ui"), f"{config.package('ui')}.xlp", blp_root / f"{config.package('ui')}.blp"),
+        CookPackage("leader-fallback", config.package("leader_fallback"), "leaderfallbacks.xlp", blp_root / f"{config.package('leader_fallback')}.blp"),
     )
+
+
+def select_packages(config: ModBuildConfig, package_key: str) -> tuple[CookPackage, ...]:
+    packages = build_cook_plan(config)
+    if package_key == "all":
+        return packages
+    return tuple(package for package in packages if package.key == package_key)
 
 
 def cleanup_cooker_dds(cooker_root: Path) -> None:
@@ -46,8 +54,14 @@ def cleanup_cooker_dds(cooker_root: Path) -> None:
     print(f"Removed {removed} temporary cooker DDS files from {images_root}.")
 
 
-def run(config: ModBuildConfig, *, sdk_root: Path | None, cooker_path: Path | None) -> None:
-    packages = build_cook_plan(config)
+def run(
+    config: ModBuildConfig,
+    *,
+    sdk_root: Path | None,
+    cooker_path: Path | None,
+    package_key: str,
+) -> None:
+    packages = select_packages(config, package_key)
     cooker_root = config.asset_root / "cooker"
     cooked_root = cooker_root / "Platforms" / "Windows" / "BLPs"
     try:
@@ -74,15 +88,26 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sdk-root", type=Path)
     parser.add_argument("--cooker-path", type=Path)
+    parser.add_argument(
+        "--package",
+        choices=("all", "ui", "leader-fallback"),
+        default="all",
+        help="cook only the selected runtime package",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
     config = load_mod_config(REPO_ROOT / "assets/ChuuniSociety/mod-build.toml", repo_root=REPO_ROOT)
-    packages = build_cook_plan(config)
+    packages = select_packages(config, args.package)
     if args.dry_run:
         for package in packages:
             print(f"Cook {package.xlp_name} -> {package.runtime_blp}")
         return 0
-    run(config, sdk_root=args.sdk_root, cooker_path=args.cooker_path)
+    run(
+        config,
+        sdk_root=args.sdk_root,
+        cooker_path=args.cooker_path,
+        package_key=args.package,
+    )
     return 0
 
 
