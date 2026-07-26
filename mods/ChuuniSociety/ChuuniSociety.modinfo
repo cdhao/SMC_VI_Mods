@@ -48,17 +48,41 @@
       </Properties>
       <File>Data/StageCombat.sql</File>
     </UpdateDatabase>
+    <UpdateDatabase id="ChuuniRikkaCombat" criteria="ChuuniExpansion2">
+      <Properties>
+        <LoadOrder>106</LoadOrder>
+      </Properties>
+      <File>Data/RikkaCombat.sql</File>
+    </UpdateDatabase>
     <UpdateDatabase id="ChuuniChimera" criteria="ChuuniExpansion2">
       <Properties>
         <LoadOrder>107</LoadOrder>
       </Properties>
       <File>Data/Chimera.sql</File>
     </UpdateDatabase>
+    <UpdateDatabase id="ChuuniUpgradeDiscounts" criteria="ChuuniExpansion2">
+      <Properties>
+        <LoadOrder>108</LoadOrder>
+      </Properties>
+      <File>Data/UpgradeDiscounts.sql</File>
+    </UpdateDatabase>
     <UpdateDatabase id="ChuuniDistrictBuilding" criteria="ChuuniExpansion2">
       <Properties>
         <LoadOrder>110</LoadOrder>
       </Properties>
       <File>Data/DistrictBuilding.sql</File>
+    </UpdateDatabase>
+    <UpdateDatabase id="ChuuniInvisibleBoundary" criteria="ChuuniExpansion2">
+      <Properties>
+        <LoadOrder>112</LoadOrder>
+      </Properties>
+      <File>Data/InvisibleBoundary.sql</File>
+    </UpdateDatabase>
+    <UpdateDatabase id="ChuuniFaithPurchase" criteria="ChuuniExpansion2">
+      <Properties>
+        <LoadOrder>114</LoadOrder>
+      </Properties>
+      <File>Data/FaithPurchase.sql</File>
     </UpdateDatabase>
     <AddGameplayScripts id="ChuuniGameplay" criteria="ChuuniExpansion2">
       <Properties>
@@ -91,8 +115,12 @@
     <File>Data/Colors.xml</File>
     <File>Data/Core.sql</File>
     <File>Data/StageCombat.sql</File>
+    <File>Data/RikkaCombat.sql</File>
     <File>Data/Chimera.sql</File>
+    <File>Data/UpgradeDiscounts.sql</File>
     <File>Data/DistrictBuilding.sql</File>
+    <File>Data/InvisibleBoundary.sql</File>
+    <File>Data/FaithPurchase.sql</File>
     <File>Scripts/ChuuniGameplay.lua</File>
     <File>UI/ChuuniStatusHUD.xml</File>
     <File>UI/ChuuniStatusHUD.lua</File>

@@ -3,11 +3,11 @@
   <Colors>
     <Row>
       <Type>COLOR_PLAYER_CHUUNI_PURPLE</Type>
-      <Color>80,42,118,255</Color>
+      <Color>43,38,112,255</Color>
     </Row>
     <Row>
       <Type>COLOR_PLAYER_CHUUNI_RED</Type>
-      <Color>206,47,58,255</Color>
+      <Color>132,98,255,255</Color>
     </Row>
     <Row>
       <Type>COLOR_PLAYER_CHUUNI_BLACK</Type>

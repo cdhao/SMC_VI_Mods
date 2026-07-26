@@ -208,6 +208,23 @@ local function OpenChuuniPopup()
     local popupDialog = PopupDialogInGame:new("ChuuniStatusPopup")
     popupDialog:AddTitle(Lookup("LOC_CHUUNI_STATUS_POPUP_TITLE"))
     popupDialog:AddText(BuildPopupText(status))
+    local selectedUnit = UI.GetHeadSelectedUnit()
+    if status.stage >= 1 and selectedUnit ~= nil
+        and selectedUnit:GetOwner() == Game.GetLocalPlayer() then
+        popupDialog:AddCustomButton(
+            Lookup("LOC_CHUUNI_TELEPORT_NEAREST"),
+            function()
+                local parameters = {}
+                parameters.OnStart = "ChuuniTeleport"
+                parameters.UnitID = selectedUnit:GetID()
+                UI.RequestPlayerOperation(
+                    Game.GetLocalPlayer(),
+                    PlayerOperations.EXECUTE_SCRIPT,
+                    parameters
+                )
+            end
+        )
+    end
     popupDialog:AddConfirmButton(Lookup("LOC_CHUUNI_STATUS_CLOSE"), function() end)
     popupDialog:Open()
 end

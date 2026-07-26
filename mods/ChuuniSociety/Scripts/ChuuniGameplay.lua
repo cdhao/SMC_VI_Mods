@@ -16,6 +16,8 @@ local CHUUNI_STAGE_4_UNLOCKED = "CHUUNI_STAGE_4_UNLOCKED"
 local CHUUNI_CHIMERA_UNLOCKED = "CHUUNI_CHIMERA_UNLOCKED"
 local CHUUNI_CHIMERA_TITLE_ATTACHED = "CHUUNI_CHIMERA_TITLE_ATTACHED"
 local CHUUNI_CHIMERA_FAITH_TIER = "CHUUNI_CHIMERA_FAITH_TIER"
+local CHUUNI_CHIMERA_CULTURE_TIER = "CHUUNI_CHIMERA_CULTURE_TIER"
+local CHUUNI_CHIMERA_SCIENCE_TIER = "CHUUNI_CHIMERA_SCIENCE_TIER"
 local CHUUNI_FIRST_COASTAL_CITY_FOUNDED = "CHUUNI_FIRST_COASTAL_CITY_FOUNDED"
 local CHUUNI_COASTAL_AMENITY_ATTACHED = "CHUUNI_COASTAL_AMENITY_ATTACHED"
 local CHUUNI_COASTAL_AMENITY_MODIFIER = "CHUUNI_RIKKA_COASTAL_CITY_AMENITIES"
@@ -26,6 +28,9 @@ local CHIMERA_REST_UNIT_TYPE = "CHUUNI_CHIMERA_REST_UNIT_TYPE"
 local CHIMERA_REST_PLOT = "CHUUNI_CHIMERA_REST_PLOT"
 local CHIMERA_REST_CITY = "CHUUNI_CHIMERA_REST_CITY"
 local CHIMERA_REST_ELIGIBLE = "CHUUNI_CHIMERA_REST_ELIGIBLE"
+local CHIMERA_COMBAT_ABILITY = "ABILITY_CHUUNI_CHIMERA_COMBAT"
+local CHIMERA_MOBILITY_ABILITY = "ABILITY_CHUUNI_CHIMERA_MOBILITY"
+local CHUUNI_TELEPORT_TURN = "CHUUNI_TELEPORT_TURN"
 
 local CHIMERA_FAITH_MODIFIERS = {
     [1] = "CHUUNI_CHIMERA_FAITH_TIER_1",
@@ -39,6 +44,19 @@ local CHIMERA_FAITH_MODIFIERS = {
     [9] = "CHUUNI_CHIMERA_FAITH_TIER_9",
     [10] = "CHUUNI_CHIMERA_FAITH_TIER_10",
 }
+
+local function BuildTierModifierTable(prefix)
+    local modifiers = {}
+    for tier = 1, 10 do
+        modifiers[tier] = prefix .. tostring(tier)
+    end
+    return modifiers
+end
+
+local CHIMERA_CULTURE_MODIFIERS =
+    BuildTierModifierTable("CHUUNI_CHIMERA_CULTURE_TIER_")
+local CHIMERA_SCIENCE_MODIFIERS =
+    BuildTierModifierTable("CHUUNI_CHIMERA_SCIENCE_TIER_")
 
 local STAGE_MARKER_RESOURCE_TYPES = {
     [1] = "RESOURCE_CHUUNI_STAGE_MARKER_1",
@@ -143,23 +161,47 @@ function GetChuuniValue(playerID)
     return math.max(0, math.min(CHUUNI_VALUE_CAP, value))
 end
 
-local function EnsureChimeraFaithTier(playerID)
-    local player = GetPlayer(playerID)
+local function GetStoredStage(player)
     if player == nil then
         return 0
     end
-    local storedTier = player:GetProperty(CHUUNI_CHIMERA_FAITH_TIER)
+    local storedStage = player:GetProperty(CHUUNI_STAGE)
+    return math.max(0, math.min(4, tonumber(storedStage) or 0))
+end
+
+local function EnsureChimeraYieldTier(
+    playerID, propertyName, modifierIDs, minimumStage
+)
+    local player = GetPlayer(playerID)
+    if player == nil or GetStoredStage(player) < minimumStage then
+        return 0
+    end
+    local storedTier = player:GetProperty(propertyName)
     local attachedTier = math.max(0, math.min(10, tonumber(storedTier) or 0))
     local targetTier = math.min(10, math.floor(GetChuuniValue(playerID) / 10))
     for tier = attachedTier + 1, targetTier do
-        local faithModifierID = CHIMERA_FAITH_MODIFIERS[tier]
-        if faithModifierID ~= nil then
-            player:AttachModifierByID(faithModifierID)
-            player:SetProperty(CHUUNI_CHIMERA_FAITH_TIER, tier)
+        local yieldModifierID = modifierIDs[tier]
+        if yieldModifierID ~= nil then
+            player:AttachModifierByID(yieldModifierID)
+            player:SetProperty(propertyName, tier)
             attachedTier = tier
         end
     end
     return attachedTier
+end
+
+local function EnsureChimeraYieldTiers(playerID)
+    EnsureChimeraYieldTier(
+        playerID, CHUUNI_CHIMERA_FAITH_TIER, CHIMERA_FAITH_MODIFIERS, 1
+    )
+    EnsureChimeraYieldTier(
+        playerID, CHUUNI_CHIMERA_CULTURE_TIER,
+        CHIMERA_CULTURE_MODIFIERS, 2
+    )
+    EnsureChimeraYieldTier(
+        playerID, CHUUNI_CHIMERA_SCIENCE_TIER,
+        CHIMERA_SCIENCE_MODIFIERS, 3
+    )
 end
 
 function ChangeChuuniValue(playerID, amount)
@@ -173,7 +215,7 @@ function ChangeChuuniValue(playerID, amount)
     local nextValue = math.min(CHUUNI_VALUE_CAP, currentValue + math.floor(gain))
     if nextValue ~= currentValue then
         player:SetProperty(CHUUNI_VALUE, nextValue)
-        EnsureChimeraFaithTier(playerID)
+        EnsureChimeraYieldTiers(playerID)
         PublishChuuniStatus(playerID)
     end
     return nextValue
@@ -260,7 +302,7 @@ function UpdateChuuniStage(playerID)
         EnsureChimeraUnlocked(player)
     end
 
-    EnsureChimeraFaithTier(playerID)
+    EnsureChimeraYieldTiers(playerID)
     player:SetProperty(CHUUNI_STAGE, stage)
     EnsureStageMarkerResources(player, stage)
     PublishChuuniStatus(playerID)
@@ -306,6 +348,62 @@ local function IsUnitInChimeraCity(unit, chimeraCity)
     end
     return owningCity:GetOwner() == chimeraCity:GetOwner()
         and owningCity:GetID() == chimeraCity:GetID(), plot
+end
+
+local function SetUnitAbilityCount(unit, abilityType, shouldHave)
+    if unit == nil or unit.GetAbility == nil then
+        return
+    end
+    local abilities = unit:GetAbility()
+    if abilities == nil or abilities.GetAbilityCount == nil
+        or abilities.ChangeAbilityCount == nil then
+        return
+    end
+    local storedCount = abilities:GetAbilityCount(abilityType)
+    local currentCount = tonumber(storedCount) or 0
+    if shouldHave and currentCount < 1 then
+        abilities:ChangeAbilityCount(abilityType, 1 - currentCount)
+    elseif not shouldHave and currentCount > 0 then
+        abilities:ChangeAbilityCount(abilityType, -currentCount)
+    end
+end
+
+local function RefreshChimeraCombatAbilityForUnit(playerID, unit)
+    local player = GetPlayer(playerID)
+    local chimeraCity = GetEstablishedChimeraCity(player)
+    local inChimeraCity = IsUnitInChimeraCity(unit, chimeraCity)
+    SetUnitAbilityCount(
+        unit,
+        CHIMERA_COMBAT_ABILITY,
+        IsChuuniPlayer(playerID)
+            and GetStoredStage(player) >= 2
+            and inChimeraCity == true
+    )
+end
+
+local function RefreshChimeraUnitAbilities(playerID)
+    if not IsChuuniPlayer(playerID) then
+        return
+    end
+    local player = GetPlayer(playerID)
+    if player == nil or player.GetUnits == nil then
+        return
+    end
+    local chimeraCity = GetEstablishedChimeraCity(player)
+    local stage = GetStoredStage(player)
+    for _, unit in player:GetUnits():Members() do
+        local inChimeraCity = IsUnitInChimeraCity(unit, chimeraCity)
+        SetUnitAbilityCount(
+            unit, CHIMERA_COMBAT_ABILITY,
+            stage >= 2 and inChimeraCity == true
+        )
+        -- This refresh runs at turn activation. The mobility ability then
+        -- remains for the turn even if the unit leaves Chimera's territory.
+        SetUnitAbilityCount(
+            unit, CHIMERA_MOBILITY_ABILITY,
+            stage >= 3 and inChimeraCity == true
+        )
+    end
 end
 
 local function ShouldGrantChimeraRestBonus(snapshot, currentState)
@@ -431,6 +529,7 @@ local function OnPlayerTurnActivated(playerID, isFirstTime)
 
     ApplyChimeraRestBonuses(playerID)
     local player = GetPlayer(playerID)
+    RefreshChimeraUnitAbilities(playerID)
     local currentTurn = Game.GetCurrentGameTurn()
     local lastValueTickTurn = player:GetProperty(CHUUNI_LAST_VALUE_TICK_TURN)
     if tonumber(lastValueTickTurn) == currentTurn then
@@ -444,10 +543,149 @@ local function OnPlayerTurnActivated(playerID, isFirstTime)
         districtCount * VALUE_PER_DISTRICT + buildingCount * VALUE_PER_BUILDING
     )
     UpdateChuuniStage(playerID)
+    RefreshChimeraUnitAbilities(playerID)
 end
 
 local function OnReligionFounded(playerID)
     UpdateChuuniStage(playerID)
+    RefreshChimeraUnitAbilities(playerID)
+end
+
+local function OnUnitMoved(playerID, unitID)
+    if not IsChuuniPlayer(playerID) or UnitManager == nil
+        or UnitManager.GetUnit == nil then
+        return
+    end
+    RefreshChimeraCombatAbilityForUnit(
+        playerID, UnitManager.GetUnit(playerID, unitID)
+    )
+end
+
+local function OnUnitAddedToMap(playerID, unitID)
+    OnUnitMoved(playerID, unitID)
+end
+
+local function CityHasMagicCircle(city)
+    if city == nil or city.GetBuildings == nil then
+        return false
+    end
+    local buildings = city:GetBuildings()
+    return buildings ~= nil and buildings:HasBuilding(MAGIC_CIRCLE_INDEX)
+end
+
+local function IsValidTeleportUnit(playerID, unit)
+    if unit == nil or unit:GetOwner() ~= playerID then
+        return false
+    end
+    local unitInfo = GameInfo.Units[unit:GetType()]
+    return unitInfo ~= nil
+        and unitInfo.Domain == "DOMAIN_LAND"
+        and unitInfo.UnitType ~= "UNIT_TRADER"
+        and unitInfo.UnitType ~= "UNIT_SPY"
+end
+
+local function GetTeleportSourceCity(playerID, unit)
+    local plot = GetUnitPlot(unit)
+    if plot == nil or plot:GetOwner() ~= playerID
+        or plot:GetDistrictType() ~= CHUUNI_DISTRICT_INDEX then
+        return nil, plot
+    end
+    local city = Cities.GetPlotPurchaseCity(plot)
+    if city == nil or not CityHasMagicCircle(city) then
+        return nil, plot
+    end
+    local hasCompletedSociety = false
+    if city.GetDistricts ~= nil then
+        for _, district in city:GetDistricts():Members() do
+            if district:IsComplete()
+                and district:GetType() == CHUUNI_DISTRICT_INDEX
+                and district:GetX() == plot:GetX()
+                and district:GetY() == plot:GetY() then
+                hasCompletedSociety = true
+                break
+            end
+        end
+    end
+    if not hasCompletedSociety then
+        return nil, plot
+    end
+    return city, plot
+end
+
+local function IsTeleportTargetPlotAvailable(plot)
+    if plot == nil or Map.GetUnitsAt == nil then
+        return false
+    end
+    local units = Map.GetUnitsAt(plot)
+    return units == nil or #units == 0
+end
+
+local function FindNearestTeleportTarget(player, sourcePlot)
+    if player == nil or sourcePlot == nil or player.GetCities == nil then
+        return nil
+    end
+    local bestPlot = nil
+    local bestDistance = nil
+    for _, city in player:GetCities():Members() do
+        if CityHasMagicCircle(city) and city.GetDistricts ~= nil then
+            local districts = city:GetDistricts()
+            for _, district in districts:Members() do
+                if district:IsComplete()
+                    and district:GetType() == CHUUNI_DISTRICT_INDEX then
+                    local targetPlot = Map.GetPlot(
+                        district:GetX(), district:GetY()
+                    )
+                    if targetPlot ~= nil
+                        and targetPlot:GetIndex() ~= sourcePlot:GetIndex()
+                        and IsTeleportTargetPlotAvailable(targetPlot) then
+                        local distance = Map.GetPlotDistance(
+                            sourcePlot:GetX(), sourcePlot:GetY(),
+                            targetPlot:GetX(), targetPlot:GetY()
+                        )
+                        if bestDistance == nil or distance < bestDistance then
+                            bestDistance = distance
+                            bestPlot = targetPlot
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return bestPlot
+end
+
+local function OnChuuniTeleport(playerID, parameters)
+    if not IsChuuniPlayer(playerID) or parameters == nil
+        or GetStoredStage(GetPlayer(playerID)) < 1 then
+        return
+    end
+    local unitID = tonumber(parameters.UnitID)
+    local unit = unitID ~= nil and UnitManager.GetUnit(playerID, unitID) or nil
+    if not IsValidTeleportUnit(playerID, unit) then
+        return
+    end
+    local currentTurn = Game.GetCurrentGameTurn()
+    local storedTeleportTurn = unit:GetProperty(CHUUNI_TELEPORT_TURN)
+    if tonumber(storedTeleportTurn) == currentTurn then
+        return
+    end
+    local sourceCity, sourcePlot = GetTeleportSourceCity(playerID, unit)
+    if sourceCity == nil then
+        return
+    end
+    local targetPlot = FindNearestTeleportTarget(
+        GetPlayer(playerID), sourcePlot
+    )
+    if targetPlot == nil then
+        return
+    end
+    UnitManager.PlaceUnit(unit, targetPlot:GetX(), targetPlot:GetY())
+    local moves = unit:GetMovesRemaining()
+    if moves > 0 then
+        UnitManager.ChangeMovesRemaining(unit, -moves)
+    end
+    unit:SetProperty(CHUUNI_TELEPORT_TURN, currentTurn)
+    Log("魔法阵传送完成 unit=" .. tostring(unitID))
 end
 
 local function GetCity(playerID, cityID)
@@ -501,5 +739,8 @@ Events.PlayerTurnActivated.Add(OnPlayerTurnActivated)
 Events.PlayerTurnDeactivated.Add(SnapshotChimeraRestCandidates)
 Events.ReligionFounded.Add(OnReligionFounded)
 Events.CityAddedToMap.Add(OnCityAddedToMap)
+Events.UnitMoved.Add(OnUnitMoved)
+Events.UnitAddedToMap.Add(OnUnitAddedToMap)
+GameEvents.ChuuniTeleport.Add(OnChuuniTeleport)
 
 Log("Chuuni gameplay progression initialized")

@@ -16,6 +16,10 @@ DISTRICT_BUILDING_SQL = (
 )
 STAGE_COMBAT_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "StageCombat.sql"
 CHIMERA_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "Chimera.sql"
+RIKKA_COMBAT_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "RikkaCombat.sql"
+UPGRADE_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "UpgradeDiscounts.sql"
+BOUNDARY_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "InvisibleBoundary.sql"
+FAITH_PURCHASE_SQL = REPO_ROOT / "mods" / "ChuuniSociety" / "Data" / "FaithPurchase.sql"
 GAMEPLAY_LUA = (
     REPO_ROOT / "mods" / "ChuuniSociety" / "Scripts" / "ChuuniGameplay.lua"
 )
@@ -173,7 +177,7 @@ class ChuuniStaticTests(unittest.TestCase):
             "CHUUNI_CHIMERA_GOVERNOR_POINT",
             "AttachModifierByID(CHUUNI_CHIMERA_GOVERNOR_POINT)",
             'CHUUNI_CHIMERA_FAITH_TIER = "CHUUNI_CHIMERA_FAITH_TIER"',
-            "EnsureChimeraFaithTier",
+            "EnsureChimeraYieldTiers",
             "CHIMERA_FAITH_MODIFIERS",
             "SnapshotChimeraRestCandidates",
             "ApplyChimeraRestBonuses",
@@ -202,6 +206,42 @@ class ChuuniStaticTests(unittest.TestCase):
             "LOC_GOVERNOR_PROMOTION_CHIMERA_BASE_DESCRIPTION",
         ):
             self.assertIn(contract, text)
+
+    def test_remaining_v01_mechanics_contract(self) -> None:
+        rikka = RIKKA_COMBAT_SQL.read_text(encoding="utf-8")
+        chimera = CHIMERA_SQL.read_text(encoding="utf-8")
+        upgrade = UPGRADE_SQL.read_text(encoding="utf-8")
+        boundary = BOUNDARY_SQL.read_text(encoding="utf-8")
+        faith = FAITH_PURCHASE_SQL.read_text(encoding="utf-8")
+        lua = GAMEPLAY_LUA.read_text(encoding="utf-8")
+        hud = STATUS_HUD_LUA.read_text(encoding="utf-8")
+
+        for token in (
+            "RIKKA_SCHWARZ_SECHS_DEFENSE",
+            "RIKKA_SCHWARZ_SECHS_ATTACK_STAGE_4",
+            "CLASS_ALL_COMBAT_UNITS",
+            "CHUUNI_STAGE_4_OWNER_REQUIREMENTS",
+        ):
+            self.assertIn(token, rikka)
+        for token in (
+            "ABILITY_CHUUNI_CHIMERA_COMBAT",
+            "ABILITY_CHUUNI_CHIMERA_MOBILITY",
+            "CHUUNI_CHIMERA_CULTURE_TIER_",
+            "CHUUNI_CHIMERA_SCIENCE_TIER_",
+            "CHUUNI_CHIMERA_STAGE_4_MAGIC_CIRCLE_FAITH",
+            "CHUUNI_CHIMERA_STAGE_4_MAGIC_CIRCLE_CULTURE",
+            "CHUUNI_CHIMERA_STAGE_4_MAGIC_CIRCLE_SCIENCE",
+        ):
+            self.assertIn(token, chimera)
+        self.assertIn("MODIFIER_PLAYER_ADJUST_UNIT_UPGRADE_DISCOUNT_PERCENT", upgrade)
+        self.assertIn("MODIFIER_PLAYER_ADJUST_UNIT_UPGRADE_RESOURCE_COST_MODIFIER", upgrade)
+        self.assertIn("IMPROVEMENT_INVISIBLE_BOUNDARY", boundary)
+        self.assertIn("OnePerCity", boundary)
+        self.assertIn("NO_PLUNDER", boundary)
+        self.assertIn("MODIFIER_CITY_ENABLE_BUILDING_FAITH_PURCHASE", faith)
+        self.assertIn("GameEvents.ChuuniTeleport.Add", lua)
+        self.assertIn("UnitManager.PlaceUnit", lua)
+        self.assertIn("parameters.OnStart = \"ChuuniTeleport\"", hud)
 
     def test_modinfo_registers_gameplay_script(self) -> None:
         text = MODINFO.read_text(encoding="utf-8")
@@ -309,7 +349,9 @@ class ChuuniStaticTests(unittest.TestCase):
         self.assertIn("特色结社与部室魔法阵+100%生产力", text)
         self.assertIn("每10点中二值使该城市+1信仰", text)
         self.assertIn("正常休整的单位额外恢复20生命值", text)
-        self.assertGreaterEqual(text.count("阶段专属能力尚未实现"), 3)
+        self.assertNotIn("阶段专属能力尚未实现", text)
+        self.assertIn("幻想武装：升级金币-25%", text)
+        self.assertIn("所有部室魔法阵城市+5信仰", text)
         for stage in ("第一阶段", "第二阶段", "第三阶段", "第四阶段"):
             self.assertIn(stage, text)
 
@@ -590,7 +632,11 @@ class ChuuniStaticTests(unittest.TestCase):
                 DISTRICT_BUILDING_SQL.read_text(encoding="utf-8")
             )
             connection.executescript(STAGE_COMBAT_SQL.read_text(encoding="utf-8"))
+            connection.executescript(RIKKA_COMBAT_SQL.read_text(encoding="utf-8"))
             connection.executescript(CHIMERA_SQL.read_text(encoding="utf-8"))
+            connection.executescript(UPGRADE_SQL.read_text(encoding="utf-8"))
+            connection.executescript(BOUNDARY_SQL.read_text(encoding="utf-8"))
+            connection.executescript(FAITH_PURCHASE_SQL.read_text(encoding="utf-8"))
             self.assertEqual(
                 connection.execute(
                     """
@@ -827,6 +873,65 @@ class ChuuniStaticTests(unittest.TestCase):
                     """
                 ).fetchone(),
                 (1,),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT ModifierId, Value
+                    FROM ModifierArguments
+                    WHERE ModifierId IN (
+                        'RIKKA_SCHWARZ_SECHS_DEFENSE',
+                        'RIKKA_SCHWARZ_SECHS_ATTACK_STAGE_4'
+                    )
+                      AND Name = 'Amount'
+                    ORDER BY ModifierId
+                    """
+                ).fetchall(),
+                [
+                    ("RIKKA_SCHWARZ_SECHS_ATTACK_STAGE_4", "5"),
+                    ("RIKKA_SCHWARZ_SECHS_DEFENSE", "5"),
+                ],
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT ModifierId, Value
+                    FROM ModifierArguments
+                    WHERE ModifierId LIKE
+                          'CHUUNI_FANTASY_ARMAMENT_STAGE_%_GOLD'
+                      AND Name = 'Amount'
+                    ORDER BY ModifierId
+                    """
+                ).fetchall(),
+                [
+                    ("CHUUNI_FANTASY_ARMAMENT_STAGE_2_GOLD", "25"),
+                    ("CHUUNI_FANTASY_ARMAMENT_STAGE_3_GOLD", "50"),
+                    ("CHUUNI_FANTASY_ARMAMENT_STAGE_4_GOLD", "100"),
+                ],
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT PrereqTech, Domain, SameAdjacentValid, OnePerCity,
+                           PlunderType
+                    FROM Improvements
+                    WHERE ImprovementType =
+                          'IMPROVEMENT_INVISIBLE_BOUNDARY'
+                    """
+                ).fetchone(),
+                ("TECH_CARTOGRAPHY", "DOMAIN_SEA", 0, 1, "NO_PLUNDER"),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM Modifiers
+                    WHERE ModifierType =
+                          'MODIFIER_CITY_ENABLE_BUILDING_FAITH_PURCHASE'
+                      AND ModifierId LIKE 'CHUUNI_%_BUILDING_FAITH_PURCHASE'
+                    """
+                ).fetchone(),
+                (2,),
             )
         finally:
             connection.close()

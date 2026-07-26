@@ -36,13 +36,13 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 | Chuuni Value stage status UI | 已实现未实机验证 | Independent LaunchBar-style button and native `PopupDialogInGame` use Player Properties; verify placement, repeated opening and live refresh in game. |
 | Leader and civilization UI presentation | 已实现未实机验证 | Rikka icon now uses an antialiased circular alpha mask; only the UI BLP was recooked and the fallback BLP hash remained unchanged. Verify all leader-list contexts in game. |
 | Save/load icon asset audit | 未开始 | Reproduce missing save icon, inspect `ForgeUI_BLPTextureLoader.log`, cooked BLP inventory and cooker source mapping before changing the cooker. |
-| Blue-purple player colors | 未开始 | Replace the invalid color XML rows that currently load as duplicate `COLOR_UNKNOWN`; prepare a blue-purple primary/secondary palette and verify jersey colors in game. |
-| Rikka Schwarz Sechs | 未开始 | Starts only after staged combat is confirmed. |
-| Chimera | 已实现未实机验证 | Real Governor and stage-one +100% Society/Magic Circle production, governed-city faith tiers and rest-only +20 healing are implemented. Verify city yield display, healing event order, assignment and save/load in game. Later-stage effects remain unimplemented. |
-| Fantasy Armament discounts | 未开始 | Native upgrade-cost modifier spike required first. |
-| Invisible Boundary | 未开始 | Ocean placement spike required first. |
-| Magic Circle teleport | 未开始 | Gameplay movement spike required first. |
-| Faith purchasing and final content pass | 未开始 | Begins after preceding mechanics are stable. |
+| Blue-purple player colors | 已实现未实机验证 | Primary/secondary colors now use dark blue-purple and bright violet. Verify jersey colors and alternate-color selection in game. |
+| Rikka Schwarz Sechs | 已实现未实机验证 | Native combat modifiers provide military defense +5 and stage-4 attack +5. Verify previews and confirm religious units are excluded. |
+| Chimera | 已实现未实机验证 | All four stages are implemented: local +5 combat, start-turn movement/sight, culture/science tiers and stage-4 Magic Circle city 5/5/5. Verify reassignment, unit-boundary refresh and city panels. |
+| Fantasy Armament discounts | 已实现未实机验证 | Native modifiers provide 25/50/100% gold and 50/50/100% resource discounts. The approved fallback is empire-wide because Civ VI exposes no city-territory-scoped upgrade-cost modifier. |
+| Invisible Boundary | 已实现未实机验证 | Cartography-gated, ocean-only, one-per-city, nonadjacent and unplunderable improvement with Coast/Ocean adjacency yields passes schema/static checks. Verify Builder placement in game. |
+| Magic Circle teleport | 已实现未实机验证 | The status popup sends a synchronized script operation for the selected land unit to the nearest empty friendly Magic Circle district, consumes movement and records the turn. Verify all whitelist/rejection cases. |
+| Faith purchasing and final content pass | 已实现未实机验证 | Society/Magic Circle city requirements attach native building faith-purchase modifiers for Holy Site and Campus chains. Verify purchase panels and worship-building compatibility. |
 
 ---
 
