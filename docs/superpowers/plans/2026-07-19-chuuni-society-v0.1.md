@@ -30,11 +30,11 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 | --- | --- | --- |
 | Phase 1 civilization and leader skeleton | 已实机验证 | Civilization selection, loading scene and in-game leader presentation were visually confirmed. |
 | Fallback art loading chain | 已实机验证 | `.dep`, fallback ArtDef and both BLP packages loaded in the supplied game screenshots. |
-| Phase 2 Society district and Magic Circle | 已实现未实机验证 | Static/schema checks pass; recheck construction, Prophet points and adjacency in a fresh game. |
+| Phase 2 Society district and Magic Circle | 已实现未实机验证 | Native Holy Site adjacency is retained; Campus/Wonder and reciprocal bonuses, Missionary prerequisite, and Holy Site ArtDef inheritance pass static/schema checks. Recheck all results in a fresh game. |
 | Phase 3 Chuuni Value and sequential stages | 已实现未实机验证 | Runtime nil conversion was fixed; recheck save/load, coastal +5 and religion gates. |
 | Phase 4 permanently attached staged combat | 已实现未实机验证 | Three permanent SQL Modifiers are attached once at sequential Property unlocks; verify save/load, no duplicate attachment and 3/5/8 totals in game. |
 | Chuuni Value stage status UI | 已实现未实机验证 | Independent LaunchBar-style button and native `PopupDialogInGame` use Player Properties; verify placement, repeated opening and live refresh in game. |
-| Leader and civilization UI presentation | 未开始 | Correct the square leader portrait/logo presentation and audit required icon sizes and masks. |
+| Leader and civilization UI presentation | 已实现未实机验证 | Rikka icon now uses an antialiased circular alpha mask; only the UI BLP was recooked and the fallback BLP hash remained unchanged. Verify all leader-list contexts in game. |
 | Save/load icon asset audit | 未开始 | Reproduce missing save icon, inspect `ForgeUI_BLPTextureLoader.log`, cooked BLP inventory and cooker source mapping before changing the cooker. |
 | Blue-purple player colors | 未开始 | Replace the invalid color XML rows that currently load as duplicate `COLOR_UNKNOWN`; prepare a blue-purple primary/secondary palette and verify jersey colors in game. |
 | Rikka Schwarz Sechs | 未开始 | Starts only after staged combat is confirmed. |
