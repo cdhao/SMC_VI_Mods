@@ -170,43 +170,58 @@ INSERT OR REPLACE INTO Building_GreatPersonPoints
 VALUES
     ('BUILDING_CLUB_MAGIC_CIRCLE', 'GREAT_PERSON_CLASS_PROPHET', 1);
 
-INSERT INTO TraitModifiers (TraitType, ModifierId)
+-- Building replacements do not satisfy the separate unit prerequisite table.
+-- Copy the Shrine prerequisite so the Magic Circle unlocks Missionaries.
+INSERT OR REPLACE INTO Unit_BuildingPrereqs
+    (Unit, PrereqBuilding, NumSupported)
+SELECT Unit, 'BUILDING_CLUB_MAGIC_CIRCLE', NumSupported
+FROM Unit_BuildingPrereqs
+WHERE Unit = 'UNIT_MISSIONARY'
+  AND PrereqBuilding = 'BUILDING_SHRINE';
+
+-- Give the Society +2 Faith for each exact Campus district type, including
+-- unique Campus replacements already loaded by the Gathering Storm ruleset.
+INSERT OR REPLACE INTO Adjacency_YieldChanges
+    (ID, Description, YieldType, YieldChange, TilesRequired, AdjacentDistrict)
+SELECT
+    'CHUUNI_SOCIETY_CAMPUS_FAITH_' || CampusDistrictType,
+    'LOC_CHUUNI_SOCIETY_FROM_CAMPUS_FAITH_DESCRIPTION',
+    'YIELD_FAITH',
+    2,
+    1,
+    CampusDistrictType
+FROM (
+    SELECT DistrictType AS CampusDistrictType
+    FROM Districts
+    WHERE DistrictType = 'DISTRICT_CAMPUS'
+    UNION
+    SELECT CivUniqueDistrictType
+    FROM DistrictReplaces
+    WHERE ReplacesDistrictType = 'DISTRICT_CAMPUS'
+);
+
+INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
+SELECT 'DISTRICT_CHUUNI_SOCIETY', ID
+FROM Adjacency_YieldChanges
+WHERE ID LIKE 'CHUUNI_SOCIETY_CAMPUS_FAITH_%';
+
+INSERT OR REPLACE INTO Adjacency_YieldChanges
+    (ID, Description, YieldType, YieldChange, TilesRequired, AdjacentWonder)
 VALUES
-    ('TRAIT_DISTRICT_CHUUNI_SOCIETY', 'CHUUNI_SOCIETY_ADJACENT_CAMPUS_FAITH');
+    ('CHUUNI_SOCIETY_WONDER_FAITH',
+     'LOC_CHUUNI_SOCIETY_FROM_WONDER_FAITH_DESCRIPTION',
+     'YIELD_FAITH', 2, 1, 1);
 
-INSERT INTO Modifiers
-    (ModifierId, ModifierType, SubjectRequirementSetId)
+INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
 VALUES
-    ('CHUUNI_SOCIETY_ADJACENT_CAMPUS_FAITH', 'MODIFIER_PLAYER_DISTRICTS_ADJUST_YIELD_CHANGE', 'CHUUNI_SOCIETY_ADJACENT_CAMPUS_REQUIREMENTS');
-
-INSERT INTO ModifierArguments (ModifierId, Name, Value) VALUES
-    ('CHUUNI_SOCIETY_ADJACENT_CAMPUS_FAITH', 'YieldType', 'YIELD_FAITH'),
-    ('CHUUNI_SOCIETY_ADJACENT_CAMPUS_FAITH', 'Amount', 3);
-
-INSERT INTO Requirements (RequirementId, RequirementType) VALUES
-    ('CHUUNI_REQUIRES_DISTRICT_IS_SOCIETY', 'REQUIREMENT_DISTRICT_TYPE_MATCHES'),
-    ('CHUUNI_REQUIRES_PLOT_ADJACENT_CAMPUS', 'REQUIREMENT_PLOT_ADJACENT_DISTRICT_TYPE_MATCHES');
-
-INSERT INTO RequirementArguments (RequirementId, Name, Value) VALUES
-    ('CHUUNI_REQUIRES_DISTRICT_IS_SOCIETY', 'DistrictType', 'DISTRICT_CHUUNI_SOCIETY'),
-    ('CHUUNI_REQUIRES_PLOT_ADJACENT_CAMPUS', 'DistrictType', 'DISTRICT_CAMPUS');
-
-INSERT INTO RequirementSets (RequirementSetId, RequirementSetType)
-VALUES
-    ('CHUUNI_SOCIETY_ADJACENT_CAMPUS_REQUIREMENTS', 'REQUIREMENTSET_TEST_ALL');
-
-INSERT INTO RequirementSetRequirements (RequirementSetId, RequirementId) VALUES
-    ('CHUUNI_SOCIETY_ADJACENT_CAMPUS_REQUIREMENTS', 'CHUUNI_REQUIRES_DISTRICT_IS_SOCIETY'),
-    ('CHUUNI_SOCIETY_ADJACENT_CAMPUS_REQUIREMENTS', 'CHUUNI_REQUIRES_PLOT_ADJACENT_CAMPUS');
+    ('DISTRICT_CHUUNI_SOCIETY', 'CHUUNI_SOCIETY_WONDER_FAITH');
 
 INSERT OR REPLACE INTO Adjacency_YieldChanges
     (ID, Description, YieldType, YieldChange, TilesRequired, AdjacentDistrict)
 VALUES
     ('CHUUNI_SOCIETY_TO_SCIENCE', 'LOC_CHUUNI_SOCIETY_TO_SCIENCE_DESCRIPTION', 'YIELD_SCIENCE', 2, 1, 'DISTRICT_CHUUNI_SOCIETY'),
     ('CHUUNI_SOCIETY_TO_CULTURE', 'LOC_CHUUNI_SOCIETY_TO_CULTURE_DESCRIPTION', 'YIELD_CULTURE', 2, 1, 'DISTRICT_CHUUNI_SOCIETY'),
-    ('CHUUNI_SOCIETY_TO_GOLD', 'LOC_CHUUNI_SOCIETY_TO_GOLD_DESCRIPTION', 'YIELD_GOLD', 2, 1, 'DISTRICT_CHUUNI_SOCIETY'),
-    ('CHUUNI_SOCIETY_TO_PRODUCTION', 'LOC_CHUUNI_SOCIETY_TO_PRODUCTION_DESCRIPTION', 'YIELD_PRODUCTION', 2, 1, 'DISTRICT_CHUUNI_SOCIETY'),
-    ('CHUUNI_SOCIETY_TO_FAITH', 'LOC_CHUUNI_SOCIETY_TO_FAITH_DESCRIPTION', 'YIELD_FAITH', 2, 1, 'DISTRICT_CHUUNI_SOCIETY');
+    ('CHUUNI_SOCIETY_TO_PRODUCTION', 'LOC_CHUUNI_SOCIETY_TO_PRODUCTION_DESCRIPTION', 'YIELD_PRODUCTION', 2, 1, 'DISTRICT_CHUUNI_SOCIETY');
 
 INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
 SELECT DistrictType, 'CHUUNI_SOCIETY_TO_SCIENCE'
@@ -220,20 +235,19 @@ WHERE ReplacesDistrictType = 'DISTRICT_CAMPUS';
 INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
 SELECT DistrictType, 'CHUUNI_SOCIETY_TO_CULTURE'
 FROM Districts
-WHERE DistrictType = 'DISTRICT_THEATER'
+WHERE DistrictType IN (
+    'DISTRICT_THEATER',
+    'DISTRICT_ENTERTAINMENT_COMPLEX',
+    'DISTRICT_WATER_ENTERTAINMENT_COMPLEX'
+)
 UNION
 SELECT CivUniqueDistrictType, 'CHUUNI_SOCIETY_TO_CULTURE'
 FROM DistrictReplaces
-WHERE ReplacesDistrictType = 'DISTRICT_THEATER';
-
-INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
-SELECT DistrictType, 'CHUUNI_SOCIETY_TO_GOLD'
-FROM Districts
-WHERE DistrictType IN ('DISTRICT_COMMERCIAL_HUB', 'DISTRICT_HARBOR')
-UNION
-SELECT CivUniqueDistrictType, 'CHUUNI_SOCIETY_TO_GOLD'
-FROM DistrictReplaces
-WHERE ReplacesDistrictType IN ('DISTRICT_COMMERCIAL_HUB', 'DISTRICT_HARBOR');
+WHERE ReplacesDistrictType IN (
+    'DISTRICT_THEATER',
+    'DISTRICT_ENTERTAINMENT_COMPLEX',
+    'DISTRICT_WATER_ENTERTAINMENT_COMPLEX'
+);
 
 INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
 SELECT DistrictType, 'CHUUNI_SOCIETY_TO_PRODUCTION'
@@ -243,12 +257,3 @@ UNION
 SELECT CivUniqueDistrictType, 'CHUUNI_SOCIETY_TO_PRODUCTION'
 FROM DistrictReplaces
 WHERE ReplacesDistrictType = 'DISTRICT_INDUSTRIAL_ZONE';
-
-INSERT OR REPLACE INTO District_Adjacencies (DistrictType, YieldChangeId)
-SELECT DistrictType, 'CHUUNI_SOCIETY_TO_FAITH'
-FROM Districts
-WHERE DistrictType = 'DISTRICT_HOLY_SITE'
-UNION
-SELECT CivUniqueDistrictType, 'CHUUNI_SOCIETY_TO_FAITH'
-FROM DistrictReplaces
-WHERE ReplacesDistrictType = 'DISTRICT_HOLY_SITE';

@@ -101,12 +101,23 @@ class ChuuniStaticTests(unittest.TestCase):
         )
         self.assertIn("Entertainment = 1", text)
         self.assertIn("Maintenance = 0", text)
+        self.assertIn("Unit_BuildingPrereqs", text)
+        self.assertIn("'UNIT_MISSIONARY'", text)
+        self.assertIn("'BUILDING_CLUB_MAGIC_CIRCLE'", text)
+        self.assertIn("CHUUNI_SOCIETY_WONDER_FAITH", text)
+        self.assertIn("AdjacentWonder", text)
+        self.assertIn("DISTRICT_ENTERTAINMENT_COMPLEX", text)
+        self.assertIn("DISTRICT_WATER_ENTERTAINMENT_COMPLEX", text)
+        self.assertNotIn("CHUUNI_SOCIETY_ADJACENT_CAMPUS_FAITH", text)
+        self.assertNotIn("MODIFIER_PLAYER_DISTRICTS_ADJUST_YIELD_CHANGE", text)
 
     def test_society_adjacency_description_names_both_receivers(self) -> None:
         text = TEXT_SQL.read_text(encoding="utf-8")
 
-        self.assertIn("自身固定获得+3信仰值", text)
+        self.assertIn("每相邻一个学院额外获得+2信仰值", text)
+        self.assertIn("每相邻一个世界奇观额外获得+2信仰值", text)
         self.assertIn("相邻学院获得+2科技值", text)
+        self.assertNotIn("自身固定获得+3信仰值", text)
 
     def test_modinfo_registers_core_gameplay_files(self) -> None:
         text = MODINFO.read_text(encoding="utf-8")
@@ -430,7 +441,18 @@ class ChuuniStaticTests(unittest.TestCase):
                     ("DISTRICT_COMMERCIAL_HUB", "Commercial Hub", 54),
                     ("DISTRICT_HARBOR", "Harbor", 54),
                     ("DISTRICT_INDUSTRIAL_ZONE", "Industrial Zone", 54),
+                    ("DISTRICT_ENTERTAINMENT_COMPLEX", "Entertainment", 54),
+                    ("DISTRICT_WATER_ENTERTAINMENT_COMPLEX", "Water Park", 54),
+                    ("DISTRICT_TEST_CAMPUS_REPLACEMENT", "Test Campus", 54),
                 ),
+            )
+            connection.execute(
+                """
+                INSERT INTO DistrictReplaces
+                    (CivUniqueDistrictType, ReplacesDistrictType)
+                VALUES
+                    ('DISTRICT_TEST_CAMPUS_REPLACEMENT', 'DISTRICT_CAMPUS')
+                """
             )
             connection.execute(
                 """
@@ -457,6 +479,43 @@ class ChuuniStaticTests(unittest.TestCase):
                     (BuildingType, GreatPersonClassType, PointsPerTurn)
                 VALUES
                     ('BUILDING_SHRINE', 'GREAT_PERSON_CLASS_PROPHET', 1)
+                """
+            )
+            connection.execute(
+                """
+                INSERT INTO Units
+                    (UnitType, Name, BaseSightRange, BaseMoves, Domain,
+                     FormationClass, Cost)
+                VALUES
+                    ('UNIT_MISSIONARY', 'Missionary', 2, 4, 'DOMAIN_LAND',
+                     'FORMATION_CLASS_CIVILIAN', 75)
+                """
+            )
+            connection.execute(
+                """
+                INSERT INTO Unit_BuildingPrereqs
+                    (Unit, PrereqBuilding, NumSupported)
+                VALUES
+                    ('UNIT_MISSIONARY', 'BUILDING_SHRINE', -1)
+                """
+            )
+            connection.execute(
+                """
+                INSERT INTO Adjacency_YieldChanges
+                    (ID, Description, YieldType, YieldChange,
+                     TilesRequired, AdjacentNaturalWonder)
+                VALUES
+                    ('TEST_HOLY_SITE_NATURAL_WONDER',
+                     'Test Holy Site natural wonder',
+                     'YIELD_FAITH', 2, 1, 1)
+                """
+            )
+            connection.execute(
+                """
+                INSERT INTO District_Adjacencies (DistrictType, YieldChangeId)
+                VALUES
+                    ('DISTRICT_HOLY_SITE',
+                     'TEST_HOLY_SITE_NATURAL_WONDER')
                 """
             )
             connection.executescript(CORE_SQL.read_text(encoding="utf-8"))
@@ -493,6 +552,95 @@ class ChuuniStaticTests(unittest.TestCase):
                     """
                 ).fetchone(),
                 ("DISTRICT_HOLY_SITE", "YIELD_FAITH", 0),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT NumSupported
+                    FROM Unit_BuildingPrereqs
+                    WHERE Unit = 'UNIT_MISSIONARY'
+                      AND PrereqBuilding = 'BUILDING_CLUB_MAGIC_CIRCLE'
+                    """
+                ).fetchone(),
+                (-1,),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM District_Adjacencies
+                    WHERE DistrictType = 'DISTRICT_CHUUNI_SOCIETY'
+                      AND YieldChangeId =
+                          'TEST_HOLY_SITE_NATURAL_WONDER'
+                    """
+                ).fetchone(),
+                (1,),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT a.AdjacentDistrict, a.AdjacentWonder,
+                           a.YieldType, a.YieldChange
+                    FROM District_Adjacencies AS d
+                    JOIN Adjacency_YieldChanges AS a
+                      ON a.ID = d.YieldChangeId
+                    WHERE d.DistrictType = 'DISTRICT_CHUUNI_SOCIETY'
+                      AND (
+                          d.YieldChangeId LIKE
+                              'CHUUNI_SOCIETY_CAMPUS_FAITH_%'
+                          OR d.YieldChangeId =
+                              'CHUUNI_SOCIETY_WONDER_FAITH'
+                      )
+                    ORDER BY a.AdjacentWonder, a.AdjacentDistrict
+                    """
+                ).fetchall(),
+                [
+                    ("DISTRICT_CAMPUS", 0, "YIELD_FAITH", 2),
+                    (
+                        "DISTRICT_TEST_CAMPUS_REPLACEMENT",
+                        0,
+                        "YIELD_FAITH",
+                        2,
+                    ),
+                    (None, 1, "YIELD_FAITH", 2),
+                ],
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT d.DistrictType, a.YieldType, a.YieldChange
+                    FROM District_Adjacencies AS d
+                    JOIN Adjacency_YieldChanges AS a
+                      ON a.ID = d.YieldChangeId
+                    WHERE a.AdjacentDistrict =
+                          'DISTRICT_CHUUNI_SOCIETY'
+                    ORDER BY d.DistrictType
+                    """
+                ).fetchall(),
+                [
+                    ("DISTRICT_CAMPUS", "YIELD_SCIENCE", 2),
+                    (
+                        "DISTRICT_ENTERTAINMENT_COMPLEX",
+                        "YIELD_CULTURE",
+                        2,
+                    ),
+                    (
+                        "DISTRICT_INDUSTRIAL_ZONE",
+                        "YIELD_PRODUCTION",
+                        2,
+                    ),
+                    (
+                        "DISTRICT_TEST_CAMPUS_REPLACEMENT",
+                        "YIELD_SCIENCE",
+                        2,
+                    ),
+                    ("DISTRICT_THEATER", "YIELD_CULTURE", 2),
+                    (
+                        "DISTRICT_WATER_ENTERTAINMENT_COMPLEX",
+                        "YIELD_CULTURE",
+                        2,
+                    ),
+                ],
             )
             self.assertEqual(
                 connection.execute(
