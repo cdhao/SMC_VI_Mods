@@ -80,20 +80,30 @@ class BuildAssetsTests(unittest.TestCase):
                 self.assertLessEqual(right, 244, stem)
                 self.assertLessEqual(bottom, 244, stem)
 
-    def test_leader_icon_has_antialiased_circular_alpha(self) -> None:
+    def test_circular_ui_icons_have_antialiased_alpha(self) -> None:
         result = self.run_builder()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-        with Image.open(
-            ASSET_ROOT / "generated/icons/png/Chuuni_Icon_Rikka_256.png"
-        ) as image:
-            alpha = image.convert("RGBA").getchannel("A")
-            self.assertEqual(alpha.getpixel((0, 0)), 0)
-            self.assertEqual(alpha.getpixel((255, 0)), 0)
-            self.assertEqual(alpha.getpixel((0, 255)), 0)
-            self.assertEqual(alpha.getpixel((255, 255)), 0)
-            self.assertGreater(alpha.getpixel((128, 128)), 0)
-            self.assertGreater(sum(alpha.histogram()[1:255]), 0)
+        for stem in ("Chuuni_Icon_Rikka", "Chuuni_Icon_MagicCircle"):
+            with Image.open(
+                ASSET_ROOT / "generated/icons/png" / f"{stem}_256.png"
+            ) as image:
+                alpha = image.convert("RGBA").getchannel("A")
+                self.assertEqual(alpha.getpixel((0, 0)), 0, stem)
+                self.assertEqual(alpha.getpixel((255, 0)), 0, stem)
+                self.assertEqual(alpha.getpixel((0, 255)), 0, stem)
+                self.assertEqual(alpha.getpixel((255, 255)), 0, stem)
+                self.assertGreater(alpha.getpixel((128, 128)), 0, stem)
+                self.assertGreater(sum(alpha.histogram()[1:255]), 0, stem)
+
+    def test_chimera_portrait_has_512_output(self) -> None:
+        result = self.run_builder()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        path = ASSET_ROOT / "generated/icons/png/Chuuni_Icon_Chimera_512.png"
+        self.assertTrue(path.is_file(), path)
+        with Image.open(path) as image:
+            self.assertEqual(image.size, (512, 512))
 
     def test_loading_art_has_exact_dimensions(self) -> None:
         result = self.run_builder()

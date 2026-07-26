@@ -151,13 +151,16 @@ local function BuildStageOverview(status)
 end
 
 local function BuildButtonTooltip(status)
-    return table.concat({
+    local lines = {
         Lookup("LOC_CHUUNI_STATUS_BUTTON_TOOLTIP", status.value),
         Lookup("LOC_CHUUNI_STATUS_STAGE_FORMAT", Lookup(STAGE_NAME_KEYS[status.stage + 1])),
-        "",
-        Lookup("LOC_CHUUNI_STATUS_STAGE_OVERVIEW"),
-        BuildStageOverview(status),
-    }, "[NEWLINE]")
+    }
+    if status.nextThreshold ~= nil then
+        table.insert(lines, Lookup("LOC_CHUUNI_STATUS_NEXT_FORMAT", status.nextThreshold))
+    else
+        table.insert(lines, Lookup("LOC_CHUUNI_STATUS_MAX_STAGE"))
+    end
+    return table.concat(lines, "[NEWLINE]")
 end
 
 local function BuildPopupText(status)

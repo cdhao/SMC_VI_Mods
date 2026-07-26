@@ -9,6 +9,8 @@ Read it before copying Grace Ashcroft or starting a new Mod.
 3. [Runtime patterns](runtime-patterns.md): SQL/Lua ownership and multiplayer scope.
 4. [Troubleshooting](troubleshooting.md): known Civ6 failure modes and probes.
 5. [Release checklist](release-checklist.md): repeatable pre-test and release checks.
+6. [Icon registration and circular UI](icon-registration-and-circular-ui.md):
+   deterministic atlas mappings, Governor channels and cooked texture checks.
 
 The Grace documents under `docs/mods/` are the detailed incident record. The
 older RE9 design and historical plans under `docs/superpowers/` preserve design

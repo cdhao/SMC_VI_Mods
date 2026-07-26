@@ -4,7 +4,7 @@
 
 **Goal:** Build a Gathering Storm-only Civilization VI mod for the Far East Magic Nap Society with Rikka, the Society district, Magic Circle building, Chuuni Value progression, Chimera governor, staged combat and upgrade effects, Invisible Boundary improvement, and land-unit teleportation.
 
-**Architecture:** Keep static game definitions in focused SQL files and use Gameplay Lua only for state that cannot be expressed reliably by database modifiers. `CHUUNI_VALUE` and stage flags are Player Properties. When a stage permanently unlocks, Lua attaches that stage's permanent SQL combat Modifier exactly once and records a matching `_COMBAT_ATTACHED` Property. Every risky subsystem begins with a static or runtime spike and is promoted into the main implementation only after its acceptance checks pass.
+**Architecture:** Keep static game definitions in focused SQL files and use Gameplay Lua only for state that cannot be expressed reliably by database modifiers. `CHUUNI_VALUE` and stage flags are Player Properties. Lua mirrors the unlocked stage into four hidden, non-consumable Bonus Marker resources; SQL pre-attaches one mutually exclusive full-value combat Modifier for each stage. Every risky subsystem begins with a static or runtime spike and is promoted into the main implementation only after its acceptance checks pass.
 
 **Tech Stack:** Civilization VI Gathering Storm SQL/XML/Lua, Python 3.11 `unittest`, PowerShell launchers, shared helpers under `tools/common`.
 
@@ -32,13 +32,13 @@ Only these states are used: `未开始`, `技术Spike`, `已实现未实机验�
 | Fallback art loading chain | 已实机验证 | `.dep`, fallback ArtDef and both BLP packages loaded in the supplied game screenshots. |
 | Phase 2 Society district and Magic Circle | 已实现未实机验证 | Native Holy Site adjacency is retained; Campus/Wonder and reciprocal bonuses, Missionary prerequisite, and Holy Site ArtDef inheritance pass static/schema checks. Recheck all results in a fresh game. |
 | Phase 3 Chuuni Value and sequential stages | 已实现未实机验证 | Runtime nil conversion was fixed; recheck save/load, coastal +5 and religion gates. |
-| Phase 4 permanently attached staged combat | 已实现未实机验证 | Three permanent SQL Modifiers are attached once at sequential Property unlocks; verify save/load, no duplicate attachment and 3/5/8 totals in game. |
+| Phase 4 Bonus Marker staged combat | 已实现未实机验证 | Four hidden stage resources select mutually exclusive full-value +3/+5/+8/+8 SQL Modifiers. Verify military and religious previews, threshold refresh and save/load in game. |
 | Chuuni Value stage status UI | 已实现未实机验证 | Independent LaunchBar-style button and native `PopupDialogInGame` use Player Properties; verify placement, repeated opening and live refresh in game. |
 | Leader and civilization UI presentation | 已实现未实机验证 | Rikka icon now uses an antialiased circular alpha mask; only the UI BLP was recooked and the fallback BLP hash remained unchanged. Verify all leader-list contexts in game. |
 | Save/load icon asset audit | 未开始 | Reproduce missing save icon, inspect `ForgeUI_BLPTextureLoader.log`, cooked BLP inventory and cooker source mapping before changing the cooker. |
 | Blue-purple player colors | 未开始 | Replace the invalid color XML rows that currently load as duplicate `COLOR_UNKNOWN`; prepare a blue-purple primary/secondary palette and verify jersey colors in game. |
 | Rikka Schwarz Sechs | 未开始 | Starts only after staged combat is confirmed. |
-| Chimera | 技术Spike | Minimal real Governor, one-turn transition and net-zero-title auto-appointment are implemented and awaiting in-game appearance/assignment/save-load verification. Four-stage effects remain unimplemented. |
+| Chimera | 已实现未实机验证 | Real Governor and stage-one +100% Society/Magic Circle production, governed-city faith tiers and rest-only +20 healing are implemented. Verify city yield display, healing event order, assignment and save/load in game. Later-stage effects remain unimplemented. |
 | Fantasy Armament discounts | 未开始 | Native upgrade-cost modifier spike required first. |
 | Invisible Boundary | 未开始 | Ocean placement spike required first. |
 | Magic Circle teleport | 未开始 | Gameplay movement spike required first. |
@@ -239,7 +239,7 @@ git commit -m "feat(chuuni): add society district and magic circle"
 
 **Interfaces:**
 - Produces: `GetChuuniValue(playerID) -> integer`, `ChangeChuuniValue(playerID, amount) -> integer`, `UpdateChuuniStage(playerID) -> integer`.
-- Produces Properties: `CHUUNI_VALUE`, `CHUUNI_LAST_VALUE_TICK_TURN`, `CHUUNI_STAGE`, `CHUUNI_STAGE_1_UNLOCKED` through `_4_UNLOCKED`, `CHUUNI_STAGE_1_COMBAT_ATTACHED` through `_3_COMBAT_ATTACHED`, `CHUUNI_FIRST_COASTAL_CITY_FOUNDED`.
+- Produces Properties: `CHUUNI_VALUE`, `CHUUNI_LAST_VALUE_TICK_TURN`, `CHUUNI_STAGE`, `CHUUNI_STAGE_1_UNLOCKED` through `_4_UNLOCKED`, `CHUUNI_CHIMERA_FAITH_TIER`, `CHUUNI_FIRST_COASTAL_CITY_FOUNDED`.
 
 - [ ] **Step 1: Add failing Lua contract tests**
 
@@ -304,7 +304,7 @@ git commit -m "feat(chuuni): add chuuni value progression"
 - [ ] **Step 1: Add failing assertions for three permanent unattached SQL modifiers with `3,2,3` amounts, Preview strings, no Requirements and no `TraitModifiers`.**
 - [ ] **Step 2: Run the focused test and confirm that the resource-gated SQL implementation fails the new contract.**
 - [ ] **Step 3: Keep the Modifier IDs `CHUUNI_FANTASY_COMBAT_STAGE_1/2/3`, use `MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH`, and set `Permanent=1`.**
-- [ ] **Step 4: At each sequential stage unlock, call `player:AttachModifierByID(modifierID)` once and then record the matching `_COMBAT_ATTACHED` Property. Stage 4 attaches no additional combat Modifier.**
+- [x] **Step 4: Mirror the highest sequentially unlocked stage into four hidden Bonus Marker resources. SQL uses mutually exclusive resource requirements to select exactly one full-value +3/+5/+8/+8 combat Modifier. Gameplay Lua never attaches a stage combat Modifier.**
 - [ ] **Step 5: Run the focused unit tests, Expansion2 schema execution and Chuuni static checker. Deploy only ChuuniSociety.**
 - [ ] **Step 6: In Gathering Storm, inspect military and theological combat previews at values `1,20,50,100`, then save/reload and restart the game. Expected totals are `3,5,8,8`, never duplicate or reach `16`. Until this passes, keep the status as `已实现未实机验证`.**
 - [ ] **Step 7: Commit with `git commit -m "feat(chuuni): attach staged combat at permanent unlocks"`.**

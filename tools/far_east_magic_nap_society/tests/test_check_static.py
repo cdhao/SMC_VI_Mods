@@ -126,7 +126,7 @@ class ChuuniStaticTests(unittest.TestCase):
         self.assertIn("Data/DistrictBuilding.sql", text)
         self.assertIn("Data/Chimera.sql", text)
 
-    def test_chimera_governor_prototype_contract(self) -> None:
+    def test_chimera_governor_stage_one_contract(self) -> None:
         self.assertTrue(CHIMERA_SQL.is_file(), CHIMERA_SQL)
         sql_text = CHIMERA_SQL.read_text(encoding="utf-8")
         lua_text = GAMEPLAY_LUA.read_text(encoding="utf-8")
@@ -140,24 +140,46 @@ class ChuuniStaticTests(unittest.TestCase):
             "'GOVERNOR_CHIMERA'",
             "TransitionStrength",
             "500",
-            "GovernorNormal_Builder",
-            "GovernorSelected_Builder",
+            "Chuuni_Icon_Chimera_512",
             "INSERT INTO Governors_XP2",
             "AssignToMajor",
+            "VALUES ('GOVERNOR_CHIMERA', 0)",
             "INSERT INTO GovernorPromotions",
             "BaseAbility",
             "INSERT INTO GovernorPromotionSets",
             "CHUUNI_CHIMERA_GOVERNOR_POINT",
             "MODIFIER_PLAYER_ADJUST_GOVERNOR_POINTS",
             "'Delta', 1",
+            "CHUUNI_CHIMERA_SOCIETY_PRODUCTION",
+            "CHUUNI_CHIMERA_MAGIC_CIRCLE_PRODUCTION",
+            "MODIFIER_CHUUNI_SINGLE_CITY_ADJUST_DISTRICT_PRODUCTION",
+            "EFFECT_ADJUST_DISTRICT_PRODUCTION",
+            "MODIFIER_SINGLE_CITY_ADJUST_BUILDING_PRODUCTION",
+            "'DistrictType', 'DISTRICT_CHUUNI_SOCIETY'",
+            "'BuildingType', 'BUILDING_CLUB_MAGIC_CIRCLE'",
+            "'Amount', 100",
+            "CHUUNI_CHIMERA_FAITH_TIER_10",
+            "MODIFIER_PLAYER_CITIES_ADJUST_CITY_YIELD_CHANGE",
+            "REQUIREMENT_CITY_HAS_SPECIFIC_GOVERNOR_PROMOTION_TYPE",
+            "'Established', 1",
         ):
             self.assertIn(contract, sql_text)
+        self.assertNotIn("GovernorNormal_Builder", sql_text)
+        self.assertNotIn("GovernorSelected_Builder", sql_text)
 
         for contract in (
             'CHUUNI_CHIMERA_UNLOCKED = "CHUUNI_CHIMERA_UNLOCKED"',
             'CHUUNI_CHIMERA_TITLE_ATTACHED = "CHUUNI_CHIMERA_TITLE_ATTACHED"',
             "CHUUNI_CHIMERA_GOVERNOR_POINT",
             "AttachModifierByID(CHUUNI_CHIMERA_GOVERNOR_POINT)",
+            'CHUUNI_CHIMERA_FAITH_TIER = "CHUUNI_CHIMERA_FAITH_TIER"',
+            "EnsureChimeraFaithTier",
+            "CHIMERA_FAITH_MODIFIERS",
+            "SnapshotChimeraRestCandidates",
+            "ApplyChimeraRestBonuses",
+            "ShouldGrantChimeraRestBonus",
+            "unit:ChangeDamage(-actualHeal)",
+            "Events.PlayerTurnDeactivated.Add",
         ):
             self.assertIn(contract, lua_text)
 
@@ -278,13 +300,24 @@ class ChuuniStaticTests(unittest.TestCase):
 
     def test_chuuni_popup_localization_lists_all_stages(self) -> None:
         text = TEXT_SQL.read_text(encoding="utf-8")
+        lua_text = STATUS_HUD_LUA.read_text(encoding="utf-8")
 
         self.assertNotIn("LOC_RESOURCE_CHUUNI_VALUE", text)
         self.assertIn("LOC_CHUUNI_STATUS_POPUP_TITLE", text)
         self.assertIn("LOC_CHUUNI_STATUS_BUTTON_TOOLTIP", text)
         self.assertIn("LOC_CHUUNI_STATUS_CLOSE", text)
+        self.assertIn("特色结社与部室魔法阵+100%生产力", text)
+        self.assertIn("每10点中二值使该城市+1信仰", text)
+        self.assertIn("正常休整的单位额外恢复20生命值", text)
+        self.assertGreaterEqual(text.count("阶段专属能力尚未实现"), 3)
         for stage in ("第一阶段", "第二阶段", "第三阶段", "第四阶段"):
             self.assertIn(stage, text)
+
+        tooltip_start = lua_text.index("local function BuildButtonTooltip")
+        tooltip_end = lua_text.index("local function BuildPopupText")
+        tooltip_function = lua_text[tooltip_start:tooltip_end]
+        self.assertNotIn("BuildStageOverview", tooltip_function)
+        self.assertIn("status.nextThreshold", tooltip_function)
 
     def test_chuuni_value_icon_is_ui_only(self) -> None:
         text = ICON_SQL.read_text(encoding="utf-8")
@@ -293,6 +326,26 @@ class ChuuniStaticTests(unittest.TestCase):
         self.assertIn("ICON_ATLAS_CHUUNI_VALUE", text)
         self.assertNotIn("RESOURCE_CHUUNI_VALUE", text)
         self.assertNotIn("ICON_RESOURCE_CHUUNI_VALUE", text)
+
+    def test_custom_icon_registration_is_deterministic(self) -> None:
+        text = ICON_SQL.read_text(encoding="utf-8")
+
+        self.assertIn("DELETE FROM IconDefinitions", text)
+        self.assertIn("DELETE FROM IconTextureAtlases", text)
+        self.assertNotIn(
+            "SELECT 'ICON_BUILDING_CLUB_MAGIC_CIRCLE', Atlas", text
+        )
+        for icon_name, atlas_name in (
+            ("ICON_DISTRICT_CHUUNI_SOCIETY", "ICON_ATLAS_CHUUNI_GAMEPLAY"),
+            (
+                "ICON_BUILDING_CLUB_MAGIC_CIRCLE",
+                "ICON_ATLAS_CHUUNI_MAGIC_CIRCLE",
+            ),
+            ("ICON_GOVERNOR_CHIMERA", "ICON_ATLAS_CHUUNI_CHIMERA"),
+            ("ICON_GOVERNOR_CHIMERA_FILL", "ICON_ATLAS_CHUUNI_CHIMERA"),
+            ("ICON_GOVERNOR_CHIMERA_SLOT", "ICON_ATLAS_CHUUNI_CHIMERA"),
+        ):
+            self.assertEqual(text.count(f"('{icon_name}', '{atlas_name}', 0)"), 1)
 
     def test_chuuni_progression_lua_contract(self) -> None:
         text = GAMEPLAY_LUA.read_text(encoding="utf-8")
@@ -304,12 +357,13 @@ class ChuuniStaticTests(unittest.TestCase):
             "CHUUNI_FIRST_COASTAL_CITY_FOUNDED",
             'CHUUNI_VALUE = "CHUUNI_VALUE"',
             "CHUUNI_LAST_VALUE_TICK_TURN",
-            "CHUUNI_STAGE_1_COMBAT_ATTACHED",
-            "CHUUNI_STAGE_2_COMBAT_ATTACHED",
-            "CHUUNI_STAGE_3_COMBAT_ATTACHED",
-            "EnsureStageCombatModifier",
             "player:SetProperty(CHUUNI_VALUE",
-            "player:AttachModifierByID(modifierID)",
+            "STAGE_MARKER_RESOURCE_TYPES",
+            "STAGE_MARKER_RESOURCE_INDICES",
+            "EnsureStageMarkerResource",
+            "EnsureStageMarkerResources",
+            "resources:GetResourceAmount(resourceIndex)",
+            "resources:ChangeResourceAmount(resourceIndex, 1 - currentAmount)",
             "GetReligionTypeCreated",
             "Events.PlayerTurnActivated.Add",
             "Events.ReligionFounded.Add",
@@ -325,9 +379,12 @@ class ChuuniStaticTests(unittest.TestCase):
             "RESOURCE_CHUUNI_VALUE",
             "CHUUNI_RESOURCE_INDEX",
             "CHUUNI_LAST_RESOURCE_TICK_TURN",
-            "GetResources()",
-            "GetResourceAmount",
-            "ChangeResourceAmount",
+            "CHUUNI_STAGE_1_COMBAT_ATTACHED",
+            "CHUUNI_STAGE_2_COMBAT_ATTACHED",
+            "CHUUNI_STAGE_3_COMBAT_ATTACHED",
+            "EnsureStageCombatModifier",
+            "STAGE_MODIFIERS",
+            "player:AttachModifierByID(modifierID)",
         ):
             self.assertNotIn(obsolete_contract, text)
 
@@ -360,42 +417,52 @@ class ChuuniStaticTests(unittest.TestCase):
             text,
         )
 
-    def test_property_gated_staged_combat_contract(self) -> None:
+    def test_bonus_marker_gated_full_staged_combat_contract(self) -> None:
         self.assertTrue(STAGE_COMBAT_SQL.is_file(), STAGE_COMBAT_SQL)
         modinfo_text = MODINFO.read_text(encoding="utf-8")
         stage_text = STAGE_COMBAT_SQL.read_text(encoding="utf-8")
         lua_text = GAMEPLAY_LUA.read_text(encoding="utf-8")
 
         self.assertIn("Data/StageCombat.sql", modinfo_text)
-        for modifier_id, attached_property, amount in (
-            ("CHUUNI_FANTASY_COMBAT_STAGE_1", "CHUUNI_STAGE_1_COMBAT_ATTACHED", 3),
-            ("CHUUNI_FANTASY_COMBAT_STAGE_2", "CHUUNI_STAGE_2_COMBAT_ATTACHED", 2),
-            ("CHUUNI_FANTASY_COMBAT_STAGE_3", "CHUUNI_STAGE_3_COMBAT_ATTACHED", 3),
-        ):
+        for stage in range(1, 5):
+            resource_type = f"RESOURCE_CHUUNI_STAGE_MARKER_{stage}"
+            modifier_id = f"CHUUNI_FANTASY_COMBAT_STAGE_{stage}_FULL"
+            self.assertIn(f"('{resource_type}', 'KIND_RESOURCE')", stage_text)
+            self.assertIn(resource_type, lua_text)
             self.assertIn(modifier_id, stage_text)
-            self.assertIn(attached_property, lua_text)
             self.assertIn(
-                f"('{modifier_id}', 'Amount', {amount})",
+                f"('TRAIT_CIVILIZATION_CHUUNI_SOCIETY', '{modifier_id}')",
                 stage_text,
             )
 
+        for modifier_id, amount in (
+            ("CHUUNI_FANTASY_COMBAT_STAGE_1_FULL", 3),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_2_FULL", 5),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_3_FULL", 8),
+            ("CHUUNI_FANTASY_COMBAT_STAGE_4_FULL", 8),
+        ):
+            self.assertIn(f"('{modifier_id}', 'Amount', {amount})", stage_text)
         self.assertEqual(
             stage_text.count("MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH"),
-            3,
+            4,
         )
-        self.assertEqual(stage_text.count("'Preview'"), 3)
-        self.assertIn("Permanent", stage_text)
+        self.assertEqual(stage_text.count("'Preview'"), 4)
+        self.assertEqual(stage_text.count("'RESOURCECLASS_BONUS', 0"), 4)
+        self.assertIn("CivilopediaPageExcludes", stage_text)
+        self.assertIn("REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED", stage_text)
+        self.assertIn("TraitModifiers", stage_text)
+        self.assertIn("CHUUNI_STAGE_1_OWNER_REQUIREMENTS", stage_text)
+        self.assertIn("CHUUNI_STAGE_4_OWNER_REQUIREMENTS", stage_text)
+        self.assertNotIn("'Amount', '1'", stage_text)
+        self.assertNotIn("'Amount', 1", stage_text)
         for forbidden in (
-            "RequirementSets",
-            "Requirements",
-            "RequirementArguments",
-            "RequirementSetRequirements",
-            "TraitModifiers",
             "RESOURCE_CHUUNI_VALUE",
-            "REQUIREMENT_PLAYER_HAS_RESOURCE_OWNED",
+            "CHUUNI_FANTASY_COMBAT_STAGE_1',",
+            "CHUUNI_FANTASY_COMBAT_STAGE_2',",
+            "CHUUNI_FANTASY_COMBAT_STAGE_3',",
         ):
             self.assertNotIn(forbidden, stage_text)
-        self.assertIn("player:AttachModifierByID(modifierID)", lua_text)
+        self.assertNotIn("player:AttachModifierByID(modifierID)", lua_text)
 
     def test_coastal_amenity_modifier_contract(self) -> None:
         text = CORE_SQL.read_text(encoding="utf-8")
@@ -654,9 +721,10 @@ class ChuuniStaticTests(unittest.TestCase):
                     """
                 ).fetchall(),
                 [
-                    ("CHUUNI_FANTASY_COMBAT_STAGE_1", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "3"),
-                    ("CHUUNI_FANTASY_COMBAT_STAGE_2", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "2"),
-                    ("CHUUNI_FANTASY_COMBAT_STAGE_3", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "3"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_1_FULL", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "3"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_2_FULL", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "5"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_3_FULL", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "8"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_4_FULL", "MODIFIER_PLAYER_UNITS_ADJUST_COMBAT_STRENGTH", "8"),
                 ],
             )
             self.assertEqual(
@@ -669,9 +737,10 @@ class ChuuniStaticTests(unittest.TestCase):
                     """
                 ).fetchall(),
                 [
-                    ("CHUUNI_FANTASY_COMBAT_STAGE_1", 1, None),
-                    ("CHUUNI_FANTASY_COMBAT_STAGE_2", 1, None),
-                    ("CHUUNI_FANTASY_COMBAT_STAGE_3", 1, None),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_1_FULL", 0, "CHUUNI_STAGE_1_OWNER_REQUIREMENTS"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_2_FULL", 0, "CHUUNI_STAGE_2_OWNER_REQUIREMENTS"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_3_FULL", 0, "CHUUNI_STAGE_3_OWNER_REQUIREMENTS"),
+                    ("CHUUNI_FANTASY_COMBAT_STAGE_4_FULL", 0, "CHUUNI_STAGE_4_OWNER_REQUIREMENTS"),
                 ],
             )
             self.assertEqual(
@@ -681,7 +750,7 @@ class ChuuniStaticTests(unittest.TestCase):
                     WHERE ModifierId LIKE 'CHUUNI_FANTASY_COMBAT_STAGE_%'
                     """
                 ).fetchone(),
-                (0,),
+                (4,),
             )
             self.assertEqual(
                 connection.execute(
@@ -695,9 +764,58 @@ class ChuuniStaticTests(unittest.TestCase):
                 (
                     500,
                     "TRAIT_CIVILIZATION_CHUUNI_SOCIETY",
-                    "GovernorNormal_Builder",
-                    "GovernorSelected_Builder",
+                    "Chuuni_Icon_Chimera_512",
+                    "Chuuni_Icon_Chimera_512",
                 ),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT COUNT(*) FROM Resources
+                    WHERE ResourceType LIKE 'RESOURCE_CHUUNI_STAGE_MARKER_%'
+                      AND ResourceClassType = 'RESOURCECLASS_BONUS'
+                      AND Frequency = 0
+                    """
+                ).fetchone(),
+                (4,),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT COUNT(*) FROM Modifiers
+                    WHERE ModifierId LIKE 'CHUUNI_CHIMERA_FAITH_TIER_%'
+                      AND ModifierType =
+                          'MODIFIER_PLAYER_CITIES_ADJUST_CITY_YIELD_CHANGE'
+                      AND SubjectRequirementSetId =
+                          'CHUUNI_CITY_HAS_ESTABLISHED_CHIMERA_REQUIREMENTS'
+                    """
+                ).fetchone(),
+                (10,),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT CollectionType, EffectType
+                    FROM DynamicModifiers
+                    WHERE ModifierType =
+                          'MODIFIER_CHUUNI_SINGLE_CITY_ADJUST_DISTRICT_PRODUCTION'
+                    """
+                ).fetchone(),
+                ("COLLECTION_OWNER", "EFFECT_ADJUST_DISTRICT_PRODUCTION"),
+            )
+            self.assertEqual(
+                connection.execute(
+                    """
+                    SELECT ModifierId FROM GovernorPromotionModifiers
+                    WHERE GovernorPromotionType =
+                          'GOVERNOR_PROMOTION_CHIMERA_BASE'
+                    ORDER BY ModifierId
+                    """
+                ).fetchall(),
+                [
+                    ("CHUUNI_CHIMERA_MAGIC_CIRCLE_PRODUCTION",),
+                    ("CHUUNI_CHIMERA_SOCIETY_PRODUCTION",),
+                ],
             )
             self.assertEqual(
                 connection.execute(

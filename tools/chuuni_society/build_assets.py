@@ -45,14 +45,15 @@ STANDARD_ICON_SIZES = (22, 30, 32, 38, 50, 64, 80, 256)
 LEADER_ICON_SIZES = (22, 30, 32, 38, 45, 48, 50, 55, 64, 80, 256)
 CIVILIZATION_ICON_SIZES = (22, 30, 32, 36, 38, 44, 45, 48, 50, 64, 80, 128, 200, 256)
 RESOURCE_ICON_SIZES = (22, 38, 50, 64, 256)
+GOVERNOR_ICON_SIZES = (*STANDARD_ICON_SIZES, 512)
 
 ICON_SPECS = {
     CIVILIZATION_PREFIX: ("processed/ChuuniSociety_Civilization_WhiteAlpha.png", CIVILIZATION_ICON_SIZES, "transparent"),
     "Chuuni_Icon_Rikka": ("六花领袖头像.png", LEADER_ICON_SIZES, "leader_circle"),
     "Chuuni_Icon_SocietyDistrict": ("极东魔术昼寝结社区域图标.png", STANDARD_ICON_SIZES, "transparent"),
-    "Chuuni_Icon_MagicCircle": ("部室魔法阵建筑图标.png", STANDARD_ICON_SIZES, "square"),
+    "Chuuni_Icon_MagicCircle": ("部室魔法阵建筑图标.png", STANDARD_ICON_SIZES, "leader_circle"),
     "Chuuni_Icon_ChuuniValue": ("中二值资源图标.png", RESOURCE_ICON_SIZES, "transparent"),
-    "Chuuni_Icon_Chimera": ("奇美拉总督头像.png", STANDARD_ICON_SIZES, "square"),
+    "Chuuni_Icon_Chimera": ("奇美拉总督头像.png", GOVERNOR_ICON_SIZES, "square"),
     "Chuuni_Icon_InvisibleBoundary": ("不可视境界线改良设施图标.png", STANDARD_ICON_SIZES, "transparent"),
 }
 

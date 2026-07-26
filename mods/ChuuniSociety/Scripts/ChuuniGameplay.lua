@@ -15,24 +15,36 @@ local CHUUNI_STAGE_3_UNLOCKED = "CHUUNI_STAGE_3_UNLOCKED"
 local CHUUNI_STAGE_4_UNLOCKED = "CHUUNI_STAGE_4_UNLOCKED"
 local CHUUNI_CHIMERA_UNLOCKED = "CHUUNI_CHIMERA_UNLOCKED"
 local CHUUNI_CHIMERA_TITLE_ATTACHED = "CHUUNI_CHIMERA_TITLE_ATTACHED"
-local CHUUNI_STAGE_1_COMBAT_ATTACHED = "CHUUNI_STAGE_1_COMBAT_ATTACHED"
-local CHUUNI_STAGE_2_COMBAT_ATTACHED = "CHUUNI_STAGE_2_COMBAT_ATTACHED"
-local CHUUNI_STAGE_3_COMBAT_ATTACHED = "CHUUNI_STAGE_3_COMBAT_ATTACHED"
+local CHUUNI_CHIMERA_FAITH_TIER = "CHUUNI_CHIMERA_FAITH_TIER"
 local CHUUNI_FIRST_COASTAL_CITY_FOUNDED = "CHUUNI_FIRST_COASTAL_CITY_FOUNDED"
 local CHUUNI_COASTAL_AMENITY_ATTACHED = "CHUUNI_COASTAL_AMENITY_ATTACHED"
 local CHUUNI_COASTAL_AMENITY_MODIFIER = "CHUUNI_RIKKA_COASTAL_CITY_AMENITIES"
 local CHUUNI_CHIMERA_GOVERNOR_POINT = "CHUUNI_CHIMERA_GOVERNOR_POINT"
+local CHIMERA_REST_DAMAGE = "CHUUNI_CHIMERA_REST_DAMAGE"
+local CHIMERA_REST_TURN = "CHUUNI_CHIMERA_REST_TURN"
+local CHIMERA_REST_UNIT_TYPE = "CHUUNI_CHIMERA_REST_UNIT_TYPE"
+local CHIMERA_REST_PLOT = "CHUUNI_CHIMERA_REST_PLOT"
+local CHIMERA_REST_CITY = "CHUUNI_CHIMERA_REST_CITY"
+local CHIMERA_REST_ELIGIBLE = "CHUUNI_CHIMERA_REST_ELIGIBLE"
 
-local STAGE_MODIFIERS = {
-    [1] = "CHUUNI_FANTASY_COMBAT_STAGE_1",
-    [2] = "CHUUNI_FANTASY_COMBAT_STAGE_2",
-    [3] = "CHUUNI_FANTASY_COMBAT_STAGE_3",
+local CHIMERA_FAITH_MODIFIERS = {
+    [1] = "CHUUNI_CHIMERA_FAITH_TIER_1",
+    [2] = "CHUUNI_CHIMERA_FAITH_TIER_2",
+    [3] = "CHUUNI_CHIMERA_FAITH_TIER_3",
+    [4] = "CHUUNI_CHIMERA_FAITH_TIER_4",
+    [5] = "CHUUNI_CHIMERA_FAITH_TIER_5",
+    [6] = "CHUUNI_CHIMERA_FAITH_TIER_6",
+    [7] = "CHUUNI_CHIMERA_FAITH_TIER_7",
+    [8] = "CHUUNI_CHIMERA_FAITH_TIER_8",
+    [9] = "CHUUNI_CHIMERA_FAITH_TIER_9",
+    [10] = "CHUUNI_CHIMERA_FAITH_TIER_10",
 }
 
-local STAGE_ATTACHED_PROPERTIES = {
-    [1] = CHUUNI_STAGE_1_COMBAT_ATTACHED,
-    [2] = CHUUNI_STAGE_2_COMBAT_ATTACHED,
-    [3] = CHUUNI_STAGE_3_COMBAT_ATTACHED,
+local STAGE_MARKER_RESOURCE_TYPES = {
+    [1] = "RESOURCE_CHUUNI_STAGE_MARKER_1",
+    [2] = "RESOURCE_CHUUNI_STAGE_MARKER_2",
+    [3] = "RESOURCE_CHUUNI_STAGE_MARKER_3",
+    [4] = "RESOURCE_CHUUNI_STAGE_MARKER_4",
 }
 
 local STAGE_THRESHOLDS = {
@@ -52,6 +64,13 @@ local VALUE_PER_BUILDING = tonumber(
 local CHUUNI_DISTRICT_INDEX = GameInfo.Districts[DISTRICT_CHUUNI_SOCIETY].Index
 local MAGIC_CIRCLE_INDEX = GameInfo.Buildings[BUILDING_CLUB_MAGIC_CIRCLE].Index
 local COAST_TERRAIN_INDEX = GameInfo.Terrains[TERRAIN_COAST].Index
+local CHIMERA_GOVERNOR_DEFINITION = GameInfo.Governors["GOVERNOR_CHIMERA"]
+local STAGE_MARKER_RESOURCE_INDICES = {}
+for stage, resourceType in pairs(STAGE_MARKER_RESOURCE_TYPES) do
+    local resourceDefinition = GameInfo.Resources[resourceType]
+    STAGE_MARKER_RESOURCE_INDICES[stage] =
+        resourceDefinition ~= nil and resourceDefinition.Index or nil
+end
 
 local function Log(message)
     print("[ChuuniSociety] " .. tostring(message))
@@ -124,6 +143,25 @@ function GetChuuniValue(playerID)
     return math.max(0, math.min(CHUUNI_VALUE_CAP, value))
 end
 
+local function EnsureChimeraFaithTier(playerID)
+    local player = GetPlayer(playerID)
+    if player == nil then
+        return 0
+    end
+    local storedTier = player:GetProperty(CHUUNI_CHIMERA_FAITH_TIER)
+    local attachedTier = math.max(0, math.min(10, tonumber(storedTier) or 0))
+    local targetTier = math.min(10, math.floor(GetChuuniValue(playerID) / 10))
+    for tier = attachedTier + 1, targetTier do
+        local faithModifierID = CHIMERA_FAITH_MODIFIERS[tier]
+        if faithModifierID ~= nil then
+            player:AttachModifierByID(faithModifierID)
+            player:SetProperty(CHUUNI_CHIMERA_FAITH_TIER, tier)
+            attachedTier = tier
+        end
+    end
+    return attachedTier
+end
+
 function ChangeChuuniValue(playerID, amount)
     local player = GetPlayer(playerID)
     local gain = tonumber(amount) or 0
@@ -135,22 +173,38 @@ function ChangeChuuniValue(playerID, amount)
     local nextValue = math.min(CHUUNI_VALUE_CAP, currentValue + math.floor(gain))
     if nextValue ~= currentValue then
         player:SetProperty(CHUUNI_VALUE, nextValue)
+        EnsureChimeraFaithTier(playerID)
         PublishChuuniStatus(playerID)
     end
     return nextValue
 end
 
-local function EnsureStageCombatModifier(player, stage)
-    local modifierID = STAGE_MODIFIERS[stage]
-    local attachedProperty = STAGE_ATTACHED_PROPERTIES[stage]
-    if modifierID == nil or attachedProperty == nil then
-        return
+local function EnsureStageMarkerResource(player, resourceIndex)
+    if player == nil or resourceIndex == nil or player.GetResources == nil then
+        return false
     end
-    if player:GetProperty(attachedProperty) == 1 then
-        return
+    local resources = player:GetResources()
+    if resources == nil or resources.GetResourceAmount == nil
+        or resources.ChangeResourceAmount == nil then
+        return false
     end
-    player:AttachModifierByID(modifierID)
-    player:SetProperty(attachedProperty, 1)
+    local storedAmount = resources:GetResourceAmount(resourceIndex)
+    local currentAmount = tonumber(storedAmount) or 0
+    if currentAmount < 1 then
+        resources:ChangeResourceAmount(resourceIndex, 1 - currentAmount)
+        return true
+    end
+    return false
+end
+
+local function EnsureStageMarkerResources(player, stage)
+    local maximumStage = math.max(0, math.min(4, tonumber(stage) or 0))
+    for markerStage = 1, maximumStage do
+        EnsureStageMarkerResource(
+            player,
+            STAGE_MARKER_RESOURCE_INDICES[markerStage]
+        )
+    end
 end
 
 local function EnsureChimeraUnlocked(player)
@@ -165,7 +219,6 @@ end
 
 local function UnlockStage(player, playerID, stage, propertyName, localizationKey)
     if player:GetProperty(propertyName) ~= 1 then
-        EnsureStageCombatModifier(player, stage)
         if stage == 1 then
             EnsureChimeraUnlocked(player)
         end
@@ -207,9 +260,141 @@ function UpdateChuuniStage(playerID)
         EnsureChimeraUnlocked(player)
     end
 
+    EnsureChimeraFaithTier(playerID)
     player:SetProperty(CHUUNI_STAGE, stage)
+    EnsureStageMarkerResources(player, stage)
     PublishChuuniStatus(playerID)
     return stage
+end
+
+local function GetEstablishedChimeraCity(player)
+    if player == nil or CHIMERA_GOVERNOR_DEFINITION == nil
+        or player.GetGovernors == nil then
+        return nil
+    end
+    local governors = player:GetGovernors()
+    if governors == nil or governors.GetGovernor == nil then
+        return nil
+    end
+    local chimera = governors:GetGovernor(CHIMERA_GOVERNOR_DEFINITION.Hash)
+    if chimera == nil or chimera.IsEstablished == nil
+        or not chimera:IsEstablished() or chimera.GetAssignedCity == nil then
+        return nil
+    end
+    return chimera:GetAssignedCity()
+end
+
+local function GetUnitPlot(unit)
+    if unit == nil or Map == nil or Map.GetPlot == nil then
+        return nil
+    end
+    return Map.GetPlot(unit:GetX(), unit:GetY())
+end
+
+local function IsUnitInChimeraCity(unit, chimeraCity)
+    if unit == nil or chimeraCity == nil or Cities == nil
+        or Cities.GetPlotPurchaseCity == nil then
+        return false, nil
+    end
+    local plot = GetUnitPlot(unit)
+    if plot == nil then
+        return false, nil
+    end
+    local owningCity = Cities.GetPlotPurchaseCity(plot)
+    if owningCity == nil then
+        return false, plot
+    end
+    return owningCity:GetOwner() == chimeraCity:GetOwner()
+        and owningCity:GetID() == chimeraCity:GetID(), plot
+end
+
+local function ShouldGrantChimeraRestBonus(snapshot, currentState)
+    if snapshot == nil or currentState == nil then
+        return false
+    end
+    return snapshot.eligible == true
+        and snapshot.turn + 1 == currentState.turn
+        and snapshot.unitType == currentState.unitType
+        and snapshot.plotIndex == currentState.plotIndex
+        and snapshot.cityID == currentState.cityID
+        and snapshot.damage > currentState.damage
+        and currentState.damage > 0
+        and currentState.inChimeraCity == true
+end
+
+local function SnapshotChimeraRestCandidates(playerID)
+    if not IsChuuniPlayer(playerID) then
+        return
+    end
+    local player = GetPlayer(playerID)
+    local chimeraCity = GetEstablishedChimeraCity(player)
+    if player == nil or player.GetUnits == nil then
+        return
+    end
+    local currentTurn = Game.GetCurrentGameTurn()
+    for _, unit in player:GetUnits():Members() do
+        local inChimeraCity, plot = IsUnitInChimeraCity(unit, chimeraCity)
+        local damage = unit:GetDamage()
+        local eligible = inChimeraCity and damage > 0
+            and unit.GetMovesRemaining ~= nil and unit.GetMaxMoves ~= nil
+            and unit:GetMovesRemaining() >= unit:GetMaxMoves()
+        unit:SetProperty(CHIMERA_REST_DAMAGE, damage)
+        unit:SetProperty(CHIMERA_REST_TURN, currentTurn)
+        unit:SetProperty(CHIMERA_REST_UNIT_TYPE, unit:GetType())
+        unit:SetProperty(
+            CHIMERA_REST_PLOT,
+            plot ~= nil and plot:GetIndex() or -1
+        )
+        unit:SetProperty(
+            CHIMERA_REST_CITY,
+            chimeraCity ~= nil and chimeraCity:GetID() or -1
+        )
+        unit:SetProperty(CHIMERA_REST_ELIGIBLE, eligible and 1 or 0)
+    end
+end
+
+local function ApplyChimeraRestBonuses(playerID)
+    if not IsChuuniPlayer(playerID) then
+        return
+    end
+    local player = GetPlayer(playerID)
+    local chimeraCity = GetEstablishedChimeraCity(player)
+    if player == nil or player.GetUnits == nil or chimeraCity == nil then
+        return
+    end
+    local currentTurn = Game.GetCurrentGameTurn()
+    for _, unit in player:GetUnits():Members() do
+        local inChimeraCity, plot = IsUnitInChimeraCity(unit, chimeraCity)
+        local storedDamage = unit:GetProperty(CHIMERA_REST_DAMAGE)
+        local storedTurn = unit:GetProperty(CHIMERA_REST_TURN)
+        local storedUnitType = unit:GetProperty(CHIMERA_REST_UNIT_TYPE)
+        local storedPlot = unit:GetProperty(CHIMERA_REST_PLOT)
+        local storedCity = unit:GetProperty(CHIMERA_REST_CITY)
+        local storedEligible = unit:GetProperty(CHIMERA_REST_ELIGIBLE)
+        local snapshot = {
+            damage = tonumber(storedDamage) or -1,
+            turn = tonumber(storedTurn) or -1,
+            unitType = tonumber(storedUnitType) or -1,
+            plotIndex = tonumber(storedPlot) or -1,
+            cityID = tonumber(storedCity) or -1,
+            eligible = tonumber(storedEligible) == 1,
+        }
+        local currentDamage = unit:GetDamage()
+        local currentState = {
+            damage = currentDamage,
+            turn = currentTurn,
+            unitType = unit:GetType(),
+            plotIndex = plot ~= nil and plot:GetIndex() or -1,
+            cityID = chimeraCity:GetID(),
+            inChimeraCity = inChimeraCity,
+        }
+        if ShouldGrantChimeraRestBonus(snapshot, currentState) then
+            local actualHeal = math.min(20, currentDamage)
+            unit:ChangeDamage(-actualHeal)
+            Log("奇美拉休整 +" .. tostring(actualHeal)
+                .. " unit=" .. tostring(unit:GetID()))
+        end
+    end
 end
 
 local function CountProgressionSources(player)
@@ -244,6 +429,7 @@ local function OnPlayerTurnActivated(playerID, isFirstTime)
         return
     end
 
+    ApplyChimeraRestBonuses(playerID)
     local player = GetPlayer(playerID)
     local currentTurn = Game.GetCurrentGameTurn()
     local lastValueTickTurn = player:GetProperty(CHUUNI_LAST_VALUE_TICK_TURN)
@@ -312,6 +498,7 @@ local function OnCityAddedToMap(playerID, cityID, cityX, cityY)
 end
 
 Events.PlayerTurnActivated.Add(OnPlayerTurnActivated)
+Events.PlayerTurnDeactivated.Add(SnapshotChimeraRestCandidates)
 Events.ReligionFounded.Add(OnReligionFounded)
 Events.CityAddedToMap.Add(OnCityAddedToMap)
 

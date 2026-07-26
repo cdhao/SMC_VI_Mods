@@ -155,7 +155,7 @@ def run(root: Path) -> None:
         blp_path=mod_root / "Platforms/Windows/BLPs" / f"{config.package('ui')}.blp",
         expected_package=config.package("ui"),
         expected_class="UITexture",
-        expected_entries=66,
+        expected_entries=67,
     )
     fallback_inventory = validate_package_inventory(
         xlp_path=asset_root / "cooker/XLPs/leaderfallbacks.xlp",

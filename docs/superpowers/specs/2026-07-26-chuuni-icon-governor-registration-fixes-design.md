@@ -1,7 +1,7 @@
 # Chuuni Icon and Governor Registration Fixes Design
 
 **Date:** 2026-07-26  
-**Status:** Approved design, pending implementation
+**Status:** Implemented, pending in-game verification
 
 ## Scope
 
